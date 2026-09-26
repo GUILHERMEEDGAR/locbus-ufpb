@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Atividade Substitutiva - Desenvolvimento do PoC - LocBUS</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 18mm 15mm 18mm 15mm;
+      @bottom-right {
+        content: counter(page);
+      }
+    }
+    
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 10.5pt;
+      line-height: 1.55;
+      color: #1e293b;
+      background-color: #ffffff;
+      margin: 0;
+      padding: 0;
+    }
+
+    .header-box {
+      border-bottom: 2px solid #2563eb;
+      padding-bottom: 12px;
+      margin-bottom: 22px;
+    }
+
+    .badge-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .badge {
+      background: #eff6ff;
+      color: #1d4ed8;
+      font-size: 8.5pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 4px 10px;
+      border-radius: 4px;
+      border: 1px solid #bfdbfe;
+    }
+
+    .date-tag {
+      font-size: 8.5pt;
+      color: #64748b;
+      font-weight: 500;
+    }
+
+    h1 {
+      font-size: 17pt;
+      font-weight: 800;
+      color: #0f172a;
+      margin: 0 0 6px 0;
+      line-height: 1.25;
+    }
+
+    .subtitle {
+      font-size: 11pt;
+      color: #334155;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      background: #f8fafc;
+      padding: 10px 14px;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+      font-size: 9.5pt;
+    }
+
+    .meta-item strong {
+      color: #0f172a;
+    }
+
+    h2 {
+      font-size: 12pt;
+      font-weight: 700;
+      color: #1e3a8a;
+      border-left: 4px solid #2563eb;
+      padding-left: 8px;
+      margin: 20px 0 10px 0;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      page-break-after: avoid;
+    }
+
+    h3 {
+      font-size: 10.5pt;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 14px 0 6px 0;
+      page-break-after: avoid;
+    }
+
+    p {
+      margin: 0 0 9px 0;
+      text-align: justify;
+    }
+
+    ul, ol {
+      margin: 0 0 10px 0;
+      padding-left: 20px;
+    }
+
+    li {
+      margin-bottom: 4px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 16px 0;
+      font-size: 9pt;
+      page-break-inside: avoid;
+    }
+
+    th, td {
+      border: 1px solid #cbd5e1;
+      padding: 7px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background-color: #f1f5f9;
+      color: #0f172a;
+      font-weight: 700;
+    }
+
+    tr:nth-child(even) td {
+      background-color: #f8fafc;
+    }
+
+    .card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      page-break-inside: avoid;
+    }
+
+    .card-highlight {
+      border-left: 4px solid #10b981;
+      background: #f0fdf4;
+    }
+
+    .card-highlight h3 {
+      color: #065f46;
+    }
+
+    .card-secondary {
+      border-left: 4px solid #64748b;
+      background: #f8fafc;
+    }
+
+    .pill-must {
+      background: #fee2e2;
+      color: #991b1b;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 8pt;
+      display: inline-block;
+    }
+
+    .pill-should {
+      background: #fef3c7;
+      color: #92400e;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 8pt;
+      display: inline-block;
+    }
+
+    .formula-box {
+      background: #f1f5f9;
+      border: 1px dashed #94a3b8;
+      border-radius: 4px;
+      padding: 6px 12px;
+      font-family: "Courier New", Courier, monospace;
+      font-size: 8.5pt;
+      margin: 8px 0;
+    }
+
+    .page-break {
+      page-break-before: always;
+    }
+
+    .footer-note {
+      font-size: 8pt;
+      color: #94a3b8;
+      text-align: center;
+      margin-top: 25px;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- CABEÇALHO INSTITUCIONAL -->
+  <div class="header-box">
+    <div class="badge-bar">
+      <span class="badge">Framework para Desenvolvimento de PoC Funcional (Etapas 1 a 7)</span>
+      <span class="date-tag">Entrega SIGAA • Setembro/2026</span>
+    </div>
+    <h1>Evolução Estruturada do Projeto LocBUS</h1>
+    <div class="subtitle">Módulo Colaborativo de Localização (Crowdsourcing) e Reformulação de UX/Frontend</div>
+    
+    <div class="meta-grid">
+      <div class="meta-item"><strong>Estudante Responsável:</strong> Guilherme Edgar C.S.R. Guedes</div>
+      <div class="meta-item"><strong>Projeto:</strong> LocBUS (Monitoramento e Telemetria Circular)</div>
+      <div class="meta-item"><strong>Frente de Trabalho:</strong> Grupo 4 — Frontend e Experiência do Usuário (UX)</div>
+      <div class="meta-item"><strong>Escopo da Atividade:</strong> Atividade Substitutiva – Desenvolvimento do PoC</div>
+    </div>
+  </div>
+
+  <!-- ETAPA 1 -->
+  <h2>1. Problema — Descrição Estruturada do Problema Real</h2>
+  <p>
+    No cotidiano universitário, a ligação viária entre polos acadêmicos e centros de ensino (como o trajeto entre o CCHLA e o Centro de Informática - CI) é atendida por linhas circulares de transporte coletivo interno. Entretanto, os estudantes e servidores enfrentam imprevisibilidade crônica quanto ao horário real de passagem do ônibus, gerando tempo ocioso excessivo nos pontos, perda de aulas e sensação generalizada de insegurança.
+  </p>
+  <p>
+    Tecnicamente, o estado atual da prova de conceito (PoC) do LocBUS opera com uma <strong>limitação de amostragem por marcos discretos</strong>:
+  </p>
+  <ul>
+    <li><strong>Detecção restrita aos pontos fixos:</strong> O rastreamento baseia-se unicamente em microcontroladores ESP32 instalados nas paradas que detectam a presença do beacon BLE emitido pelo ônibus quando ele encosta no ponto.</li>
+    <li><strong>Zona Cega no Trajeto:</strong> Assim que o ônibus parte de um terminal rumo ao próximo, ele entra em um estado estático de inferência (indicador binário de trânsito), perdendo-se completamente a coordenada geográfica em tempo real durante todo o percurso intermediário.</li>
+    <li><strong>Assimetria de Informação no Frontend:</strong> A interface gráfica atual exibe rotas estáticas e estimativas pré-fixadas (ETA fixo), sem transparência sobre o grau de atualização ou atraso decorrente do trânsito na via.</li>
+  </ul>
+
+  <!-- ETAPA 2 -->
+  <h2>2. Necessidade — Identificação e Priorização das Necessidades</h2>
+  <p>
+    Para superar a zona cega sem onerar o projeto com dispendiosos módulos telemáticos dedicados (rastreadores veiculares comerciais com chips M2M 4G em cada veículo), priorizou-se as necessidades através da metodologia MoSCoW:
+  </p>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 10%;">ID</th>
+        <th style="width: 45%;">Descrição da Necessidade</th>
+        <th style="width: 15%;">Prioridade</th>
+        <th style="width: 30%;">Impacto no PoC Funcional</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>N01</strong></td>
+        <td>Rastrear o deslocamento contínuo do ônibus entre as paradas sem custo de hardware adicional no veículo.</td>
+        <td><span class="pill-must">MUST (Crítica)</span></td>
+        <td>Elimina a zona cega no mapa através de telemetria colaborativa espontânea.</td>
+      </tr>
+      <tr>
+        <td><strong>N02</strong></td>
+        <td>Desenvolver fluxo e interface no Frontend/UX para coleta consentida de GPS do usuário a bordo (Crowdsourcing).</td>
+        <td><span class="pill-must">MUST (Crítica)</span></td>
+        <td>Permite que o próprio passageiro ative o compartilhamento da localização durante a viagem com 1 clique.</td>
+      </tr>
+      <tr>
+        <td><strong>N03</strong></td>
+        <td>Interface responsiva moderna (Mobile-First) com visualização clara de status e confiabilidade temporal dos dados.</td>
+        <td><span class="pill-must">MUST (Crítica)</span></td>
+        <td>Garante usabilidade ágil para estudantes acessando o serviço pelo smartphone no ponto de parada.</td>
+      </tr>
+      <tr>
+        <td><strong>N04</strong></td>
+        <td>Validação de integridade espacial das coordenadas recebidas (filtro de geofencing da rota).</td>
+        <td><span class="pill-should">SHOULD (Alta)</span></td>
+        <td>Previne a poluição do mapa com coordenadas incorretas ou disparadas fora do itinerário oficial.</td>
+      </tr>
+      <tr>
+        <td><strong>N05</strong></td>
+        <td>Cálculo dinâmico de tempo estimado de chegada (ETA) atualizado pelo progresso em rota.</td>
+        <td><span class="pill-should">SHOULD (Alta)</span></td>
+        <td>Substitui os valores fixos atuais por estimativas reais de aproximação.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ETAPA 3 -->
+  <h2>3. Variáveis e Funções — Medição, Detecção, Controle e Processamento</h2>
+  
+  <h3>A. Variáveis a serem Medidas e Detectadas</h3>
+  <ul>
+    <li><strong>Sinal de Presença Física (BLE):</strong> Intensidade de sinal recebido (RSSI, em dBm), endereço MAC/UUID do transmissor embarcado e timestamp de passagem no ponto fixo.</li>
+    <li><strong>Geolocalização Colaborativa Móvel (Web Geolocation API no Frontend):</strong>
+      Latitude (&phi;) e Longitude (&lambda;) em graus decimais; raio de acurácia horizontal (&plusmn; metros); vetor cinemático de velocidade instantânea (km/h) e rumo de deslocamento (heading em graus).
+    </li>
+    <li><strong>Janela de Validade Temporal:</strong> Idade do dado (&Delta;t em segundos) desde a última emissão válida.</li>
+  </ul>
+
+  <h3>B. Funções a serem Executadas e Processadas</h3>
+  <ul>
+    <li><strong>Função de Consentimento e Amostragem (Frontend - UX):</strong> Execução controlada de <code>navigator.geolocation.watchPosition</code> com desativação automática após perda de sinal, encerramento de trajeto ou fechamento da aba.</li>
+    <li><strong>Função de Geofencing e Filtragem de Consistência (Backend):</strong> 
+      Rejeição de dados com velocidade incompatível com ônibus urbano (ex.: <em>v > 65 km/h</em>) ou cujo ponto (lat, long) diste mais de 80 metros da polilinha da rota oficial.
+    </li>
+    <li><strong>Função de Fusão e Agrupamento (Clustering Espacial):</strong> 
+      Quando múltiplos passageiros colaboram simultaneamente no mesmo ônibus, o sistema executa o cálculo da média ponderada das coordenadas com base no inverso da variância da acurácia:
+      <div class="formula-box">
+        Coord_Consolidada = &sum;(Coord_i / Acuracia_i) / &sum;(1 / Acuracia_i)
+      </div>
+    </li>
+    <li><strong>Função de Máquina de Estados Operacional:</strong>
+      Transição entre os estados: <code>PARADO_PONTO</code>, <code>EM_TRANSITO_COLABORATIVO</code>, <code>EM_TRANSITO_ESTIMADO</code> e <code>INATIVO/DESCONECTADO</code>.
+    </li>
+  </ul>
+
+  <!-- ETAPA 4 -->
+  <h2>4. Restrições e Normas — Requisitos, Limitações e Segurança</h2>
+  <ul>
+    <li><strong>Privacidade e Conformidade com a LGPD (Lei nº 13.709/2018):</strong>
+      A coleta de localização é estritamente opt-in. Não são solicitados ou armazenados dados identificáveis (sem login, sem CPF, sem gravação de IP persistente). Os pacotes de localização são gravados apenas em buffer volátil/efêmero, com política de descarte imediato (TTL &le; 5 minutos).
+    </li>
+    <li><strong>Restrições Energéticas e de Consumo de Dados no Dispositivo do Usuário:</strong>
+      A amostragem de GPS é throttled (taxa máxima de 1 envio a cada 10 a 15 segundos) para evitar drenagem de bateria e consumo excessivo do plano de dados móveis do estudante.
+    </li>
+    <li><strong>Restrições de Segurança Web:</strong>
+      A W3C Geolocation API exige contexto estritamente seguro (HTTPS). Todas as requisições utilizam criptografia TLS e validação de schema rigorosa no backend para barrar ataques de injeção ou spoofing de pacotes.
+    </li>
+    <li><strong>Normativas de Telecomunicações (Anatel):</strong>
+      Os módulos de radiofrequência (ESP32) utilizam exclusivamente frequências não licenciadas da banda ISM (2.4 GHz) conforme a Resolução Anatel nº 680/2017.
+    </li>
+  </ul>
+
+  <!-- ETAPA 5 -->
+  <h2>5. Benchmark — Levantamento Comparativo de Soluções Existentes</h2>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 22%;">Solução / Tecnologia</th>
+        <th style="width: 28%;">Princípio Operacional</th>
+        <th style="width: 25%;">Vantagens e Limitações</th>
+        <th style="width: 25%;">Diferencial do LocBUS</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Sistemas AVL Comerciais (Cittamobi / Moovit)</strong></td>
+        <td>Rastreador GPS veicular proprietário conectado a rede celular 4G/M2M com telemetria direta.</td>
+        <td><strong>Vantagem:</strong> Precisão industrial contínua.<br><strong>Limitação:</strong> Custo de aquisição, taxa mensal por chip e burocracia de manutenção.</td>
+        <td>Dispensa hardware dedicado no ônibus e mensalidades de dados móveis; infraestrutura de custo quase zero para a universidade.</td>
+      </tr>
+      <tr>
+        <td><strong>Waze / Google Maps (Crowdsourcing Puro)</strong></td>
+        <td>Coleta passiva de GPS de milhões de motoristas em tráfego aberto.</td>
+        <td><strong>Vantagem:</strong> Base ampla.<br><strong>Limitação:</strong> Não distingue linhas circulares universitárias nem identifica qual veículo específico está sendo rastreado.</td>
+        <td>Focado na linha específica e ancorado pelos beacons físicos de partida e chegada, garantindo rastreabilidade do ônibus correto.</td>
+      </tr>
+      <tr>
+        <td><strong>Sistemas com Beacons Estáticos (Estimote / Kontakt)</strong></td>
+        <td>Checkpoints instalados em paradas físicas apenas para registrar passagem.</td>
+        <td><strong>Vantagem:</strong> Baixo consumo energético.<br><strong>Limitação:</strong> Zona cega absoluta entre uma parada e outra.</td>
+        <td><strong>Modelo Híbrido:</strong> A ESP32 no ponto garante a certeza da chegada, enquanto os usuários em trânsito iluminam o trajeto intermediário.</td>
+      </tr>
+      <tr>
+        <td><strong>Patentes de Rastreamento Colaborativo (US9651642B2)</strong></td>
+        <td>Sistemas que utilizam dispositivos de passageiros para reportar tráfego em transporte público.</td>
+        <td><strong>Vantagem:</strong> Validação teórica e técnica da arquitetura colaborativa.<br><strong>Limitação:</strong> Geralmente exigem aplicativos nativos instalados.</td>
+        <td>Abordagem baseada 100% em navegador web (PWA), sem requerer download de apps em lojas (Google Play ou App Store).</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ETAPA 6 -->
+  <h2>6. Estado da Arte — Evidências Técnicas, Artigos e Métodos</h2>
+  <p>
+    A fundamentação técnica da solução proposta está respaldada em publicações de referência na área de <em>Intelligent Transportation Systems (ITS)</em> e <em>Mobile Crowd Sensing (MCS)</em>:
+  </p>
+  <ul>
+    <li><strong>Sensing Colaborativo Urbano:</strong> Pesquisas seminais na área demonstram que uma taxa de adesão de apenas 2% a 5% dos passageiros de uma linha de ônibus é suficiente para inferir a trajetória espacial e a velocidade média da frota com índice de correlação superior a 90% em relação aos sensores de alta precisão (Gao et al., <em>IEEE Transactions on Mobile Computing</em>).</li>
+    <li><strong>Arquitetura Híbrida e Map-Matching:</strong> A literatura técnica evidencia que dados esparsos de GPS móvel sofrem com o efeito "cânion urbano" e ruídos de reflexão de sinal. A utilização de algoritmos de <em>Map-Matching</em> restritos à malha viária (polilinha KML da rota), aliada ao reset determinístico de posição provido pelos marcos BLE físicos nas paradas, neutraliza o acúmulo de erro sistemático.</li>
+    <li><strong>Adoção Tecnológica via Web Geolocation e PWA:</strong> O atrito do usuário para instalar aplicativos dedicados atinge índices de abandono de até 70% no setor público. A implementação através de componentes modernos de Frontend Web (HTML5 Geolocation API sob Web Workers) assegura carregamento instantâneo e adesão voluntária superior.</li>
+  </ul>
+
+  <!-- ETAPA 7 -->
+  <h2>7. Lacuna e Oportunidade — Contribuição e Diferencial da Solução</h2>
+  <div class="card">
+    <p>
+      <strong>A Lacuna Identificada:</strong> Ambientes universitários e cidades de menor porte operam frotas de transporte circular com recursos orçamentários limitados, inviabilizando a adoção de sistemas telemáticos profissionais de custo elevado. Por outro lado, soluções baseadas exclusivamente em sensores de presença estáticos (como o protótipo inicial do LocBUS) deixam o usuário desamparado de informações durante o intervalo mais crítico: quando ele está esperando na parada e o ônibus se encontra em deslocamento.
+    </p>
+    <p>
+      <strong>A Oportunidade e o Diferencial do LocBUS:</strong> 
+      A inovação reside no <strong>modelo híbrido de custo zero de telemetria veicular</strong>. Aproveitamos a infraestrutura física já desenvolvida (ESP32 + BLE nos pontos) como âncora de verdade-terrena e agregamos a inteligência coletiva dos próprios estudantes a bordo através do Frontend do LocBUS. Com um design de interface (UX) acolhedor e transparente, o passageiro torna-se um agente ativo de melhoria da mobilidade comunitária no campus.
+    </p>
+  </div>
+
+  <!-- PLANO DE TRABALHO -->
+  <h2>8. Relação Nominal da Equipe e Plano de Trabalho Individual (Próximos 7 Dias)</h2>
+  
+  <p>
+    Em concordância com as diretrizes da atividade, apresenta-se o plano de trabalho individualizado para os próximos 7 dias. Na presente etapa de submissão do módulo no SIGAA, o plano detalha as entregas verificáveis e mensuráveis da frente de Frontend/UX liderada pelo estudante responsável, acompanhada da especificação técnica das interfaces de integração com as demais frentes do projeto LocBUS:
+  </p>
+
+  <!-- CARTÃO DO GUILHERME (DESTAQUE) -->
+  <div class="card card-highlight">
+    <div style="display: flex; justify-content: space-between; align-items: baseline;">
+      <h3 style="margin: 0;">Integrante: Guilherme Edgar C.S.R. Guedes (Responsável pela Entrega)</h3>
+      <span class="badge" style="background: #d1fae5; color: #065f46; border-color: #a7f3d0;">Grupo 4 — Frontend e UX</span>
+    </div>
+    <p style="margin: 8px 0 6px 0; font-size: 9.5pt;">
+      <strong>Demanda Específica:</strong> Implementar a interface de usuário (UI/UX) para o módulo de compartilhamento colaborativo de localização (*Crowdsourcing*) e o mecanismo de captura da Web Geolocation API no frontend do LocBUS.
+    </p>
+    <p style="margin: 0; font-size: 9.5pt;">
+      <strong>Resultado Objetivo e Verificável ao Final de 7 Dias:</strong>
+    </p>
+    <ol style="margin: 4px 0 0 0; font-size: 9pt;">
+      <li>Desenvolvimento do componente visual com botão de ação rápida (toggle button: <em>"Estou a bordo • Compartilhar Trajeto"</em>) com feedback visual de transmissão ativa;</li>
+      <li>Criação do modal de consentimento prévio e política clara de privacidade alinhada à LGPD (termos de uso sem retenção de identificadores pessoais);</li>
+      <li>Script JavaScript testado no navegador do smartphone integrando a API <code>navigator.geolocation.watchPosition</code> com throttling temporal de 10 segundos e tratamento visual de erros (permissão negada, GPS sem sinal, modo economia).</li>
+    </ol>
+  </div>
+
+  <!-- FRENTES COMPLEMENTARES -->
+  <div class="card card-secondary">
+    <h3 style="margin: 0 0 6px 0; font-size: 10pt; color: #334155;">Detalhamento das Interfaces Técnicas Complementares (Frentes 1, 2, 3 e 5 do PoC)</h3>
+    <p style="font-size: 8.5pt; color: #475569; margin-bottom: 8px;">
+      Para viabilizar a integração fim-a-fim da entrega do Grupo 4, as demandas modulares das demais camadas do LocBUS estão mapeadas com entregas técnicas equivalentes:
+    </p>
+    <table style="margin: 0; font-size: 8.5pt;">
+      <thead>
+        <tr>
+          <th style="width: 28%;">Frente de Trabalho</th>
+          <th style="width: 36%;">Demanda Específica Programada</th>
+          <th style="width: 36%;">Entrega Verificável Esperada</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Grupo 1: Backend & Regras</strong></td>
+          <td>Criação do endpoint REST <code>POST /api/v1/telemetry/collaborative</code> no FastAPI com validação de payload.</td>
+          <td>Código com esquema Pydantic validando formato de lat/long, acurácia e descarte de dados com mais de 60s.</td>
+        </tr>
+        <tr>
+          <td><strong>Grupo 2: Telemetria & MQTT</strong></td>
+          <td>Estruturação do tópico MQTT (<code>tele/bus/collab</code>) e buffer volátil para armazenamento das coordenadas recebidas.</td>
+          <td>Script de simulação em Python publicando e assinando 50 payloads colaborativos no broker EMQX.</td>
+        </tr>
+        <tr>
+          <td><strong>Grupo 3: Hardware & Firmware</strong></td>
+          <td>Calibração de sensibilidade e RSSI da antena BLE da ESP32 instalada na parada física do CCHLA.</td>
+          <td>Relatório técnico com tabela de 20 medições empíricas delimitando o raio de detecção de aproximação sem repiques.</td>
+        </tr>
+        <tr>
+          <td><strong>Grupo 5: Mapas, ETA & Testes</strong></td>
+          <td>Criação de rotina de teste de integração para plotagem de marcador móvel colaborativo sobre o mapa Leaflet.</td>
+          <td>Script com bateria de testes automatizados simulando trajeto completo com e sem passageiros colaboradores.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer-note">
+    Documento elaborado por Guilherme Edgar C.S.R. Guedes • Projeto LocBUS • Submissão SIGAA • 2026
+  </div>
+
+</body>
+</html>

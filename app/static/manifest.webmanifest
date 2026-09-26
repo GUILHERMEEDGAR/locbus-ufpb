@@ -1,0 +1,64 @@
+{
+  "name": "LocBUS • Mobilidade Circular UFPB",
+  "short_name": "LocBUS",
+  "description": "Sistema de Rastreamento e Telemetria em Tempo Real do Transporte Intercampi CCHLA ↔ CI Mangabeira.",
+  "start_url": "/",
+  "id": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#090d16",
+  "theme_color": "#090d16",
+  "orientation": "portrait-primary",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "categories": ["transportation", "utilities", "education"],
+  "icons": [
+    {
+      "src": "/static/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/icons/icon-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/static/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Mapa em Tempo Real",
+      "short_name": "Mapa",
+      "description": "Visualizar posição ao vivo do ônibus no trajeto CCHLA ↔ CI",
+      "url": "/?tab=mapa",
+      "icons": [{ "src": "/static/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Tabela de Horários",
+      "short_name": "Horários",
+      "description": "Quadro oficial de partidas da manhã, tarde e noite",
+      "url": "/?tab=itinerario",
+      "icons": [{ "src": "/static/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Histórico de Viagens",
+      "short_name": "Histórico",
+      "description": "Reconstrução dos últimos 7 dias de circulação",
+      "url": "/?tab=historico",
+      "icons": [{ "src": "/static/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

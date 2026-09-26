@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>{% block title %}LocBUS • Mobilidade Circular UFPB{% endblock %}</title>
+  
+  <!-- Configurações PWA & Mobile Web App -->
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#090d16">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="LocBUS">
+  <meta name="description" content="Sistema de Rastreamento e Telemetria em Tempo Real do Transporte Intercampi CCHLA ↔ CI Mangabeira.">
+  
+  <!-- Ícones do Aplicativo -->
+  <link rel="icon" type="image/svg+xml" href="/static/icons/icon.svg">
+  <link rel="icon" type="image/png" sizes="192x192" href="/static/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+  
+  <!-- Fontes Google: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Leaflet CSS para Mapas Interativos -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  
+  <!-- Estilos Customizados -->
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+  <!-- Notificação Flutuante de Modo Offline -->
+  <div class="offline-banner" id="offline-banner">
+    <div class="offline-content">
+      <span class="offline-icon">📶</span>
+      <span><strong>Modo Offline Ativo</strong> • Exibindo itinerário e dados locais em cache.</span>
+    </div>
+  </div>
+
+  <!-- Barra de Navegação Superior -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="nav-brand">
+        <div class="brand-icon">🚌</div>
+        <div class="brand-info">
+          <span class="brand-name">Loc<strong>BUS</strong></span>
+          <span class="brand-badge"><span class="badge-dot"></span> Tempo Real • UFPB</span>
+        </div>
+      </div>
+      
+      <!-- Navegação de Abas -->
+      <nav class="nav-tabs">
+        <button class="tab-btn active" data-tab="tab-view-mapa">🗺️ Mapa</button>
+        <button class="tab-btn" data-tab="tab-view-historico">📊 Histórico</button>
+        <button class="tab-btn" data-tab="tab-view-itinerario">🕒 Itinerário</button>
+        <button class="tab-btn" data-tab="tab-view-sobre">ℹ️ Sobre</button>
+      </nav>
+      
+      <div class="nav-actions">
+        <!-- Botão de Instalação do PWA (Exibido quando elegível no smartphone/desktop) -->
+        <button id="btn-install-pwa" class="btn-install-pwa" style="display: none;" title="Instalar aplicativo LocBUS na tela de início">
+          📲 Instalar App
+        </button>
+
+        <!-- Controle de Simulação em Tempo Real -->
+        <button id="btn-demo-mode" class="btn-demo" title="Avançar trajeto simulado via Server-Sent Events">
+          ⚡ Simular Rota
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Conteúdo Principal -->
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Rodapé -->
+  <footer class="footer">
+    <div class="footer-container">
+      <p>LocBUS • Sistema Integrado de Mobilidade Circular • UFPB (CCHLA &harr; CI)</p>
+      <p class="footer-sub">Transmissão em Tempo Real via Server-Sent Events (SSE) e Crowdsourcing Colaborativo</p>
+    </div>
+  </footer>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  
+  {% block scripts %}{% endblock %}
+</body>
+</html>

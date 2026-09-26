@@ -1,0 +1,511 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!-- ==========================================
+     ABA 1: MAPA EM TEMPO REAL (VIEW PRINCIPAL)
+     ========================================== -->
+<div class="tab-view active" id="tab-view-mapa">
+  <div class="dashboard-grid">
+
+    <!-- COLUNA PRINCIPAL: MAPA E AÇÃO COLABORATIVA -->
+    <section class="map-column">
+      
+      <!-- CARD DE STATUS EM TEMPO REAL -->
+      <div class="status-card glass-panel">
+        <div class="status-header">
+          <div class="route-badge">
+            <span class="route-point" id="route-origem">{{ status.origem }}</span>
+            <span class="route-arrow">&rarr;</span>
+            <span class="route-point" id="route-destino">{{ status.destino }}</span>
+          </div>
+          <div class="status-right-badges">
+            <div class="sse-badge connected" id="sse-badge" title="Canal Server-Sent Events ativo">
+              <span class="sse-indicator-dot"></span>
+              <span id="sse-status-label">SSE Tempo Real</span>
+            </div>
+            <div class="source-tag" id="source-tag">
+              <span class="pulse-dot"></span>
+              <span id="source-text">{{ status.confiabilidade }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="status-body">
+          <div class="eta-block">
+            <span class="eta-label">Previsão de Chegada (ETA)</span>
+            <span class="eta-value" id="eta-value">{{ status.eta_minutos }}</span>
+          </div>
+          <div class="location-block">
+            <span class="location-label">Status da Rota</span>
+            <span class="location-value" id="location-value">{{ status.centro_atual }}</span>
+            <span class="last-update" id="last-update">Última leitura: {{ status.ultima_atualizacao }}</span>
+          </div>
+        </div>
+
+        <!-- BARRA DE PROGRESSO DO TRAJETO EM TEMPO REAL -->
+        <div class="route-progress-container">
+          <div class="progress-labels">
+            <span class="next-stop-info">Próxima Parada: <strong id="next-stop-name">{{ status.proxima_parada }}</strong></span>
+            <span class="progress-pct" id="progress-pct">{{ status.progresso_percentual }}% da rota</span>
+          </div>
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill" id="progress-bar-fill" style="width: {{ status.progresso_percentual }}%;"></div>
+          </div>
+        </div>
+
+        <div class="status-footer-actions">
+          <button id="btn-proximity-alert" class="btn-proximity-alert" title="Receber aviso sonoro quando o ônibus estiver a menos de 5 min">
+            <span class="alert-bell-icon">🔔</span>
+            <span id="alert-label">Avisar quando estiver perto (&lt; 5 min)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- BOTÃO / BANNER DE CONTRIBUIÇÃO COLABORATIVA (CROWDSOURCING) -->
+      <div class="collab-action-card glass-panel" id="collab-card">
+        <div class="collab-info">
+          <div class="collab-icon">📍</div>
+          <div class="collab-text">
+            <h3 id="collab-title">Você está a bordo deste circular?</h3>
+            <p id="collab-desc">Compartilhe sua localização voluntariamente e ajude os colegas que estão esperando nos pontos.</p>
+          </div>
+        </div>
+        <div class="collab-controls">
+          <button id="btn-toggle-collab" class="btn-collab">
+            <span class="btn-icon">🚌</span>
+            <span class="btn-label" id="btn-collab-label">Estou no Ônibus • Compartilhar</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- PAINEL DE TELEMETRIA ATIVA DO PASSAGEIRO -->
+      <div class="collab-active-bar glass-panel" id="collab-active-bar" style="display: none;">
+        <div class="active-status">
+          <span class="transmitting-pulse"></span>
+          <span>Você está transmitindo localização ao vivo (GPS móvel)</span>
+        </div>
+        <div class="active-metrics">
+          <span class="metric-pill" id="metric-acc">Acurácia: ± 0m</span>
+          <span class="metric-pill" id="metric-speed">Velocidade: 0 km/h</span>
+          <button id="btn-stop-collab" class="btn-stop">Desembarquei / Parar</button>
+        </div>
+      </div>
+
+      <!-- CONTAINER DO MAPA LEAFLET -->
+      <div class="map-wrapper glass-panel">
+        <div id="map" class="interactive-map"></div>
+        
+        <!-- LEGENDA FLUTUANTE DO MAPA -->
+        <div class="map-legend">
+          <div class="legend-item"><span class="legend-dot dot-terminal"></span> Terminais (CCHLA / CI)</div>
+          <div class="legend-item"><span class="legend-dot dot-route"></span> Rota Viária Oficial</div>
+          <div class="legend-item"><span class="legend-dot dot-bus"></span> Posição em Tempo Real</div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- COLUNA LATERAL: VISÃO RESUMIDA DA ROTA -->
+    <aside class="sidebar-column">
+      
+      <div class="info-card glass-panel">
+        <h3 class="card-title">Monitoramento Circular</h3>
+        <p class="card-subtitle">Ligação contínua CCHLA (Campus I) &harr; CI (Mangabeira)</p>
+        
+        <div class="quick-stats-box">
+          <div class="stat-mini">
+            <span class="stat-mini-val">6.8 km</span>
+            <span class="stat-mini-label">Extensão da Rota</span>
+          </div>
+          <div class="stat-mini">
+            <span class="stat-mini-val">~22 min</span>
+            <span class="stat-mini-label">Tempo Médio</span>
+          </div>
+          <div class="stat-mini">
+            <span class="stat-mini-val">Gratuito</span>
+            <span class="stat-mini-label">Circular UFPB</span>
+          </div>
+        </div>
+
+        <ol class="timeline" style="margin-top: 15px;">
+          <li class="timeline-step step-done">
+            <div class="step-marker">1</div>
+            <div class="step-content">
+              <strong>Terminal CCHLA (Campus I)</strong>
+              <span>Estacionamento principal</span>
+            </div>
+          </li>
+          <li class="timeline-step step-active">
+            <div class="step-marker">2</div>
+            <div class="step-content">
+              <strong>Via Expressa & Bancários</strong>
+              <span>Av. Sérgio Guerra e Praça da Paz</span>
+            </div>
+          </li>
+          <li class="timeline-step">
+            <div class="step-marker">3</div>
+            <div class="step-content">
+              <strong>Terminal CI (Mangabeira)</strong>
+              <span>Centro de Informática</span>
+            </div>
+          </li>
+        </ol>
+      </div>
+
+      <div class="info-card glass-panel" style="padding: 16px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 24px;">💡</span>
+          <div>
+            <strong style="font-size: 13px; color: #93c5fd;">Dica ao Passageiro</strong>
+            <p style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">
+              Ao embarcar, ative a transmissão por alguns minutos para atualizar a posição para quem está na parada.
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+
+  </div>
+</div>
+
+<!-- ==========================================
+     ABA 2: HISTÓRICO DE VIAGENS (ÚLTIMOS 7 DIAS)
+     ========================================== -->
+<div class="tab-view" id="tab-view-historico">
+  <div class="historico-container">
+    
+    <!-- CABEÇALHO DO HISTÓRICO COM KPIS -->
+    <div class="kpi-grid">
+      <div class="kpi-card glass-panel">
+        <div class="kpi-icon">🚌</div>
+        <div class="kpi-info">
+          <span class="kpi-value">{{ historico.estatisticas.total_viagens }}</span>
+          <span class="kpi-label">Viagens nos Últimos 7 Dias</span>
+        </div>
+      </div>
+      <div class="kpi-card glass-panel">
+        <div class="kpi-icon">⏱️</div>
+        <div class="kpi-info">
+          <span class="kpi-value">{{ historico.estatisticas.tempo_medio_min }} min</span>
+          <span class="kpi-label">Tempo Médio de Percurso</span>
+        </div>
+      </div>
+      <div class="kpi-card glass-panel">
+        <div class="kpi-icon">🎯</div>
+        <div class="kpi-info">
+          <span class="kpi-value">{{ historico.estatisticas.taxa_conclusao }}</span>
+          <span class="kpi-label">Taxa de Conclusão da Linha</span>
+        </div>
+      </div>
+      <div class="kpi-card glass-panel">
+        <div class="kpi-icon">📅</div>
+        <div class="kpi-info">
+          <span class="kpi-value">{{ historico.estatisticas.viagens_hoje }}</span>
+          <span class="kpi-label">Viagens Realizadas Hoje</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- GRÁFICO E FILTROS -->
+    <div class="historico-controls glass-panel">
+      <div class="chart-box">
+        <span class="chart-title">Distribuição de Viagens por Dia (Seg &rarr; Sex)</span>
+        <div class="bar-chart">
+          {% for dia in historico.grafico_dias %}
+          <div class="bar-col">
+            <div class="bar-fill" style="height: {{ (dia.count * 14) }}px;" title="{{ dia.count }} viagens">
+              <span class="bar-count">{{ dia.count }}</span>
+            </div>
+            <span class="bar-label">{{ dia.label }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="filter-box">
+        <span class="filter-title">Filtrar Viagens</span>
+        <div class="filter-actions">
+          <input type="text" id="input-search-trip" class="search-input" placeholder="Buscar por data ou horário...">
+          <div class="pill-group">
+            <button class="pill-filter active" data-filter="all">Todas</button>
+            <button class="pill-filter" data-filter="cchla-ci">CCHLA &rarr; CI</button>
+            <button class="pill-filter" data-filter="ci-cchla">CI &rarr; CCHLA</button>
+            <a href="/api/v1/history/export" class="btn-export-csv" download="LocBUS_Historico_Viagens.csv" title="Exportar histórico de viagens em arquivo CSV">
+              📥 Exportar CSV
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABELA DE VIAGENS -->
+    <div class="table-wrapper glass-panel">
+      <table class="data-table" id="trips-table">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Origem</th>
+            <th>Destino</th>
+            <th>Partida</th>
+            <th>Chegada</th>
+            <th>Duração</th>
+            <th>Status</th>
+            <th>Fonte</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for viagem in historico.viagens %}
+          <tr data-origem="{{ viagem.origem }}" data-destino="{{ viagem.destino }}" data-date="{{ viagem.data }}">
+            <td><strong>{{ viagem.data }}</strong></td>
+            <td><span class="badge-station badge-cchla">{{ viagem.origem }}</span></td>
+            <td><span class="badge-station badge-ci">{{ viagem.destino }}</span></td>
+            <td>{{ viagem.partida }}</td>
+            <td>{{ viagem.chegada }}</td>
+            <td>
+              <span class="badge-duration {% if viagem.duracao_min <= 21 %}dur-fast{% elif viagem.duracao_min <= 26 %}dur-normal{% else %}dur-slow{% endif %}">
+                {{ viagem.duracao_min }} min
+              </span>
+            </td>
+            <td><span class="badge-status-done">{{ viagem.status }}</span></td>
+            <td style="color: var(--text-dim); font-size: 11px;">{{ viagem.fonte }}</td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 30px;">
+              Nenhum registro de telemetria disponível na pasta data/telemetria/.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<!-- ==========================================
+     ABA 3: ITINERÁRIO E HORÁRIOS PROGRAMADOS
+     ========================================== -->
+<div class="tab-view" id="tab-view-itinerario">
+  <div class="itinerario-container">
+    
+    <!-- QUADRO DE HORÁRIOS POR TURNO -->
+    <div class="timetable-section glass-panel">
+      <div class="timetable-header">
+        <div>
+          <h2 class="section-title">Horários Oficiais de Partida</h2>
+          <p class="section-sub">Programação regular da linha circular CCHLA &harr; CI em dias letivos</p>
+        </div>
+        <div class="shift-selector">
+          <button class="shift-btn active" data-shift="manha">☀️ Manhã</button>
+          <button class="shift-btn" data-shift="tarde">⛅ Tarde</button>
+          <button class="shift-btn" data-shift="noite">🌙 Noite</button>
+        </div>
+      </div>
+
+      <!-- TURNO MANHÃ -->
+      <div class="shift-panel active" id="shift-manha">
+        <div class="departure-grid">
+          {% for item in itinerario.horarios.manha %}
+          <div class="departure-card">
+            <div class="dep-time">{{ item.saida }}</div>
+            <div class="dep-route">
+              <span class="dep-station">{{ item.origem }}</span>
+              <span class="dep-arrow">&rarr;</span>
+              <span class="dep-station">{{ item.destino }}</span>
+            </div>
+            <div class="dep-eta">Chegada prevista: <strong>{{ item.previsao }}</strong></div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- TURNO TARDE -->
+      <div class="shift-panel" id="shift-tarde">
+        <div class="departure-grid">
+          {% for item in itinerario.horarios.tarde %}
+          <div class="departure-card">
+            <div class="dep-time">{{ item.saida }}</div>
+            <div class="dep-route">
+              <span class="dep-station">{{ item.origem }}</span>
+              <span class="dep-arrow">&rarr;</span>
+              <span class="dep-station">{{ item.destino }}</span>
+            </div>
+            <div class="dep-eta">Chegada prevista: <strong>{{ item.previsao }}</strong></div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- TURNO NOITE -->
+      <div class="shift-panel" id="shift-noite">
+        <div class="departure-grid">
+          {% for item in itinerario.horarios.noite %}
+          <div class="departure-card">
+            <div class="dep-time">{{ item.saida }}</div>
+            <div class="dep-route">
+              <span class="dep-station">{{ item.origem }}</span>
+              <span class="dep-arrow">&rarr;</span>
+              <span class="dep-station">{{ item.destino }}</span>
+            </div>
+            <div class="dep-eta">Chegada prevista: <strong>{{ item.previsao }}</strong></div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- SEQUÊNCIA COMPLETA DAS PARADAS -->
+    <div class="stops-section glass-panel">
+      <h2 class="section-title">Paradas e Pontos de Referência</h2>
+      <p class="section-sub">Trajeto viário da linha circular ao longo dos 6.8 km do corredor universitário</p>
+
+      <div class="stops-list">
+        {% for parada in itinerario.paradas %}
+        <div class="stop-row">
+          <div class="stop-num">{{ parada.ordem }}</div>
+          <div class="stop-main">
+            <div class="stop-name-row">
+              <strong class="stop-name">{{ parada.nome }}</strong>
+              <span class="stop-tag {% if parada.tipo == 'Terminal' %}tag-term{% else %}tag-stop{% endif %}">{{ parada.tipo }}</span>
+            </div>
+            <div class="stop-desc">{{ parada.detalhe }}</div>
+          </div>
+          <div class="stop-time">{{ parada.tempo_estimado }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- ORIENTAÇÕES GERAIS -->
+    <div class="guidelines-card glass-panel">
+      <h3 style="font-size: 15px; margin-bottom: 10px; color: #93c5fd;">ℹ️ Informações e Regras da Linha</h3>
+      <ul class="guidelines-list">
+        {% for info in itinerario.informacoes_gerais %}
+        <li>{{ info }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+<!-- ==========================================
+     ABA 4: SOBRE O PROJETO LOCBUS
+     ========================================== -->
+<div class="tab-view" id="tab-view-sobre">
+  <div class="sobre-container">
+    
+    <div class="sobre-header glass-panel">
+      <div class="sobre-badge">Arquitetura Integrada • UFPB</div>
+      <h2 style="font-size: 22px; font-weight: 800; margin: 8px 0 6px 0;">LocBUS: Sistema Híbrido de Rastreamento Circular</h2>
+      <p style="color: var(--text-muted); font-size: 13.5px; line-height: 1.5;">
+        O LocBUS é uma solução tecnológica desenvolvida para eliminar a imprevisibilidade do transporte universitário intercampi, unindo microcontroladores de baixo custo nos terminais com colaboração ativa dos passageiros em trânsito.
+      </p>
+    </div>
+
+    <!-- DIAGRAMA DA CADEIA DO SISTEMA -->
+    <div class="sobre-card glass-panel">
+      <h3 class="card-title">Cadeia de Funcionamento do LocBUS</h3>
+      <div class="pipeline-diagram">
+        <div class="pipe-step">
+          <div class="pipe-icon">🚌</div>
+          <strong>ESP32 no Ônibus</strong>
+          <span>Beacon BLE transmissor</span>
+        </div>
+        <div class="pipe-arrow">&rarr;</div>
+        <div class="pipe-step">
+          <div class="pipe-icon">🚏</div>
+          <strong>ESP32 no Ponto</strong>
+          <span>Recepção BLE + Wi-Fi</span>
+        </div>
+        <div class="pipe-arrow">&rarr;</div>
+        <div class="pipe-step">
+          <div class="pipe-icon">☁️</div>
+          <strong>EMQX Broker</strong>
+          <span>MQTT sobre TLS</span>
+        </div>
+        <div class="pipe-arrow">&rarr;</div>
+        <div class="pipe-step">
+          <div class="pipe-icon">⚙️</div>
+          <strong>Backend FastAPI</strong>
+          <span>Regras e Crowdsourcing</span>
+        </div>
+        <div class="pipe-arrow">&rarr;</div>
+        <div class="pipe-step pipe-highlight">
+          <div class="pipe-icon">📱</div>
+          <strong>Frontend Web (UX)</strong>
+          <span>Mapa ao vivo &amp; PWA</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPONENTES DE ARQUITETURA DE PRODUÇÃO -->
+    <div class="sobre-card glass-panel">
+      <h3 class="card-title">Arquitetura de Engenharia do Sistema</h3>
+      <div class="groups-grid">
+        <div class="group-box">
+          <strong>1. Backend &amp; Streaming SSE</strong>
+          <p>Servidor FastAPI assíncrono, canal pub/sub Server-Sent Events, reconstrução de histórico e APIs RESTful.</p>
+        </div>
+        <div class="group-box">
+          <strong>2. Telemetria &amp; Mensageria IoT</strong>
+          <p>Coletor contínuo, broker MQTT com TLS, detecção de beacons BLE e armazenamento persistente de logs.</p>
+        </div>
+        <div class="group-box">
+          <strong>3. Firmware &amp; Gateways</strong>
+          <p>Microcontroladores ESP32 nos pontos terminais (CCHLA e CI), filtragem de sinal RSSI e antenas omnidirecionais.</p>
+        </div>
+        <div class="group-box group-box-active">
+          <strong>4. Frontend &amp; Crowdsourcing</strong>
+          <p>Design System responsivo em tempo real, renderização geoespacial com Leaflet e telemetria colaborativa espontânea.</p>
+        </div>
+        <div class="group-box">
+          <strong>5. Inteligência Geoespacial</strong>
+          <p>Algoritmos de Haversine, geofencing de segurança, detecção de tráfego e estimador dinâmico de tempo estimado (ETA).</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TERMOS DE PRIVACIDADE LGPD -->
+    <div class="sobre-card glass-panel">
+      <h3 class="card-title">Privacidade e Diretrizes LGPD (Lei nº 13.709/2018)</h3>
+      <div class="lgpd-text">
+        <p>• <strong>Coleta Voluntária:</strong> O usuário escolhe livremente se deseja compartilhar sua geolocalização durante o trajeto.</p>
+        <p>• <strong>Zero Retenção de Dados Pessoais:</strong> O LocBUS não armazena nomes, endereços IP, cookies de rastreamento ou dados do dispositivo. As coordenadas de trânsito residem em buffer volátil efêmero na memória RAM e são descartadas automaticamente após o encerramento do trajeto.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL DE CONSENTIMENTO LGPD (COMPARTILHAMENTO) -->
+<div class="modal-backdrop" id="lgpd-modal" style="display: none;">
+  <div class="modal-box glass-panel">
+    <div class="modal-icon">🛡️</div>
+    <h2 class="modal-title">Compartilhar Localização no Ônibus</h2>
+    <div class="modal-body">
+      <p>Você está prestes a ativar a transmissão voluntária da sua posição para atualizar o mapa do LocBUS.</p>
+      <div class="modal-rules">
+        <div class="rule-item">&bull; <strong>100% Anônimo:</strong> Nenhum dado pessoal, conta ou IP permanente é registrado.</div>
+        <div class="rule-item">&bull; <strong>Apenas Durante a Viagem:</strong> O envio cessa automaticamente quando você fechar a página ou clicar em "Desembarquei".</div>
+        <div class="rule-item">&bull; <strong>Pouca Bateria:</strong> Amostragem controlada para não consumir sua franquia nem aquecer o celular.</div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="btn-modal-cancel">Cancelar</button>
+      <button class="btn-confirm" id="btn-modal-confirm">Concordar e Ativar</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/map.js"></script>
+<script src="/static/js/crowdsource.js"></script>
+<script src="/static/js/simulation.js"></script>
+<script src="/static/js/tabs.js"></script>
+<script src="/static/js/pwa.js"></script>
+{% endblock %}
