@@ -1,106 +1,102 @@
-# 🗺️ ROTEIRO TÉCNICO PRIORIZADO — LOCBUS PoC (2026)
+# 🗺️ ROTEIRO TÉCNICO REVISADO — LOCBUS PoC (Setembro/2026)
 
-> **Documento Estratégico de Execução**: Alinhado à *Atividade Substitutiva de Desenvolvimento do PoC* e à frente de trabalho de *Frontend & UX (Grupo 4)* com interfaces de integração com Backend, Telemetria e Testes.
-
----
-
-## 🎯 Visão Sintética por Níveis de Prioridade
-
-```mermaid
-graph TD
-    P0["P0: Estabilização & Commit da Base"] --> P1["P1: Integração Fim-a-Fim (Simulação + Colaborativo)"]
-    P1 --> P2["P2: Refinamento UX/Mobile-First (Grupo 4)"]
-    P2 --> P3["P3: ETA Dinâmico & Regras de Estado"]
-    P3 --> P4["P4: PWA & Resiliência de Conexão"]
-    P4 --> P5["P5: Auditoria, Documentação & Entrega SIGAA"]
-```
+> **Revisão feita em:** 26/09/2026 · Sessão de trabalho atual
+> **Base:** 5 commits consolidados · 18/18 testes passando · Servidor rodando na porta 8000
 
 ---
 
-## 🔴 PRIORIDADE 0 (P0) — Estabilização, Baseline & Git (Imediato)
-*Objetivo: Garantir que nenhuma alteração em andamento seja perdida e que o ambiente de testes esteja 100% reprodutível.*
+## ✅ O QUE JÁ ESTÁ FEITO (CONCLUÍDO E COMMITADO)
 
-1. **Revisar e consolidar as alterações ativas no Git (Working Tree)**:
-   - [ ] Confirmar a expansão de 31 waypoints da rota circular (`app/main.py`).
-   - [ ] Confirmar os novos botões e controles de velocidade na simulação (`app/static/js/simulation.js` e `app/Templates/index.html`).
-   - [ ] Confirmar as melhorias no Leaflet (`app/static/js/map.js` e `style.css`).
-   - [ ] Fazer commit atômico dessas mudanças: `feat: rota circular completa (ida e volta) e controles interativos de simulacao`.
-2. **Garantir Execução Padrão dos Testes**:
-   - [ ] Adicionar arquivo de configuração `pytest.ini` na raiz contendo `pythonpath = .` para permitir execução direta via `pytest` sem depender de `python -m`.
-
----
-
-## 🟠 PRIORIDADE 1 (P1) — Ciclo Fim-a-Fim: Crowdsourcing & Telemetria em Tempo Real
-*Objetivo: Validar que o ônibus é rastreado continuamente durante o trajeto sem depender de hardware caro embarcado.*
-
-1. **Validação do Fluxo de Crowdsourcing no Frontend (`crowdsource.js`)**:
-   - [ ] Verificar gatilho de permissão de geolocalização (`navigator.geolocation.watchPosition`).
-   - [ ] Validar o mecanismo de *throttling* (amostragem a cada 10s-15s para não drenar bateria nem consumir dados móveis).
-   - [ ] Exibir indicador visual pulsante ("Transmitindo localização do ônibus...") enquanto ativo.
-2. **Validação do Pipeline no Backend (`app/services.py` & `app/main.py`)**:
-   - [ ] Endpoint `POST /api/v1/telemetry/collaborative`:
-     - Validação de payload Pydantic (`CollaborativeIn`: lat, lon, precisão, velocidade, timestamp).
-     - Filtro de Geofencing: descartar pontos com desvio > 80m da rota ou velocidade espúria (> 65 km/h).
-     - Buffer volátil com descarte automático (TTL <= 5 min / descarte após chegada no ponto).
-     - Clustering espacial: fusão ponderada pelo inverso da acurácia quando múltiplos passageiros transmitem.
-3. **Transmissão em Tempo Real via Server-Sent Events (SSE)**:
-   - [ ] Testar canal `/api/v1/stream` para transmissão instantânea da posição consolidada ao mapa do usuário que está esperando no ponto.
+| Commit | Entrega |
+|---|---|
+| `76c4e60` | Baseline funcional: módulo colaborativo, PWA, SSE, 17 testes |
+| `fc955b5` | Rota circular de 31 waypoints (CCHLA ↔ CI), controles de simulação, `pytest.ini` |
+| `a07738f` | Banner de feedback (sem `alert()`), diferenciação BLE/Colaborativo, teste de clustering ponderado |
+| `cc2096c` | Documentação interna (relatório IA, GEMINI.md, roteiro) |
+| `db1888d` | **Redesign visual completo**: fonte Inter, SVG logo, paleta grafite, sem glassmorphism nem emojis |
 
 ---
 
-## 🟡 PRIORIDADE 2 (P2) — Frontend & Experiência do Usuário (Entrega Núcleo Grupo 4)
-*Objetivo: Cumprir integralmente o plano de 7 dias do Grupo 4 especificado no SIGAA.*
+## 🔴 PRIORIDADE 1 (P1) — Fechar o Ciclo Visual do Dashboard *(Próximo a executar)*
+*O redesign foi aplicado no CSS/HTML, mas o dashboard ainda tem inconsistências visuais menores e falta de refinamento.*
 
-1. **Botão de Ação Rápida no Dashboard ("Estou a bordo • Compartilhar Trajeto")**:
-   - [ ] Posicionamento em destaque acessível com 1 polegar (Design Mobile-First).
-   - [ ] Estados visuais claros: *Inativo*, *Aguardando GPS*, *Ativo / Transmitindo*, *Erro de Permissão*.
-2. **Modal de Consentimento e Privacidade (LGPD)**:
-   - [ ] Criar modal explicando a coleta anônima, sem login e sem retenção de identificadores pessoais.
-   - [ ] Botão explícito de "Concordar e Iniciar" e "Agora não".
-3. **Painel de Transparência e Confiabilidade dos Dados**:
-   - [ ] Exibir etiqueta visual com a fonte do dado atual:
-     - 🟢 *Presença física confirmada no ponto (BLE)*
-     - 🔵 *Localização colaborativa em trânsito (X passageiros a bordo)*
-     - 🟡 *Posição estimada pelo tempo médio decorrido*
-     - ⚪ *Aguardando próxima partida*
-   - [ ] Exibir contador "Atualizado há X segundos".
+**1.1 — Auditoria Visual Rápida (verificar no navegador)**
+- [ ] Confirmar que abas, cards, mapa Leaflet e modal LGPD estão com o novo visual.
+- [ ] Verificar se o fonte Inter está carregando corretamente (Google Fonts).
+- [ ] Checar se `brand-badge` ficou órfão no CSS (foi renomeado para `brand-sub` mas o teste do HTML pode falhar).
+
+**1.2 — Ajuste do Card de Status (limpeza final)**
+- [ ] Remover os emojis restantes em outros pontos do `index.html` (painel de simulação: `🎮`, `⏭`, `🔄`).
+- [ ] Substituir a barra de progresso por um visual mais funcional (menos néon, mais produto).
+
+**1.3 — Correção de Potencial Falha de Teste**
+- [ ] Rodar os testes com o novo HTML e verificar se o `test_home_page_pwa_meta_tags` que checa `brand-badge` vs. `brand-sub` ainda passa.
 
 ---
 
-## 🟢 PRIORIDADE 3 (P3) — ETA Dinâmico & Máquina de Estados Operacional
-*Objetivo: Oferecer previsibilidade confiável para quem aguarda nas paradas.*
+## 🟠 PRIORIDADE 2 (P2) — Integração Real do ETA Dinâmico no Card de Status
+*Atualmente o ETA é calculado mas exibido de forma estática no template inicial. O SSE atualiza, mas o valor inicial pode ser "12–18 min" fixo.*
 
-1. **Cálculo Dinâmico de ETA**:
-   - [ ] Substituir estimativas estáticas por cálculo em função da distância restante e velocidade média da via.
-   - [ ] Considerar tempo de parada nos terminais (CCHLA e CI).
-2. **Máquina de Estados Operacional**:
-   - [ ] Implementar formalmente as transições de estado:
-     - `PARADO_PONTO`
-     - `EM_TRANSITO_COLABORATIVO`
-     - `EM_TRANSITO_ESTIMADO`
-     - `INATIVO / FORA_DE_OPERACAO`
-   - [ ] Transmitir o estado atual no payload SSE para atualização imediata dos cards da interface.
+- [ ] Garantir que o template renderiza o ETA dinâmico **já calculado** (não o placeholder estático).
+- [ ] Exibir a **direção da viagem** (Ida/Volta) de forma visual clara no header do card (ex: seta animada ou badge).
+- [ ] Mostrar o **estado operacional** (Aguardando Partida / Em Trânsito / Fora de Operação) com cor diferente no indicador de status.
 
 ---
 
-## 🔵 PRIORIDADE 4 (P4) — PWA, Resiliência & Funcionamento Offline
-*Objetivo: Garantir que o aplicativo funcione como um Web App instalável e tolere quedas momentâneas de sinal celular.*
+## 🟡 PRIORIDADE 3 (P3) — Painel de Simulação: UX Limpa e Funcional
+*O painel de simulação está funcional mas visualmente ainda usa emojis e textos prolixos.*
 
-1. **Validação do Web App Manifest e Service Worker**:
-   - [ ] Ícones nas resoluções corretas (192px, 512px, maskable).
-   - [ ] Suporte a "Adicionar à tela de início" no Android/iOS sem passar por lojas.
-2. **Tratamento de Desconexão no Frontend**:
-   - [ ] Notificação discreta quando a conexão SSE ou a rede cair.
-   - [ ] Reconexão automática com backoff exponencial.
+- [ ] Limpar os botões do painel de simulação (`▶`, `⏭`, `🔄` → ícones SVG ou texto direto).
+- [ ] Simplificar o badge de direção (`Sentido: Ida (CCHLA → CI)` → badge compacto).
+- [ ] Verificar se os 3 botões de velocidade (1x, 2x, 4x) estão responsivos no mobile.
 
 ---
 
-## 🟣 PRIORIDADE 5 (P5) — Documentação, Auditoria & Entrega SIGAA
-*Objetivo: Fechar a entrega acadêmica e institucional com excelência.*
+## 🟢 PRIORIDADE 4 (P4) — Testes de Integração e Cobertura
+*A suíte de testes cobre endpoints mas não testa o estado da UI nem a sequência completa de simulação.*
 
-1. **Atualização do Documento da Atividade**:
-   - [ ] Revisar [Atividade_PoC_LocBUS_Guilherme_Guedes.html](file:///e:/prof3/Atividade_PoC_LocBUS_Guilherme_Guedes.html) incorporando capturas e evidências reais da PoC.
-   - [ ] Gerar versão final atualizada em PDF.
-2. **Evidências de Teste**:
-   - [ ] Gerar relatório de execução dos testes com 100% de sucesso.
-   - [ ] Gravar/demonstrar o fluxo da simulação completa com a rota circular.
+- [ ] Adicionar teste de simulação de ciclo completo (31 passos, verificar que o estado volta ao início).
+- [ ] Adicionar teste que verifica o estado `AGUARDANDO` quando o ônibus está no terminal.
+- [ ] Adicionar teste que verifica `modo_rastreamento = BLE_FIXO` no terminal e `COLABORATIVO_PASSAGEIRO` em trânsito.
+
+---
+
+## 🔵 PRIORIDADE 5 (P5) — Documento da Entrega SIGAA *(Prazo: Setembro/2026)*
+*Este é o entregável acadêmico final. Deve refletir a PoC funcional com evidências reais.*
+
+- [ ] Atualizar [Atividade_PoC_LocBUS_Guilherme_Guedes.html](file:///e:/prof3/Atividade_PoC_LocBUS_Guilherme_Guedes.html) com:
+  - Seção 7 (Lacuna e Oportunidade) já está boa — manter.
+  - Adicionar **Seção 8 ampliada** com print/evidências das funcionalidades implementadas:
+    - Simulação de rota circular (31 pontos)
+    - Mapa Leaflet com traçado real
+    - Modal LGPD
+    - Banner de feedback do crowdsourcing
+    - Diferenciação de fonte BLE/Colaborativo
+- [ ] Gerar **PDF de entrega** a partir do HTML (`Ctrl+P` no navegador ou via `wkhtmltopdf`).
+- [ ] Exportar **log dos 18 testes passando** como evidência de qualidade.
+
+---
+
+## ⬜ PRIORIDADE 6 (P6) — Melhorias Futuras (pós-entrega)
+*Não bloqueante para a entrega do SIGAA. Backlog para evolução.*
+
+- [ ] Implementar **Map-Matching** real: fixar coordenada colaborativa na polilinha da rota ao invés de usar lat/lon livre.
+- [ ] Configurar **variáveis de ambiente** via `.env` (separar `MQTT_BROKER`, `MQTT_USER`, `MQTT_PASSWORD` do código).
+- [ ] Adicionar **histórico visual** na aba Histórico: gráfico de barras de viagens por dia.
+- [ ] PWA: atualizar ícone SVG com o novo logotipo geométrico.
+- [ ] Implementar **notificação push** real (Web Push API) no lugar do fallback de `Notification` do browser.
+
+---
+
+## 📊 Resumo de Status por Área
+
+| Área | Status | Cobertura de Testes |
+|---|---|---|
+| Backend (FastAPI + SSE) | ✅ Completo | ✅ 8 endpoints testados |
+| Crowdsourcing (GPS + LGPD) | ✅ Completo | ✅ Validação de geofence + velocidade + clustering |
+| Simulação de Rota | ✅ Completo (31 pts) | ✅ Teste de step + reset |
+| PWA (manifest + SW) | ✅ Completo | ✅ 5 testes PWA |
+| SSE (Streaming) | ✅ Completo | ✅ 3 testes SSE |
+| Design / UX | 🔄 90% (P1 em aberto) | — |
+| ETA Dinâmico na UI | 🔄 Backend OK, UI incompleta | — |
+| Documento SIGAA | ⏳ Pendente (P5) | — |
