@@ -162,11 +162,14 @@ def identificar_proxima_parada(lat: float, lon: float, sentido: str) -> tuple[st
     return proxima, min(100, max(5, progresso))
 
 
+_direcao_atual_circular = "CI"
+
 def calcular_status_geral() -> StatusLocBUS:
     """
     Calcula o estado geral do ônibus com base na fusão de telemetria.
     Dá prioridade à telemetria colaborativa quando ativa para preencher a zona cega.
     """
+    global _direcao_atual_circular
     collab = collaborative_buffer.get_consolidated_status()
     now_str = datetime.now().strftime("%H:%M:%S")
 
@@ -175,33 +178,32 @@ def calcular_status_geral() -> StatusLocBUS:
         dist_cchla = haversine_km(collab.latitude, collab.longitude, settings.PONTO_CCHLA[0], settings.PONTO_CCHLA[1])
         dist_ci = haversine_km(collab.latitude, collab.longitude, settings.PONTO_CI[0], settings.PONTO_CI[1])
 
-        # Se estiver a menos de 150m de um ponto, considera aguardando/embarcando
-        if dist_cchla < 0.15:
-            estado = "AGUARDANDO"
-            origem = "CCHLA"
-            destino = "CI"
-            centro_atual = "CCHLA (Parada Principal)"
-            eta = "Aguardando partida"
-        elif dist_ci < 0.15:
+        # Se estiver muito próximo ao CI (< 180m), chegou ao CI e o próximo sentido é retorno (CCHLA)
+        if dist_ci < 0.18:
+            _direcao_atual_circular = "CCHLA"
             estado = "AGUARDANDO"
             origem = "CI"
             destino = "CCHLA"
-            centro_atual = "CI (Mangabeira)"
+            centro_atual = "Terminal CI (Mangabeira) - Ponto Final / Embarque Retorno"
             eta = "Aguardando partida"
+            dist_restante = 0.0
+        # Se estiver muito próximo ao CCHLA (< 180m), chegou ao CCHLA e o próximo sentido é ida (CI)
+        elif dist_cchla < 0.18:
+            _direcao_atual_circular = "CI"
+            estado = "AGUARDANDO"
+            origem = "CCHLA"
+            destino = "CI"
+            centro_atual = "Terminal CCHLA (Campus I) - Ponto de Partida / Embarque"
+            eta = "Aguardando partida"
+            dist_restante = 0.0
         else:
             # Em trânsito entre pontos
             estado = "EM_ROTA"
-            # Determina direção provável com base nas distâncias relativas
-            if dist_ci < dist_cchla:
-                origem = "CCHLA"
-                destino = "CI"
-                dist_restante = dist_ci
-            else:
-                origem = "CI"
-                destino = "CCHLA"
-                dist_restante = dist_cchla
+            destino = _direcao_atual_circular
+            origem = "CCHLA" if destino == "CI" else "CI"
+            dist_restante = dist_ci if destino == "CI" else dist_cchla
                 
-            velocidade_ref = collab.speed_kmh if (collab.speed_kmh and collab.speed_kmh > 5) else 22.0
+            velocidade_ref = collab.speed_kmh if (collab.speed_kmh and collab.speed_kmh > 5) else 24.0
             minutos = max(1, int(round((dist_restante / velocidade_ref) * 60)))
             eta = f"{minutos} min"
             centro_atual = f"Em trânsito sentido {destino} ({dist_restante:.1f} km restantes)"

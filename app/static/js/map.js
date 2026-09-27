@@ -12,19 +12,49 @@ let routeLine = null;
 const CCHLA_COORDS = [-7.1397, -34.8450];
 const CI_COORDS = [-7.1627, -34.8182];
 
-// Traçado realista das vias (Campus I CCHLA -> Castelo Branco -> Av. Sérgio Guerra / Bancários -> CI Mangabeira)
+// Traçado viário realista completo (Circuito Circular CCHLA <-> CI: Ida e Volta)
 const ROUTE_POLYLINE = [
+  // --- Sentido Ida: Campus I CCHLA -> CI Mangabeira ---
   [-7.1397, -34.8450], // Terminal CCHLA (Campus I)
-  [-7.1408, -34.8436], // Saída do CCHLA
+  [-7.1404, -34.8442], // Saída do CCHLA
+  [-7.1415, -34.8430], // Via interna Campus I
   [-7.1425, -34.8420], // Rotatória Reitoria / Praça da Alegria
-  [-7.1438, -34.8410], // Próximo ao CCS / HU
-  [-7.1455, -34.8398], // Acesso Via Expressa Padre Zé
+  [-7.1438, -34.8410], // Centro de Ciências da Saúde (CCS)
+  [-7.1448, -34.8404], // Hospital Universitário Lauro Wanderley (HULW)
+  [-7.1458, -34.8395], // Acesso Via Expressa Padre Zé
   [-7.1472, -34.8378], // Início Av. Sérgio Guerra (Bancários)
+  [-7.1492, -34.8356], // Av. Sérgio Guerra (Comércios / Bancos)
   [-7.1510, -34.8335], // Praça da Paz (Bancários)
-  [-7.1542, -34.8290], // Av. Sérgio Guerra / Comércio
+  [-7.1530, -34.8308], // Av. Sérgio Guerra (Bancários Sul)
+  [-7.1555, -34.8272], // Aproximação do Viaduto de Mangabeira
   [-7.1578, -34.8242], // Trevo / Viaduto de Mangabeira
-  [-7.1605, -34.8210], // Av. Alfredo Ferreira da Rocha
+  [-7.1598, -34.8218], // Av. Alfredo Ferreira da Rocha
+  [-7.1615, -34.8196], // Rua do Centro de Informática
   [-7.1627, -34.8182], // Terminal CI (Centro de Informática)
+
+  // --- Sentido Volta: CI Mangabeira -> Campus I CCHLA ---
+  [-7.1615, -34.8196], // Retorno Av. Alfredo Ferreira da Rocha
+  [-7.1598, -34.8218], // Av. Alfredo Ferreira da Rocha norte
+  [-7.1578, -34.8242], // Viaduto de Mangabeira
+  [-7.1555, -34.8272], // Início Av. Sérgio Guerra norte
+  [-7.1530, -34.8308], // Av. Sérgio Guerra (altura Shopping Sul)
+  [-7.1510, -34.8335], // Praça da Paz (Retorno)
+  [-7.1492, -34.8356], // Av. Sérgio Guerra norte
+  [-7.1472, -34.8378], // Saída dos Bancários / Trevo Castelo Branco
+  [-7.1458, -34.8395], // Via Expressa Padre Zé rumo ao Campus I
+  [-7.1448, -34.8404], // Entrada Campus I / Hospital Universitário
+  [-7.1438, -34.8410], // Passando pelo CCS
+  [-7.1425, -34.8420], // Praça da Alegria / Reitoria
+  [-7.1408, -34.8436], // Acesso final ao CCHLA
+  [-7.1397, -34.8450], // Retorno ao Terminal CCHLA
+];
+
+// Paradas intermediárias oficiais
+const INTERMEDIATE_STOPS = [
+  { name: "Reitoria / Praça da Alegria", coords: [-7.1425, -34.8420] },
+  { name: "CCS / Hospital Universitário (HULW)", coords: [-7.1448, -34.8404] },
+  { name: "Praça da Paz (Bancários)", coords: [-7.1510, -34.8335] },
+  { name: "Trevo / Viaduto de Mangabeira", coords: [-7.1578, -34.8242] },
 ];
 
 function initMap() {
@@ -37,13 +67,13 @@ function initMap() {
     attributionControl: true
   }).setView([-7.1512, -34.8316], 13);
 
-  // 1. Camada de Ruas Reais Coloridas (OpenStreetMap) - Mostra todas as ruas, praças e bairros
+  // 1. Camada de Ruas Reais Coloridas (OpenStreetMap)
   const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
   });
 
-  // 2. Camada de Satélite Real (Esri World Imagery) - Fotografias de satélite reais de alta resolução
+  // 2. Camada de Satélite Real (Esri World Imagery)
   const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
     maxZoom: 19,
     attribution: 'Tiles &copy; <a href="https://www.esri.com/" target="_blank">Esri</a>'
@@ -59,7 +89,7 @@ function initMap() {
   // Define OpenStreetMap como camada ativa padrão
   osmLayer.addTo(map);
 
-  // Controle de alternância de camadas no canto superior direito
+  // Controle de alternância de camadas
   const baseMaps = {
     "🗺️ Mapa Real (Ruas OSM)": osmLayer,
     "🛰️ Satélite Real (Esri HD)": satelliteLayer,
@@ -76,24 +106,38 @@ function initMap() {
     lineCap: 'round'
   }).addTo(map);
 
-  // Marcadores personalizados dos terminais
+  // Marcadores personalizados dos terminais principais
   const iconTerminal = L.divIcon({
     className: 'custom-terminal-icon',
-    html: `<div style="background: #1e40af; color: #fff; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; border: 2.5px solid #fff; box-shadow: 0 3px 8px rgba(0,0,0,0.5);">🚏</div>`,
-    iconSize: [32, 32],
-    iconAnchor: [16, 16]
+    html: `<div style="background: #1e40af; color: #fff; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 2.5px solid #fff; box-shadow: 0 3px 8px rgba(0,0,0,0.5);">🚏</div>`,
+    iconSize: [34, 34],
+    iconAnchor: [17, 17]
   });
 
   L.marker(CCHLA_COORDS, { icon: iconTerminal })
     .addTo(map)
-    .bindPopup('<strong>Terminal CCHLA (Campus I)</strong><br>Ponto de parada no estacionamento do CCHLA.');
+    .bindPopup('<strong>Terminal CCHLA (Campus I)</strong><br>Ponto de parada e embarque no estacionamento do CCHLA.');
 
   L.marker(CI_COORDS, { icon: iconTerminal })
     .addTo(map)
-    .bindPopup('<strong>Terminal CI (Mangabeira)</strong><br>Ponto final em frente ao Centro de Informática.');
+    .bindPopup('<strong>Terminal CI (Mangabeira)</strong><br>Ponto final e embarque de retorno em frente ao Centro de Informática.');
+
+  // Marcadores discretos das paradas intermediárias oficiais
+  INTERMEDIATE_STOPS.forEach(stop => {
+    L.circleMarker(stop.coords, {
+      radius: 6,
+      fillColor: '#3b82f6',
+      color: '#ffffff',
+      weight: 2,
+      opacity: 1,
+      fillOpacity: 0.9
+    })
+    .addTo(map)
+    .bindPopup(`<strong>Parada Oficial:</strong><br>${stop.name}`);
+  });
 
   // Ajusta a visão para enquadrar todo o percurso
-  map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
+  map.fitBounds(routeLine.getBounds(), { padding: [40, 40] });
 
   // Exporta referência global para redimensionamento dinâmico
   window.map = map;

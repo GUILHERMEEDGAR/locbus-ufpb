@@ -73,14 +73,42 @@ settings.TEMPLATES_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/static", StaticFiles(directory=str(settings.STATIC_DIR)), name="static")
 templates = Jinja2Templates(directory=str(settings.TEMPLATES_DIR))
 
-# Waypoints de simulação de rota (CCHLA -> Castelo Branco -> Bancários -> CI Mangabeira)
+# Waypoints de simulação da rota circular completa (CCHLA <-> CI: Ida e Volta)
 SIMULATION_WAYPOINTS = [
-    {"lat": -7.1397, "lon": -34.8450, "speed": 0.0, "desc": "Parado no CCHLA (Campus I)"},
-    {"lat": -7.1420, "lon": -34.8430, "speed": 28.0, "desc": "Saindo da UFPB em direção à Via Expressa"},
-    {"lat": -7.1465, "lon": -34.8390, "speed": 38.0, "desc": "Avenida Sérgio Guerra (Principal dos Bancários)"},
-    {"lat": -7.1510, "lon": -34.8335, "speed": 34.0, "desc": "Passando pela Praça da Paz (Bancários)"},
-    {"lat": -7.1570, "lon": -34.8250, "speed": 40.0, "desc": "Trevo de Mangabeira"},
-    {"lat": -7.1627, "lon": -34.8182, "speed": 5.0, "desc": "Aproximando-se do Centro de Informática (CI)"},
+    # --- ETAPA 1: SENTIDO IDA (CCHLA -> CI) ---
+    {"lat": -7.1397, "lon": -34.8450, "speed": 0.0, "origem": "CCHLA", "destino": "CI", "desc": "Parado no Terminal CCHLA (Campus I) - Embarque"},
+    {"lat": -7.1404, "lon": -34.8442, "speed": 18.0, "origem": "CCHLA", "destino": "CI", "desc": "Saindo do estacionamento do CCHLA"},
+    {"lat": -7.1415, "lon": -34.8430, "speed": 25.0, "origem": "CCHLA", "destino": "CI", "desc": "Via interna do Campus I"},
+    {"lat": -7.1425, "lon": -34.8420, "speed": 22.0, "origem": "CCHLA", "destino": "CI", "desc": "Parada Reitoria / Praça da Alegria"},
+    {"lat": -7.1438, "lon": -34.8410, "speed": 24.0, "origem": "CCHLA", "destino": "CI", "desc": "Passando pelo Centro de Ciências da Saúde (CCS)"},
+    {"lat": -7.1448, "lon": -34.8404, "speed": 26.0, "origem": "CCHLA", "destino": "CI", "desc": "Parada do Hospital Universitário (HULW)"},
+    {"lat": -7.1458, "lon": -34.8395, "speed": 35.0, "origem": "CCHLA", "destino": "CI", "desc": "Acessando a Via Expressa Padre Zé"},
+    {"lat": -7.1472, "lon": -34.8378, "speed": 42.0, "origem": "CCHLA", "destino": "CI", "desc": "Entrando na Av. Sérgio Guerra (Principal dos Bancários)"},
+    {"lat": -7.1492, "lon": -34.8356, "speed": 38.0, "origem": "CCHLA", "destino": "CI", "desc": "Av. Sérgio Guerra (altura dos bancos e comércios)"},
+    {"lat": -7.1510, "lon": -34.8335, "speed": 30.0, "origem": "CCHLA", "destino": "CI", "desc": "Parada da Praça da Paz (Bancários)"},
+    {"lat": -7.1530, "lon": -34.8308, "speed": 40.0, "origem": "CCHLA", "destino": "CI", "desc": "Av. Sérgio Guerra (Bancários Sul)"},
+    {"lat": -7.1555, "lon": -34.8272, "speed": 42.0, "origem": "CCHLA", "destino": "CI", "desc": "Aproximando-se do Viaduto dos Bancários"},
+    {"lat": -7.1578, "lon": -34.8242, "speed": 36.0, "origem": "CCHLA", "destino": "CI", "desc": "Trevo / Viaduto de Mangabeira"},
+    {"lat": -7.1598, "lon": -34.8218, "speed": 32.0, "origem": "CCHLA", "destino": "CI", "desc": "Avenida Alfredo Ferreira da Rocha (Mangabeira)"},
+    {"lat": -7.1615, "lon": -34.8196, "speed": 22.0, "origem": "CCHLA", "destino": "CI", "desc": "Rua do Centro de Informática"},
+    {"lat": -7.1627, "lon": -34.8182, "speed": 0.0, "origem": "CCHLA", "destino": "CI", "desc": "Terminal CI (Mangabeira) - Chegada no Destino"},
+
+    # --- ETAPA 2: SENTIDO VOLTA (CI -> CCHLA) ---
+    {"lat": -7.1627, "lon": -34.8182, "speed": 0.0, "origem": "CI", "destino": "CCHLA", "desc": "Terminal CI (Mangabeira) - Embarque para Campus I"},
+    {"lat": -7.1615, "lon": -34.8196, "speed": 20.0, "origem": "CI", "destino": "CCHLA", "desc": "Saindo do CI rumo à Av. Alfredo Ferreira da Rocha"},
+    {"lat": -7.1598, "lon": -34.8218, "speed": 34.0, "origem": "CI", "destino": "CCHLA", "desc": "Av. Alfredo Ferreira da Rocha (Retorno)"},
+    {"lat": -7.1578, "lon": -34.8242, "speed": 38.0, "origem": "CI", "destino": "CCHLA", "desc": "Passando pelo Viaduto de Mangabeira sentido Bancários"},
+    {"lat": -7.1555, "lon": -34.8272, "speed": 40.0, "origem": "CI", "destino": "CCHLA", "desc": "Entrando na Av. Sérgio Guerra (Sentido Campus)"},
+    {"lat": -7.1530, "lon": -34.8308, "speed": 36.0, "origem": "CI", "destino": "CCHLA", "desc": "Av. Sérgio Guerra (altura do Shopping Sul)"},
+    {"lat": -7.1510, "lon": -34.8335, "speed": 28.0, "origem": "CI", "destino": "CCHLA", "desc": "Parada da Praça da Paz (Sentido Campus)"},
+    {"lat": -7.1492, "lon": -34.8356, "speed": 38.0, "origem": "CI", "destino": "CCHLA", "desc": "Av. Sérgio Guerra norte (Bancários)"},
+    {"lat": -7.1472, "lon": -34.8378, "speed": 42.0, "origem": "CI", "destino": "CCHLA", "desc": "Final da Av. Sérgio Guerra / Trevo Castelo Branco"},
+    {"lat": -7.1458, "lon": -34.8395, "speed": 40.0, "origem": "CI", "destino": "CCHLA", "desc": "Via Expressa Padre Zé sentido Campus I"},
+    {"lat": -7.1448, "lon": -34.8404, "speed": 25.0, "origem": "CI", "destino": "CCHLA", "desc": "Entrada Campus I / Hospital Universitário"},
+    {"lat": -7.1438, "lon": -34.8410, "speed": 24.0, "origem": "CI", "destino": "CCHLA", "desc": "Passando pelo CCS"},
+    {"lat": -7.1425, "lon": -34.8420, "speed": 20.0, "origem": "CI", "destino": "CCHLA", "desc": "Rotatória da Reitoria / Praça da Alegria"},
+    {"lat": -7.1408, "lon": -34.8436, "speed": 18.0, "origem": "CI", "destino": "CCHLA", "desc": "Acesso final ao CCHLA"},
+    {"lat": -7.1397, "lon": -34.8450, "speed": 0.0, "origem": "CI", "destino": "CCHLA", "desc": "Terminal CCHLA (Campus I) - Ciclo Completo Concluído!"},
 ]
 sim_state = {"index": 0}
 
@@ -272,11 +300,12 @@ async def simulation_step():
     idx = sim_state["index"]
     wp = SIMULATION_WAYPOINTS[idx]
 
-    # Injeta ponto simulado no buffer
+    # Atualiza o buffer com o ponto exato da simulação
+    collaborative_buffer._points.clear()
     collab_input = CollaborativeIn(
         latitude=wp["lat"],
         longitude=wp["lon"],
-        accuracy=8.5,
+        accuracy=5.0,
         speed=wp["speed"],
         heading=145.0,
         client_timestamp=datetime.now(timezone.utc)

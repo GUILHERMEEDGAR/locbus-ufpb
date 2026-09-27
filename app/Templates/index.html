@@ -104,6 +104,46 @@
         </div>
       </div>
 
+      <!-- PAINEL DE CONTROLE DA SIMULAÇÃO CONTÍNUA DE ROTA -->
+      <div class="simulation-card glass-panel" id="simulation-panel">
+        <div class="sim-header">
+          <div class="sim-title-group">
+            <span class="sim-badge">🎮 Simulação de Trajeto Completo</span>
+            <span class="sim-current-step" id="sim-step-badge">Ponto 1 de 31: Parado no Terminal CCHLA</span>
+          </div>
+          <div class="sim-direction-badge" id="sim-direction-badge">
+            <span class="pulse-dot"></span>
+            <span id="sim-direction-text">Sentido: Ida (CCHLA &rarr; CI)</span>
+          </div>
+        </div>
+
+        <div class="sim-controls">
+          <div class="sim-buttons-group">
+            <button id="btn-sim-play-pause" class="btn-sim-action btn-sim-play" title="Iniciar deslocamento contínuo automático">
+              <span id="sim-play-icon">▶</span>
+              <span id="sim-play-label">Iniciar Simulação Contínua</span>
+            </button>
+            <button id="btn-sim-step" class="btn-sim-action btn-sim-step" title="Avançar manualmente um ponto">
+              ⏭ Próximo Ponto
+            </button>
+            <button id="btn-sim-reset" class="btn-sim-action btn-sim-reset" title="Reiniciar simulação no CCHLA">
+              🔄 Reiniciar
+            </button>
+          </div>
+
+          <div class="sim-speed-selector">
+            <span class="speed-label">Velocidade:</span>
+            <button class="btn-speed active" data-speed="2000">1x (Normal)</button>
+            <button class="btn-speed" data-speed="1100">2x (Rápido)</button>
+            <button class="btn-speed" data-speed="550">4x (Turbo)</button>
+          </div>
+        </div>
+
+        <div class="sim-progress-track">
+          <div class="sim-progress-bar" id="sim-progress-bar" style="width: 3%;"></div>
+        </div>
+      </div>
+
     </section>
 
     <!-- COLUNA LATERAL: VISÃO RESUMIDA DA ROTA -->
