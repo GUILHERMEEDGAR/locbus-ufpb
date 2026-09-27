@@ -186,6 +186,8 @@ def calcular_status_geral() -> StatusLocBUS:
             destino = "CCHLA"
             centro_atual = "Terminal CI (Mangabeira) - Ponto Final / Embarque Retorno"
             eta = "Aguardando partida"
+            modo_rastreamento = "BLE_FIXO"
+            confiabilidade = "Presença Física Confirmada no Terminal (BLE)"
             dist_restante = 0.0
         # Se estiver muito próximo ao CCHLA (< 180m), chegou ao CCHLA e o próximo sentido é ida (CI)
         elif dist_cchla < 0.18:
@@ -195,6 +197,8 @@ def calcular_status_geral() -> StatusLocBUS:
             destino = "CI"
             centro_atual = "Terminal CCHLA (Campus I) - Ponto de Partida / Embarque"
             eta = "Aguardando partida"
+            modo_rastreamento = "BLE_FIXO"
+            confiabilidade = "Presença Física Confirmada no Terminal (BLE)"
             dist_restante = 0.0
         else:
             # Em trânsito entre pontos
@@ -207,6 +211,9 @@ def calcular_status_geral() -> StatusLocBUS:
             minutos = max(1, int(round((dist_restante / velocidade_ref) * 60)))
             eta = f"{minutos} min"
             centro_atual = f"Em trânsito sentido {destino} ({dist_restante:.1f} km restantes)"
+            modo_rastreamento = "COLABORATIVO_PASSAGEIRO"
+            n_collab = collab.collaborators_count
+            confiabilidade = f"Alta (Colaboração em Tempo Real • {n_collab} a bordo)" if n_collab > 1 else "Alta (Colaboração em Tempo Real)"
 
         proxima, progresso = identificar_proxima_parada(collab.latitude, collab.longitude, destino)
 
@@ -216,8 +223,8 @@ def calcular_status_geral() -> StatusLocBUS:
             estado=estado,
             centro_atual=centro_atual,
             eta_minutos=eta,
-            confiabilidade="Alta (Colaboração em Tempo Real)",
-            modo_rastreamento="COLABORATIVO_PASSAGEIRO",
+            confiabilidade=confiabilidade,
+            modo_rastreamento=modo_rastreamento,
             ultima_atualizacao=now_str,
             detalhes_colaboracao=collab.model_dump(),
             proxima_parada=proxima,

@@ -19,6 +19,35 @@ const collabActiveBar = document.getElementById('collab-active-bar');
 const metricAcc = document.getElementById('metric-acc');
 const metricSpeed = document.getElementById('metric-speed');
 
+// Elementos DOM do Banner de Feedback
+const collabFeedbackBanner = document.getElementById('collab-feedback-banner');
+const feedbackText = document.getElementById('feedback-text');
+const feedbackIcon = document.getElementById('feedback-icon');
+const btnDismissFeedback = document.getElementById('btn-dismiss-feedback');
+let feedbackTimeout = null;
+
+function showCollabFeedback(msg, isError = true) {
+  if (!collabFeedbackBanner || !feedbackText) return;
+  if (feedbackTimeout) clearTimeout(feedbackTimeout);
+  feedbackText.textContent = msg;
+  if (feedbackIcon) feedbackIcon.textContent = isError ? '⚠️' : 'ℹ️';
+  if (isError) {
+    collabFeedbackBanner.classList.add('is-error');
+  } else {
+    collabFeedbackBanner.classList.remove('is-error');
+  }
+  collabFeedbackBanner.style.display = 'flex';
+  feedbackTimeout = setTimeout(() => {
+    if (collabFeedbackBanner) collabFeedbackBanner.style.display = 'none';
+  }, 8000);
+}
+
+if (btnDismissFeedback) {
+  btnDismissFeedback.addEventListener('click', () => {
+    if (collabFeedbackBanner) collabFeedbackBanner.style.display = 'none';
+  });
+}
+
 // Elementos DOM de Status
 const routeOrigem = document.getElementById('route-origem');
 const routeDestino = document.getElementById('route-destino');
@@ -62,7 +91,7 @@ if (btnStopCollab) {
 // 2. Início do Rastreamento do Passageiro
 function startCrowdsourcing() {
   if (!('geolocation' in navigator)) {
-    alert('Seu dispositivo ou navegador não suporta geolocalização por GPS.');
+    showCollabFeedback('Seu dispositivo ou navegador não suporta geolocalização por GPS.', true);
     return;
   }
 
@@ -80,6 +109,7 @@ function startCrowdsourcing() {
 
   collabCard.style.display = 'none';
   collabActiveBar.style.display = 'flex';
+  if (collabFeedbackBanner) collabFeedbackBanner.style.display = 'none';
 }
 
 // 3. Callback de Sucesso do GPS
@@ -130,13 +160,14 @@ function onGeoSuccess(position) {
 function onGeoError(error) {
   console.warn('Erro de Geolocalização:', error);
   let msg = 'Erro ao obter sinal GPS.';
-  if (error.code === 1) msg = 'Permissão de localização negada pelo usuário.';
-  else if (error.code === 2) msg = 'Sinal de GPS indisponível no momento.';
-  else if (error.code === 3) msg = 'Tempo limite esgotado para obter coordenadas.';
+  if (error.code === 1) msg = 'Permissão de localização negada no navegador. Permita o acesso nas configurações do site para colaborar.';
+  else if (error.code === 2) msg = 'Sinal de GPS indisponível no momento. Verifique se o GPS está ativo.';
+  else if (error.code === 3) msg = 'Tempo limite esgotado para obter coordenadas de GPS.';
 
-  alert(msg);
+  showCollabFeedback(msg, true);
   stopCrowdsourcing();
 }
+
 
 // 5. Encerramento do Rastreamento
 function stopCrowdsourcing() {

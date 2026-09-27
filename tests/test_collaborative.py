@@ -117,3 +117,42 @@ def test_history_export_csv():
     assert "CI" in content
 
 
+def test_multiple_collaborators_weighted_clustering():
+    """Valida o agrupamento ponderado pelo inverso da acurácia quando 2+ passageiros colaboram."""
+    collaborative_buffer._points.clear()
+
+    # Ponto 1: passageiro com acurácia alta (± 5m)
+    p1 = {
+        "latitude": -7.1460,
+        "longitude": -34.8390,
+        "accuracy": 5.0,
+        "speed": 30.0,
+        "heading": 180.0
+    }
+    # Ponto 2: passageiro com acurácia mais baixa (± 20m), peso menor
+    p2 = {
+        "latitude": -7.1480,
+        "longitude": -34.8370,
+        "accuracy": 20.0,
+        "speed": 32.0,
+        "heading": 180.0
+    }
+
+    r1 = client.post("/api/v1/telemetry/collaborative", json=p1)
+    assert r1.status_code == 200
+    r2 = client.post("/api/v1/telemetry/collaborative", json=p2)
+    assert r2.status_code == 200
+
+    latest_resp = client.get("/api/v1/telemetry/collaborative/latest")
+    assert latest_resp.status_code == 200
+    data = latest_resp.json()
+    assert data["active"] is True
+    assert data["collaborators_count"] == 2
+
+    # O resultado deve estar ponderado mais próximo do P1 (peso 1/5 = 0.20) do que do P2 (peso 1/20 = 0.05)
+    # Latitude esperada: (-7.1460 * 0.20 + -7.1480 * 0.05) / 0.25 = -7.1464
+    assert abs(data["latitude"] - (-7.1464)) < 0.0001
+    assert data["accuracy"] == 12.5 # (5 + 20) / 2
+
+
+
