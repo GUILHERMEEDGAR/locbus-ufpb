@@ -19,10 +19,10 @@
   <link rel="icon" type="image/png" sizes="192x192" href="/static/icons/icon-192.png">
   <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
   
-  <!-- Fontes Google: Plus Jakarta Sans -->
+  <!-- Fontes Google: Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   
   <!-- Leaflet CSS para Mapas Interativos -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
@@ -44,30 +44,37 @@
   <header class="navbar">
     <div class="nav-container">
       <div class="nav-brand">
-        <div class="brand-icon">🚌</div>
+        <!-- Logomarca: ônibus estilizado com seta -->
+        <div class="brand-logo-mark">
+          <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect x="2" y="4" width="16" height="11" rx="2" fill="white" opacity="0.9"/>
+            <rect x="4" y="6" width="5" height="3" rx="0.7" fill="#1a6dff"/>
+            <rect x="11" y="6" width="5" height="3" rx="0.7" fill="#1a6dff"/>
+            <rect x="2" y="13" width="2.5" height="3" rx="0.5" fill="white" opacity="0.7"/>
+            <rect x="15.5" y="13" width="2.5" height="3" rx="0.5" fill="white" opacity="0.7"/>
+            <path d="M10 3.5L12.5 1M10 3.5L7.5 1" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+        </div>
         <div class="brand-info">
-          <span class="brand-name">Loc<strong>BUS</strong></span>
-          <span class="brand-badge"><span class="badge-dot"></span> Tempo Real • UFPB</span>
+          <span class="brand-name">LocBUS</span>
+          <span class="brand-sub">Mobilidade UFPB &middot; Tempo Real</span>
         </div>
       </div>
       
       <!-- Navegação de Abas -->
       <nav class="nav-tabs">
-        <button class="tab-btn active" data-tab="tab-view-mapa">🗺️ Mapa</button>
-        <button class="tab-btn" data-tab="tab-view-historico">📊 Histórico</button>
-        <button class="tab-btn" data-tab="tab-view-itinerario">🕒 Itinerário</button>
-        <button class="tab-btn" data-tab="tab-view-sobre">ℹ️ Sobre</button>
+        <button class="tab-btn active" data-tab="tab-view-mapa">Mapa</button>
+        <button class="tab-btn" data-tab="tab-view-historico">Histórico</button>
+        <button class="tab-btn" data-tab="tab-view-itinerario">Horários</button>
+        <button class="tab-btn" data-tab="tab-view-sobre">Sobre</button>
       </nav>
       
       <div class="nav-actions">
-        <!-- Botão de Instalação do PWA (Exibido quando elegível no smartphone/desktop) -->
         <button id="btn-install-pwa" class="btn-install-pwa" style="display: none;" title="Instalar aplicativo LocBUS na tela de início">
-          📲 Instalar App
+          Instalar App
         </button>
-
-        <!-- Controle de Simulação em Tempo Real -->
         <button id="btn-demo-mode" class="btn-demo" title="Avançar trajeto simulado via Server-Sent Events">
-          ⚡ Simular Rota
+          Simular Rota
         </button>
       </div>
     </div>
