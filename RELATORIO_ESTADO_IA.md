@@ -23,13 +23,18 @@
 ---
 
 ## 2. 📍 Status Atual & Ponto de Parada
-- **Status do Sistema**: **PoC Estável e Funcional** (17/17 testes passando via `python -m pytest`).
-- **Último Commit**: `76c4e60 feat: baseline funcional com modulo colaborativo, pwa, sse e suite de testes`
-- **Modificações Atuais em Andamento (Working Tree)**:
-  - **Rota Circular Completa**: `app/main.py` expandido para 31 waypoints cobrindo o trajeto completo de **Ida (CCHLA -> CI)** e **Volta (CI -> CCHLA)** com nomes de pontos reais da UFPB/Bancários/Mangabeira.
-  - **Controle Interativo da Simulação**: `app/static/js/simulation.js` e `app/Templates/index.html` com controles aprimorados de play/pause, velocidade e avanço passo a passo.
-  - **Interface & Mapa**: `app/static/js/map.js` e `app/static/css/style.css` atualizados com traçado e marcadores dinâmicos.
-  - **Buffer Colaborativo**: Ajuste em `simulation_step` para sincronizar o ponto exato da simulação limpando posições defasadas.
+- **Status do Sistema**: **PoC Estável, Integrada e Testada** (18/18 testes passando via `pytest`).
+- **Últimos Commits**:
+  - `a07738f feat(p1-p3): feedback amigavel de geolocalizacao, distincao BLE vs Colaborativo e teste de clustering ponderado`
+  - `fc955b5 feat(p0): rota circular de 31 waypoints, controles de simulacao, pytest.ini e governanca IA`
+- **Funcionalidades Consolidadas**:
+  - **Rota Circular Completa**: 31 waypoints cobrindo CCHLA <-> CI (Ida e Volta) com nomes de pontos reais.
+  - **Feedback Mobile-First no Crowdsourcing**: Alertas nativos invasivos (`alert()`) substituídos por banner inline elegante (`.collab-feedback-banner`) com dismiss manual ou auto-hide.
+  - **Diferenciação Visual de Fontes de Dados**:
+    - Terminais: `BLE_FIXO` ("Presença Física Confirmada no Terminal (BLE)")
+    - Percurso em trânsito: `COLABORATIVO_PASSAGEIRO` ("Alta (Colaboração em Tempo Real • X a bordo)")
+    - Fallback: `ESTIMADO` ("Média (Estimativa Baseada em Tabela)")
+  - **Algoritmo de Fusão Geoespacial**: Clustering ponderado por inverso da variância da acurácia com teste unitário validando fórmula matemática do documento da atividade.
 
 ---
 
@@ -46,15 +51,19 @@ Para evitar que a I.A. "pense demais e trave":
 | Data / Hora | Ação Executada | Arquivos Envolvidos | Status |
 | :--- | :--- | :--- | :--- |
 | *26/09/2026* | Configuração de diretrizes anti-hang e relatório de auto-leitura | `RELATORIO_ESTADO_IA.md`, `GEMINI.md` | ✅ Concluído |
-| *26/09/2026* | Expansão da rota de simulação para ida e volta completa (31 waypoints) | `app/main.py`, `simulation.js`, `map.js` | 🔄 Em andamento no working tree |
-| *26/09/2026* | Criação do `pytest.ini` e validação direta de 17/17 testes | `pytest.ini`, `tests/` | ✅ 17/17 Passando |
+| *26/09/2026* | Expansão da rota de simulação para ida e volta completa (31 waypoints) | `app/main.py`, `simulation.js`, `map.js` | ✅ Concluído |
+| *26/09/2026* | Criação do `pytest.ini` e validação direta dos testes | `pytest.ini`, `tests/` | ✅ 18/18 Passando |
 | *26/09/2026* | Elaboração do Roteiro Técnico Priorizado (P0 a P5) | `ROTEIRO_PRIORIZADO_PROJETO.md` | ✅ Concluído |
+| *26/09/2026* | Commit da Prioridade 0 (P0 - Baseline & Rota Circular) | `git commit fc955b5` | ✅ Concluído |
+| *26/09/2026* | Implementação da Prioridade 1 a 3 (Banner amigável, confiabilidade BLE/Collab e clustering test) | `style.css`, `index.html`, `crowdsource.js`, `services.py`, `test_collaborative.py` | ✅ Concluído (`a07738f`) |
 
 ---
 
 ## 5. 🚀 Próximos Passos Imediatos (Backlog Ativo)
-- [x] Validar que todos os testes automatizados continuam passando (17/17).
-- [x] Criar `pytest.ini` para execução padrão do pytest.
-- [x] Elaborar o roteiro técnico priorizado completo (`ROTEIRO_PRIORIZADO_PROJETO.md`).
-- [ ] Confirmar com o usuário o commit das alterações do working tree (P0).
-- [ ] Executar os itens da Prioridade 1 (Crowdsourcing e fluxo em tempo real).
+- [x] Consolidar P0 (Estabilização da Base e Git).
+- [x] Consolidar P1 (Ciclo de Crowdsourcing, Throttling e Buffer).
+- [x] Consolidar P2 (UX Mobile-First: Banner amigável sem bloqueios).
+- [x] Consolidar P3 (Diferenciação de estados BLE vs Colaborativo e teste de clustering ponderado).
+- [ ] Validar Prioridade 4 (PWA offline & service worker se necessário).
+- [ ] Conectar evidências reais da PoC ao documento da entrega [Atividade_PoC_LocBUS_Guilherme_Guedes.html](file:///e:/prof3/Atividade_PoC_LocBUS_Guilherme_Guedes.html) (P5).
+
