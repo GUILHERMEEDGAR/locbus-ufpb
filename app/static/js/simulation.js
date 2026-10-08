@@ -18,6 +18,16 @@ const simDirectionText = document.getElementById('sim-direction-text');
 const simProgressBar = document.getElementById('sim-progress-bar');
 const simPlayIcon = document.getElementById('sim-play-icon');
 const simPlayLabel = document.getElementById('sim-play-label');
+const btnToggleSimPanel = document.getElementById('btn-toggle-sim-panel');
+const simulationPanel = document.getElementById('simulation-panel');
+
+if (btnToggleSimPanel && simulationPanel) {
+  btnToggleSimPanel.addEventListener('click', () => {
+    const isHidden = simulationPanel.style.display === 'none';
+    simulationPanel.style.display = isHidden ? 'block' : 'none';
+    btnToggleSimPanel.classList.toggle('active', isHidden);
+  });
+}
 
 function advanceSimulationStep() {
   return fetch('/api/v1/simulation/step', { method: 'POST' })

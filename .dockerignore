@@ -1,0 +1,14 @@
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.git
+.gitignore
+node_modules
+android/.gradle
+android/app/build
+android/.idea
+LocBUS*.apk
+*.bat

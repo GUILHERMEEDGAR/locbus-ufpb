@@ -19,8 +19,9 @@ class Settings(BaseModel):
     
     # Parâmetros da Janela de Telemetria Colaborativa
     COLLABORATIVE_TTL_SECONDS: int = 180  # Coordenada expira após 3 minutos sem atualização
-    COLLABORATIVE_MIN_ACCURACY_METERS: float = 65.0  # Descartar leituras com erro maior que 65m
-    COLLABORATIVE_MAX_SPEED_KMH: float = 75.0  # Descarte se v > 75km/h (incompatível com ônibus urbano)
+    COLLABORATIVE_GEOFENCE_TOLERANCE_METERS: float = 250.0  # Envelope de tolerância do corredor viário (250m)
+    COLLABORATIVE_MIN_ACCURACY_METERS: float = 250.0  # Descartar leituras com erro maior que 250m
+    COLLABORATIVE_MAX_SPEED_KMH: float = 85.0  # Descarte se v > 85km/h (incompatível com ônibus urbano)
     COLLABORATIVE_SAMPLING_INTERVAL_SEC: int = 10  # Intervalo recomendado de envio pelo frontend
     
     # Coordenadas de Referência (UFPB Campus I e Mangabeira)

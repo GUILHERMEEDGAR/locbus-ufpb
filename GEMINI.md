@@ -11,3 +11,8 @@ O usuário relatou problemas de congelamento quando a I.A. passa tempo excessivo
 2. **Passos Curtos e Incrementais**: Não tente resolver 5 problemas de uma só vez gerando respostas gigantescas. Divida em micro-passos verificáveis.
 3. **Respostas Diretas**: Evite respostas desnecessariamente prolixas; priorize código limpo, testes e confirmações pontuais.
 4. **Recuperação Imediata em caso de Falha**: Se uma sessão anterior caiu ou travou, leia [RELATORIO_ESTADO_IA.md](file:///e:/prof3/RELATORIO_ESTADO_IA.md), identifique onde parou e continue a partir do último checkpoint registrado.
+
+## 📦 3. Padrão de Nomenclatura e Versionamento de APKs
+- **Sempre incluir a versão no nome do arquivo APK**: Todo binário gerado para distribuição ou testes DEVE obrigatoriamente conter a versão explícita no nome do arquivo no formato `LocBUS-v<versao>.apk` (ex: `LocBUS-v1.1.0.apk`).
+- O versionamento deve ser mantido e sincronizado no `android/app/build.gradle` (`versionCode` e `versionName`).
+- Disponibilizar tanto na raiz do projeto quanto no diretório estático de download (`app/static/downloads/LocBUS-v<versao>.apk`), mantendo `LocBUS.apk` como alias para não quebrar links legados.

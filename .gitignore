@@ -27,6 +27,18 @@ Notas/
 data/telemetria/*.csv
 !data/telemetria/.gitkeep
 
+# Dependências Node.js
+node_modules/
+package-lock.json
+
+# Android Build Caches e Configurações de Máquina Local
+android/.gradle/
+android/app/build/
+android/local.properties
+android/.idea/
+android/*.iml
+android/app/*.iml
+
 # IDEs e Sistema Operacional
 .vscode/
 .idea/

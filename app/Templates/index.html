@@ -5,224 +5,217 @@
 <!-- ==========================================
      ABA 1: MAPA EM TEMPO REAL (VIEW PRINCIPAL)
      ========================================== -->
-<div class="tab-view active" id="tab-view-mapa">
-  <div class="dashboard-grid">
+<!-- ==========================================
+     ABA 1: MAPA EM TEMPO REAL (VIEW PRINCIPAL - MAP-FIRST TRANSIT APP)
+     ========================================== -->
+<div class="tab-view active map-first-container" id="tab-view-mapa">
+  
+  <!-- O MAPA OCUPA 100% DA ÁREA -->
+  <div id="map" class="hero-map"></div>
 
-    <!-- COLUNA PRINCIPAL: MAPA E AÇÃO COLABORATIVA -->
-    <section class="map-column">
-      
-      <!-- CARD DE STATUS EM TEMPO REAL -->
-      <div class="status-card glass-panel">
-        <div class="status-header">
-          <div class="route-badge">
-            <span class="route-point" id="route-origem">{{ status.origem }}</span>
-            <span class="route-arrow">&rarr;</span>
-            <span class="route-point" id="route-destino">{{ status.destino }}</span>
-          </div>
-          <div class="status-right-badges">
-            <div class="sse-badge connected" id="sse-badge" title="Canal Server-Sent Events ativo">
-              <span class="sse-indicator-dot"></span>
-              <span id="sse-status-label">SSE Tempo Real</span>
-            </div>
-            <div class="source-tag" id="source-tag">
-              <span class="pulse-dot"></span>
-              <span id="source-text">{{ status.confiabilidade }}</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="status-body">
-          <div class="eta-block">
-            <span class="eta-label">Previsão de Chegada (ETA)</span>
-            <span class="eta-value" id="eta-value">{{ status.eta_minutos }}</span>
-          </div>
-          <div class="location-block">
-            <span class="location-label">Status da Rota</span>
-            <span class="location-value" id="location-value">{{ status.centro_atual }}</span>
-            <span class="last-update" id="last-update">Última leitura: {{ status.ultima_atualizacao }}</span>
-          </div>
-        </div>
-
-        <!-- BARRA DE PROGRESSO DO TRAJETO EM TEMPO REAL -->
-        <div class="route-progress-container">
-          <div class="progress-labels">
-            <span class="next-stop-info">Próxima Parada: <strong id="next-stop-name">{{ status.proxima_parada }}</strong></span>
-            <span class="progress-pct" id="progress-pct">{{ status.progresso_percentual }}% da rota</span>
-          </div>
-          <div class="progress-bar-track">
-            <div class="progress-bar-fill" id="progress-bar-fill" style="width: {{ status.progresso_percentual }}%;"></div>
-          </div>
-        </div>
-
-        <div class="status-footer-actions">
-          <button id="btn-proximity-alert" class="btn-proximity-alert" title="Receber aviso sonoro quando o ônibus estiver a menos de 5 min">
-            <span class="alert-bell-icon">🔔</span>
-            <span id="alert-label">Avisar quando estiver perto (&lt; 5 min)</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- BOTÃO / BANNER DE CONTRIBUIÇÃO COLABORATIVA (CROWDSOURCING) -->
-      <div class="collab-action-card glass-panel" id="collab-card">
-        <div class="collab-info">
-          <div class="collab-icon">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="22" height="22">
-              <path d="M12 2C8.68 2 6 4.68 6 8c0 4.5 6 12 6 12s6-7.5 6-12c0-3.32-2.68-6-6-6zm0 8.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z" fill="#1a6dff"/>
-            </svg>
-          </div>
-          <div class="collab-text">
-            <h3 id="collab-title">Você está a bordo deste circular?</h3>
-            <p id="collab-desc">Compartilhe sua localização voluntariamente e ajude os colegas que estão esperando nos pontos.</p>
-          </div>
-        </div>
-        <div class="collab-controls">
-          <button id="btn-toggle-collab" class="btn-collab">
-            <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-              <path d="M10 2a6 6 0 00-6 6c0 3.31 6 10 6 10s6-6.69 6-10a6 6 0 00-6-6zm0 8a2 2 0 110-4 2 2 0 010 4z" fill="white"/>
-            </svg>
-            <span class="btn-label" id="btn-collab-label">Estou no Ônibus • Compartilhar</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- PAINEL DE TELEMETRIA ATIVA DO PASSAGEIRO -->
-      <div class="collab-active-bar glass-panel" id="collab-active-bar" style="display: none;">
-        <div class="active-status">
-          <span class="transmitting-pulse"></span>
-          <span>Você está transmitindo localização ao vivo (GPS móvel)</span>
-        </div>
-        <div class="active-metrics">
-          <span class="metric-pill" id="metric-acc">Acurácia: ± 0m</span>
-          <span class="metric-pill" id="metric-speed">Velocidade: 0 km/h</span>
-          <button id="btn-stop-collab" class="btn-stop">Desembarquei / Parar</button>
-        </div>
-      </div>
-
-      <!-- BANNER DE FEEDBACK E AVISOS DO CROWDSOURCING -->
-      <div class="collab-feedback-banner glass-panel" id="collab-feedback-banner" style="display: none;">
-        <div class="feedback-content">
-          <span class="feedback-icon" id="feedback-icon">⚠️</span>
-          <span id="feedback-text">Aviso de localização</span>
-        </div>
-        <button class="btn-dismiss-feedback" id="btn-dismiss-feedback" title="Fechar aviso">&times;</button>
-      </div>
-
-      <!-- CONTAINER DO MAPA LEAFLET -->
-      <div class="map-wrapper glass-panel">
-        <div id="map" class="interactive-map"></div>
-        
-        <!-- LEGENDA FLUTUANTE DO MAPA -->
-        <div class="map-legend">
-          <div class="legend-item"><span class="legend-dot dot-terminal"></span> Terminais (CCHLA / CI)</div>
-          <div class="legend-item"><span class="legend-dot dot-route"></span> Rota Viária Oficial</div>
-          <div class="legend-item"><span class="legend-dot dot-bus"></span> Posição em Tempo Real</div>
-        </div>
-      </div>
-
-      <!-- PAINEL DE CONTROLE DA SIMULAÇÃO CONTÍNUA DE ROTA -->
-      <div class="simulation-card glass-panel" id="simulation-panel">
-        <div class="sim-header">
-          <div class="sim-title-group">
-            <span class="sim-badge">🎮 Simulação de Trajeto Completo</span>
-            <span class="sim-current-step" id="sim-step-badge">Ponto 1 de 31: Parado no Terminal CCHLA</span>
-          </div>
-          <div class="sim-direction-badge" id="sim-direction-badge">
-            <span class="pulse-dot"></span>
-            <span id="sim-direction-text">Sentido: Ida (CCHLA &rarr; CI)</span>
-          </div>
-        </div>
-
-        <div class="sim-controls">
-          <div class="sim-buttons-group">
-            <button id="btn-sim-play-pause" class="btn-sim-action btn-sim-play" title="Iniciar deslocamento contínuo automático">
-              <span id="sim-play-icon">▶</span>
-              <span id="sim-play-label">Iniciar Simulação Contínua</span>
-            </button>
-            <button id="btn-sim-step" class="btn-sim-action btn-sim-step" title="Avançar manualmente um ponto">
-              ⏭ Próximo Ponto
-            </button>
-            <button id="btn-sim-reset" class="btn-sim-action btn-sim-reset" title="Reiniciar simulação no CCHLA">
-              🔄 Reiniciar
-            </button>
-          </div>
-
-          <div class="sim-speed-selector">
-            <span class="speed-label">Velocidade:</span>
-            <button class="btn-speed active" data-speed="2000">1x (Normal)</button>
-            <button class="btn-speed" data-speed="1100">2x (Rápido)</button>
-            <button class="btn-speed" data-speed="550">4x (Turbo)</button>
-          </div>
-        </div>
-
-        <div class="sim-progress-track">
-          <div class="sim-progress-bar" id="sim-progress-bar" style="width: 3%;"></div>
-        </div>
-      </div>
-
-    </section>
-
-    <!-- COLUNA LATERAL: VISÃO RESUMIDA DA ROTA -->
-    <aside class="sidebar-column">
-      
-      <div class="info-card glass-panel">
-        <h3 class="card-title">Monitoramento Circular</h3>
-        <p class="card-subtitle">Ligação contínua CCHLA (Campus I) &harr; CI (Mangabeira)</p>
-        
-        <div class="quick-stats-box">
-          <div class="stat-mini">
-            <span class="stat-mini-val">6.8 km</span>
-            <span class="stat-mini-label">Extensão da Rota</span>
-          </div>
-          <div class="stat-mini">
-            <span class="stat-mini-val">~22 min</span>
-            <span class="stat-mini-label">Tempo Médio</span>
-          </div>
-          <div class="stat-mini">
-            <span class="stat-mini-val">Gratuito</span>
-            <span class="stat-mini-label">Circular UFPB</span>
-          </div>
-        </div>
-
-        <ol class="timeline" style="margin-top: 15px;">
-          <li class="timeline-step step-done">
-            <div class="step-marker">1</div>
-            <div class="step-content">
-              <strong>Terminal CCHLA (Campus I)</strong>
-              <span>Estacionamento principal</span>
-            </div>
-          </li>
-          <li class="timeline-step step-active">
-            <div class="step-marker">2</div>
-            <div class="step-content">
-              <strong>Via Expressa & Bancários</strong>
-              <span>Av. Sérgio Guerra e Praça da Paz</span>
-            </div>
-          </li>
-          <li class="timeline-step">
-            <div class="step-marker">3</div>
-            <div class="step-content">
-              <strong>Terminal CI (Mangabeira)</strong>
-              <span>Centro de Informática</span>
-            </div>
-          </li>
-        </ol>
-      </div>
-
-      <div class="info-card glass-panel" style="padding: 16px;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <span style="font-size: 24px;">💡</span>
-          <div>
-            <strong style="font-size: 13px; color: #93c5fd;">Dica ao Passageiro</strong>
-            <p style="font-size: 11.5px; color: var(--text-muted); margin-top: 2px;">
-              Ao embarcar, ative a transmissão por alguns minutos para atualizar a posição para quem está na parada.
-            </p>
-          </div>
-        </div>
-      </div>
-
-    </aside>
-
+  <!-- BARRA DE AÇÕES FLUTUANTES NO MAPA (ESTILO UBER / MOOVIT / TRANSIT) -->
+  <div class="map-floating-actions" id="map-floating-actions">
+    <button id="btn-recenter-bus" class="btn-map-float btn-recenter-bus" type="button" title="Centralizar mapa na posição do ônibus">
+      <span class="float-btn-icon">🎯</span>
+      <span class="recenter-label">Focar Ônibus</span>
+    </button>
+    <button id="btn-floating-share" class="btn-map-float btn-share-gps" type="button" title="Compartilhar localização GPS no ônibus">
+      <span class="pulse-beacon-dot"></span>
+      <span class="float-btn-icon">📡</span>
+      <span class="share-label" id="floating-share-label">Transmitir GPS</span>
+    </button>
   </div>
+
+  <!-- LEGENDA FLUTUANTE DO MAPA -->
+  <div class="map-legend-floating">
+    <div class="legend-item"><span class="legend-dot dot-terminal"></span> Terminais (CCHLA/CI)</div>
+    <div class="legend-item"><span class="legend-dot dot-bus"></span> Ônibus Ao Vivo</div>
+  </div>
+
+  <!-- PAINEL FLUTUANTE DE TRÂNSITO (BOTTOM SHEET NO MOBILE / FLOATING CARD NO DESKTOP) -->
+  <aside class="transit-sheet" id="transit-sheet">
+    <div class="sheet-drag-handle" id="sheet-drag-handle" title="Arraste para expandir/recolher"></div>
+
+    <!-- CABEÇALHO DA LINHA ESTILO TRANSIT APP -->
+    <div class="transit-line-header">
+      <div class="transit-badge-group">
+        <span class="transit-line-pill">
+          <span class="line-icon">🚌</span>
+          <span class="line-name">CIRCULAR INTERCAMPI</span>
+        </span>
+        <span class="vehicle-id-badge">Ônibus #01</span>
+        <span class="tracking-mode-badge" id="tracking-mode-badge">
+          {% if status.modo_rastreamento == 'BLE_FIXO' %}
+            BLE Fixo
+          {% elif status.modo_rastreamento == 'COLABORATIVO_PASSAGEIRO' %}
+            Colaborativo (GPS)
+          {% else %}
+            Estimado
+          {% endif %}
+        </span>
+      </div>
+
+      <div class="status-right-badges">
+        <div class="sse-badge connected" id="sse-badge" title="Canal Server-Sent Events ativo">
+          <span class="sse-indicator-dot"></span>
+          <span id="sse-status-label">SSE Tempo Real</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SENTIDO E ETA EM DESTAQUE -->
+    <div class="transit-hero-row">
+      <div class="route-direction-row">
+        <span class="direction-lead">Sentido:</span>
+        <span class="route-point" id="route-origem">{{ status.origem }}</span>
+        <span class="route-arrow">&rarr;</span>
+        <span class="route-point" id="route-destino">{{ status.destino }}</span>
+      </div>
+      <div class="eta-pill-highlight">
+        <span class="eta-pill-label">Chegando em</span>
+        <div class="eta-pill-val-row">
+          <span class="eta-value" id="eta-value">{{ status.eta_minutos }}</span>
+          <span class="live-dot-pulse" title="Transmissão ao vivo"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTÃO DE CONTRIBUIÇÃO COLABORATIVA EM DESTAQUE IMEDIATO -->
+    <div class="collab-action-card glass-panel" id="collab-card">
+      <div class="collab-header-row">
+        <span class="collab-lead">A bordo deste circular?</span>
+        <span class="collab-sub">Transmita seu GPS para quem espera</span>
+      </div>
+      <button id="btn-toggle-collab" class="btn-collab">
+        <span class="pulse-beacon-dot"></span>
+        <span class="btn-label" id="btn-collab-label">Estou no Ônibus • Compartilhar GPS</span>
+      </button>
+    </div>
+
+    <!-- PAINEL DE TELEMETRIA ATIVA DO PASSAGEIRO -->
+    <div class="collab-active-bar glass-panel" id="collab-active-bar" style="display: none;">
+      <div class="active-status">
+        <span class="transmitting-pulse"></span>
+        <span>Transmitindo ao vivo (GPS móvel)</span>
+      </div>
+      <div class="active-metrics">
+        <span class="metric-pill" id="metric-acc">Acurácia: ± 0m</span>
+        <span class="metric-pill" id="metric-speed">Velocidade: 0 km/h</span>
+        <button id="btn-stop-collab" class="btn-stop">Parar</button>
+      </div>
+    </div>
+
+    <!-- BANNER DE FEEDBACK E AVISOS DO CROWDSOURCING -->
+    <div class="collab-feedback-banner glass-panel" id="collab-feedback-banner" style="display: none;">
+      <div class="feedback-content">
+        <span class="feedback-icon" id="feedback-icon">⚠️</span>
+        <span id="feedback-text">Aviso de localização</span>
+      </div>
+      <button class="btn-dismiss-feedback" id="btn-dismiss-feedback" title="Fechar aviso">&times;</button>
+    </div>
+
+    <!-- STATUS DA ROTA & PRÓXIMA PARADA -->
+    <div class="transit-status-strip">
+      <div class="strip-item">
+        <span class="strip-label">Status da Linha</span>
+        <span class="strip-val" id="location-value">{{ status.centro_atual }}</span>
+      </div>
+      <div class="strip-item">
+        <span class="strip-label">Próxima Parada</span>
+        <span class="strip-val highlight-stop" id="next-stop-name">{{ status.proxima_parada }}</span>
+      </div>
+    </div>
+
+    <!-- BARRA DE PROGRESSO DO TRAJETO -->
+    <div class="route-progress-container">
+      <div class="progress-labels">
+        <span class="last-update" id="last-update">Última leitura: {{ status.ultima_atualizacao }}</span>
+        <span class="progress-pct" id="progress-pct">{{ status.progresso_percentual }}% da rota</span>
+      </div>
+      <div class="progress-bar-track">
+        <div class="progress-bar-fill" id="progress-bar-fill" style="width: {{ status.progresso_percentual }}%;"></div>
+      </div>
+    </div>
+
+    <!-- TIMELINE DE PARADAS (ESTILO CITTAMOBI / CITYMAPPER) -->
+    <div class="stops-timeline-widget" id="stops-timeline-widget">
+      <div class="timeline-header">
+        <span class="timeline-title">Paradas do Itinerário</span>
+        <button id="btn-toggle-timeline" class="btn-toggle-timeline" type="button" aria-expanded="true">
+          <span id="timeline-toggle-text">Recolher</span>
+          <span class="timeline-arrow-icon">▾</span>
+        </button>
+      </div>
+      <div class="stops-timeline-track" id="stops-timeline-track">
+        <!-- 8 Paradas Oficiais do Campus UFPB -->
+        <div class="stop-node" data-stop="Terminal CCHLA">
+          <div class="node-indicator"><span class="node-dot"></span></div>
+          <div class="node-info">
+            <span class="node-name">Terminal CCHLA</span>
+            <span class="node-meta">Campus I • Ponto de Partida</span>
+          </div>
+        </div>
+        <div class="stop-node" data-stop="Reitoria">
+          <div class="node-indicator"><span class="node-dot"></span></div>
+          <div class="node-info">
+            <span class="node-name">Reitoria / Praça da Alegria</span>
+            <span class="node-meta">Campus I</span>
+          </div>
+        </div>
+        <div class="stop-node" data-stop="RU">
+          <div class="node-indicator"><span class="node-dot"></span></div>
+          <div class="node-info">
+            <span class="node-name">Centro de Convivência / RU</span>
+            <span class="node-meta">Campus I</span>
+          </div>
+        </div>
+        <div class="stop-node" data-stop="CCEN">
+          <div class="node-indicator"><span class="node-dot"></span></div>
+          <div class="node-info">
+            <span class="node-name">CCEN / Química</span>
+            <span class="node-meta">Campus I</span>
+          </div>
+        </div>
+        <div class="stop-node" data-stop="CT">
+          <div class="node-indicator"><span class="node-dot"></span></div>
+          <div class="node-info">
+            <span class="node-name">Centro de Tecnologia (CT)</span>
+            <span class="node-meta">Campus I</span>
+          </div>
+        </div>
+        <div class="stop-node" data-stop="Praça da Paz">
+          <div class="node-indicator"><span class="node-dot"></span></div>
+          <div class="node-info">
+            <span class="node-name">Praça da Paz</span>
+            <span class="node-meta">Bancários</span>
+          </div>
+        </div>
+        <div class="stop-node" data-stop="Trevo">
+          <div class="node-indicator"><span class="node-dot"></span></div>
+          <div class="node-info">
+            <span class="node-name">Trevo / Viaduto</span>
+            <span class="node-meta">Mangabeira</span>
+          </div>
+        </div>
+        <div class="stop-node" data-stop="CI">
+          <div class="node-indicator"><span class="node-dot"></span></div>
+          <div class="node-info">
+            <span class="node-name">Centro de Informática (CI)</span>
+            <span class="node-meta">Mangabeira • Terminal</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AÇÕES NO RODAPÉ DO SHEET -->
+    <div class="sheet-footer-actions">
+      <button id="btn-proximity-alert" class="btn-proximity-alert" title="Receber aviso sonoro quando o ônibus estiver a menos de 5 min">
+        <span class="alert-bell-icon">🔔</span>
+        <span id="alert-label">Avisar quando perto (&lt; 5 min)</span>
+      </button>
+    </div>
+  </aside>
+
 </div>
 
 <!-- ==========================================
@@ -558,9 +551,8 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="/static/js/map.js"></script>
-<script src="/static/js/crowdsource.js"></script>
-<script src="/static/js/simulation.js"></script>
-<script src="/static/js/tabs.js"></script>
-<script src="/static/js/pwa.js"></script>
+<script src="/static/js/map.js?v=1.2.0"></script>
+<script src="/static/js/crowdsource.js?v=1.2.0"></script>
+<script src="/static/js/tabs.js?v=1.2.0"></script>
+<script src="/static/js/pwa.js?v=1.2.0"></script>
 {% endblock %}

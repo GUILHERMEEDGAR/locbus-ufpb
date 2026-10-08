@@ -3,19 +3,18 @@
  * Implementa cache inteligente para funcionamento offline, mapa offline resiliente e navegação instantânea.
  */
 
-const CACHE_NAME = 'locbus-v2.2-cache';
+const CACHE_NAME = 'locbus-v1.2.0-cache';
 const TILES_CACHE_NAME = 'locbus-map-tiles';
 
 // Recursos essenciais do App Shell
 const PRECACHE_ASSETS = [
   '/',
   '/manifest.webmanifest',
-  '/static/css/style.css',
-  '/static/js/map.js',
-  '/static/js/crowdsource.js',
-  '/static/js/simulation.js',
-  '/static/js/tabs.js',
-  '/static/js/pwa.js',
+  '/static/css/style.css?v=1.2.0',
+  '/static/js/map.js?v=1.2.0',
+  '/static/js/crowdsource.js?v=1.2.0',
+  '/static/js/tabs.js?v=1.2.0',
+  '/static/js/pwa.js?v=1.2.0',
   '/static/icons/icon.svg',
   '/static/icons/icon-192.png',
   '/static/icons/icon-512.png',

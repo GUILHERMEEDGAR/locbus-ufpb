@@ -26,6 +26,81 @@ def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     return R * c
 
 
+# Traçado oficial de referência para envelope de tolerância do geofencing
+CORREDOR_ROTA_WAYPOINTS = [
+    # Sentido Ida (CCHLA -> CI)
+    {"lat": -7.1397, "lon": -34.8450},
+    {"lat": -7.1404, "lon": -34.8442},
+    {"lat": -7.1415, "lon": -34.8430},
+    {"lat": -7.1425, "lon": -34.8420},
+    {"lat": -7.1438, "lon": -34.8410},
+    {"lat": -7.1448, "lon": -34.8404},
+    {"lat": -7.1458, "lon": -34.8395},
+    {"lat": -7.1472, "lon": -34.8378},
+    {"lat": -7.1492, "lon": -34.8356},
+    {"lat": -7.1510, "lon": -34.8335},
+    {"lat": -7.1530, "lon": -34.8308},
+    {"lat": -7.1555, "lon": -34.8272},
+    {"lat": -7.1578, "lon": -34.8242},
+    {"lat": -7.1598, "lon": -34.8218},
+    {"lat": -7.1615, "lon": -34.8196},
+    {"lat": -7.1627, "lon": -34.8182},
+    # Sentido Volta (CI -> CCHLA)
+    {"lat": -7.1615, "lon": -34.8196},
+    {"lat": -7.1598, "lon": -34.8218},
+    {"lat": -7.1578, "lon": -34.8242},
+    {"lat": -7.1555, "lon": -34.8272},
+    {"lat": -7.1530, "lon": -34.8308},
+    {"lat": -7.1510, "lon": -34.8335},
+    {"lat": -7.1492, "lon": -34.8356},
+    {"lat": -7.1472, "lon": -34.8378},
+    {"lat": -7.1458, "lon": -34.8395},
+    {"lat": -7.1448, "lon": -34.8404},
+    {"lat": -7.1438, "lon": -34.8410},
+    {"lat": -7.1425, "lon": -34.8420},
+    {"lat": -7.1408, "lon": -34.8436},
+    {"lat": -7.1397, "lon": -34.8450},
+]
+
+
+def dist_point_to_segment_km(plat: float, plon: float, lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """Calcula a menor distância ortogonal de um ponto (plat, plon) até um segmento de reta (lat1, lon1)-(lat2, lon2)."""
+    mean_lat_rad = math.radians((lat1 + lat2 + plat) / 3.0)
+    cos_lat = math.cos(mean_lat_rad)
+    scale_y = 111.139
+    scale_x = 111.139 * cos_lat
+    
+    dx = (lon2 - lon1) * scale_x
+    dy = (lat2 - lat1) * scale_y
+    seg_len_sq = dx * dx + dy * dy
+    
+    if seg_len_sq < 1e-9:
+        return haversine_km(plat, plon, lat1, lon1)
+        
+    px = (plon - lon1) * scale_x
+    py = (plat - lat1) * scale_y
+    
+    t = max(0.0, min(1.0, (px * dx + py * dy) / seg_len_sq))
+    proj_lat = lat1 + t * (lat2 - lat1)
+    proj_lon = lon1 + t * (lon2 - lon1)
+    
+    return haversine_km(plat, plon, proj_lat, proj_lon)
+
+
+def dist_point_to_corridor_km(plat: float, plon: float) -> float:
+    """Calcula a menor distância contínua de um ponto a qualquer segmento do traçado viário oficial."""
+    min_dist = float("inf")
+    for i in range(len(CORREDOR_ROTA_WAYPOINTS) - 1):
+        w1 = CORREDOR_ROTA_WAYPOINTS[i]
+        w2 = CORREDOR_ROTA_WAYPOINTS[i + 1]
+        d = dist_point_to_segment_km(plat, plon, w1["lat"], w1["lon"], w2["lat"], w2["lon"])
+        if d < min_dist:
+            min_dist = d
+            if min_dist < 0.005:  # se < 5 metros, já está sobre a via
+                break
+    return min_dist
+
+
 class CollaborativeBuffer:
     """
     Buffer efêmero em memória para armazenamento e fusão de dados colaborativos.
@@ -41,14 +116,19 @@ class CollaborativeBuffer:
 
         # 2. Filtro de velocidade plausível
         if data.speed is not None and data.speed > settings.COLLABORATIVE_MAX_SPEED_KMH:
-            return False, f"Velocidade reportada ({data.speed:.1f} km/h) incompatível com transporte urbano."
+            return False, f"Velocidade reportada ({data.speed:.1f} km/h) incompatível com transporte urbano (máx: {settings.COLLABORATIVE_MAX_SPEED_KMH:.0f} km/h)."
 
-        # 3. Filtro geográfico (Geofencing do corredor CCHLA <-> CI)
-        # Permite uma margem de segurança de ~0.02 graus além do bounding box
+        # 3. Filtro geográfico preliminar (Bounding Box com margem)
         margin = 0.02
         if not (settings.BBOX_SOUTH - margin <= data.latitude <= settings.BBOX_NORTH + margin and
                 settings.BBOX_WEST - margin <= data.longitude <= settings.BBOX_EAST + margin):
             return False, "Coordenada fora do perímetro operacional da linha circular."
+
+        # 4. Geofencing contínuo em relação aos segmentos viários homologados
+        dist_min_km = dist_point_to_corridor_km(data.latitude, data.longitude)
+        tolerance_km = settings.COLLABORATIVE_GEOFENCE_TOLERANCE_METERS / 1000.0
+        if dist_min_km > tolerance_km:
+            return False, f"Ponto fora da rota homologada (distância de {dist_min_km*1000:.0f}m > tolerância de {settings.COLLABORATIVE_GEOFENCE_TOLERANCE_METERS:.0f}m)."
 
         now = datetime.now(timezone.utc)
         point = CollaborativePoint(

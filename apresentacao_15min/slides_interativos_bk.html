@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LocBUS — Apresentação Oral IEEE Latin America (15 min)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg: #070b14;
+      --surface: #0f172a;
+      --surface-card: #141e33;
+      --surface-hover: #1e293b;
+      --border: #1f2d48;
+      --border-accent: #0284c7;
+      --accent: #0284c7;
+      --accent-light: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.25);
+      --emerald: #10b981;
+      --emerald-glow: rgba(16, 185, 129, 0.2);
+      --amber: #f59e0b;
+      --rose: #f43f5e;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-sub: #cbd5e1;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+    }
+
+    /* Top Progress Bar */
+    .top-progress {
+      height: 4px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.05);
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 100;
+    }
+    .top-progress-fill {
+      height: 100%;
+      width: 8.33%;
+      background: linear-gradient(90deg, #0284c7, #38bdf8, #10b981);
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 0 10px var(--accent-glow);
+    }
+
+    /* Header Navigation */
+    header {
+      padding: 10px 24px;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      z-index: 50;
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .logo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      color: white;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 800;
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .timer-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #090f1d;
+      border: 1px solid var(--border);
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent-light);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .timer-pill:hover {
+      border-color: var(--accent-light);
+      background: #111a2e;
+    }
+
+    .btn-header-tool {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      color: var(--text-sub);
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+    .btn-header-tool:hover {
+      background: var(--surface-hover);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    .btn-header-tool.active {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: var(--accent-light);
+      color: var(--accent-light);
+    }
+
+    /* Main Presentation Canvas */
+    .presentation-viewport {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide {
+      display: none;
+      width: 100%;
+      max-width: 1280px;
+      height: 100%;
+      max-height: 740px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 36px 44px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+      animation: slideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .slide.active {
+      display: flex;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: scale(0.985) translateY(6px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    /* Typography & Core Elements */
+    .slide-badge-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      background: rgba(56, 189, 248, 0.12);
+      color: var(--accent-light);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+    }
+
+    .badge.emerald {
+      background: rgba(16, 185, 129, 0.12);
+      color: #34d399;
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    .badge.amber {
+      background: rgba(245, 158, 11, 0.12);
+      color: #fbbf24;
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+
+    .badge.rose {
+      background: rgba(244, 63, 94, 0.12);
+      color: #fb7185;
+      border-color: rgba(244, 63, 94, 0.3);
+    }
+
+    .slide-timing {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    h1 {
+      font-size: 32px;
+      font-weight: 800;
+      line-height: 1.25;
+      color: #ffffff;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    h2 {
+      font-size: 25px;
+      font-weight: 700;
+      line-height: 1.3;
+      color: #ffffff;
+      letter-spacing: -0.01em;
+      margin-bottom: 12px;
+    }
+
+    .subtitle {
+      font-size: 15px;
+      line-height: 1.5;
+      color: var(--accent-light);
+      margin-bottom: 20px;
+    }
+
+    p {
+      font-size: 15px;
+      line-height: 1.6;
+      color: var(--text-sub);
+      margin-bottom: 12px;
+    }
+
+    /* Grids & Cards */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px;
+      transition: all 0.2s;
+    }
+    .card:hover {
+      border-color: rgba(56, 189, 248, 0.4);
+      background: #17233c;
+    }
+
+    .card h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--accent-light);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card ul, .card ol, ul.clean-list {
+      list-style: none;
+    }
+
+    .card li, ul.clean-list li {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #cbd5e1;
+      margin-bottom: 8px;
+      position: relative;
+      padding-left: 20px;
+    }
+
+    .card li::before, ul.clean-list li::before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      top: 0;
+      color: var(--accent-light);
+      font-weight: bold;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .card.positive li::before { content: "✓"; color: #34d399; }
+    .card.negative li::before { content: "✕"; color: #fb7185; }
+
+    /* Stat Cards */
+    .stat-box {
+      background: #0d1527;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+    }
+    .stat-number {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--accent-light);
+      line-height: 1.1;
+      margin-bottom: 4px;
+    }
+    .stat-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Comparison Table */
+    .table-container {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      margin-top: 10px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+      text-align: left;
+    }
+    th, td {
+      padding: 11px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    th {
+      background: #090f1f;
+      color: var(--text-sub);
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255, 255, 255, 0.02); }
+    .col-highlight {
+      background: rgba(16, 185, 129, 0.08) !important;
+      font-weight: 600;
+      color: #34d399;
+      border-left: 2px solid #10b981;
+      border-right: 2px solid #10b981;
+    }
+    th.col-highlight {
+      background: rgba(16, 185, 129, 0.15) !important;
+      color: #34d399;
+      border-top: 2px solid #10b981;
+    }
+    tr:last-child td.col-highlight {
+      border-bottom: 2px solid #10b981;
+    }
+
+    /* Image Display & Mockup Frames */
+    .image-preview-frame {
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: #0a0f1d;
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .preview-header {
+      background: #090e1a;
+      padding: 8px 14px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .preview-dots {
+      display: flex;
+      gap: 6px;
+    }
+    .dot { width: 9px; height: 9px; border-radius: 50%; }
+    .dot.r { background: #ef4444; }
+    .dot.y { background: #f59e0b; }
+    .dot.g { background: #10b981; }
+
+    .image-preview-frame img {
+      width: 100%;
+      height: 100%;
+      max-height: 400px;
+      object-fit: contain;
+      background: transparent;
+      transition: transform 0.2s;
+    }
+
+    /* Math Formula Block */
+    .formula-card {
+      background: #090e1a;
+      border-left: 4px solid var(--accent);
+      border-radius: 0 12px 12px 0;
+      padding: 14px 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      color: var(--accent-light);
+      margin: 12px 0;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    /* Speaker Notes Drawer */
+    .notes-drawer {
+      position: fixed;
+      bottom: 58px;
+      left: 0;
+      right: 0;
+      background: rgba(10, 15, 29, 0.96);
+      backdrop-filter: blur(16px);
+      border-top: 1px solid var(--border);
+      padding: 16px 32px;
+      max-height: 220px;
+      overflow-y: auto;
+      z-index: 80;
+      transform: translateY(110%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
+    }
+    .notes-drawer.open {
+      transform: translateY(0);
+    }
+    .notes-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent-light);
+    }
+    .notes-content {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #e2e8f0;
+    }
+    .notes-content em {
+      color: #93c5fd;
+      font-style: normal;
+    }
+
+    /* Bottom Controller Footer */
+    footer {
+      padding: 10px 24px;
+      background: rgba(15, 23, 42, 0.95);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 50;
+    }
+
+    .footer-nav {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav-btn {
+      background: var(--surface-card);
+      color: #fff;
+      border: 1px solid var(--border);
+      padding: 7px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .nav-btn:hover:not(:disabled) {
+      background: var(--surface-hover);
+      border-color: var(--accent);
+    }
+    .nav-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .slide-dots {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .slide-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #334155;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .slide-dot.active {
+      background: var(--accent-light);
+      width: 22px;
+      border-radius: 4px;
+    }
+
+    .indicator-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    /* Modal Image Zoom */
+    .image-zoom-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.88);
+      backdrop-filter: blur(10px);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 30px;
+      cursor: zoom-out;
+    }
+    .image-zoom-overlay.open { display: flex; }
+    .image-zoom-overlay img {
+      max-width: 95vw;
+      max-height: 90vh;
+      object-fit: contain;
+      border-radius: 12px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.8);
+      border: 1px solid var(--border);
+    }
+
+    /* Keybind Hints */
+    .key-hint {
+      display: inline-block;
+      padding: 2px 6px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 4px;
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-sub);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Progress Bar -->
+  <div class="top-progress">
+    <div class="top-progress-fill" id="topProgress"></div>
+  </div>
+
+  <!-- Header -->
+  <header>
+    <div class="header-brand">
+      <div class="logo-badge">📍 LocBUS</div>
+      <span style="color: var(--text-muted); font-weight: 400;">|</span>
+      <span style="color: #cbd5e1;">Apresentação Oral IEEE Latin America</span>
+      <span class="badge">15 min</span>
+    </div>
+
+    <div class="header-actions">
+      <div class="timer-pill" id="timerPill" title="Clique para pausar / retomar / reiniciar">
+        <span id="timerIcon">⏱️</span>
+        <span id="timer">00:00 / 15:00</span>
+      </div>
+
+      <button class="btn-header-tool" id="btnToggleNotes" title="Atalho: Tecla N">
+        🎙️ <span>Roteiro de Fala (N)</span>
+      </button>
+
+      <button class="btn-header-tool" id="btnFullscreen" title="Atalho: Tecla F">
+        ⛶ <span>Tela Cheia (F)</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Presentation Canvas -->
+  <main class="presentation-viewport">
+
+    <!-- ==================== SLIDE 1 ==================== -->
+    <section class="slide active" data-index="1">
+      <div>
+        <div class="slide-badge-row">
+          <span class="badge">Artigo Científico &amp; Proposta de Engenharia</span>
+          <span class="slide-timing">⏱️ 00:00 - 00:45 (45s)</span>
+        </div>
+        <h1 style="font-size: 34px; margin-top: 10px;">
+          LocBUS: Arquitetura Híbrida de Telemetria e Rastreamento Veicular Colaborativo de Baixo Custo
+        </h1>
+        <div class="subtitle" style="font-size: 18px; margin-bottom: 24px;">
+          Rastreamento Inteligente de Transporte Universitário Intercampi sem Computador de Bordo 4G
+        </div>
+      </div>
+
+      <div class="grid-4" style="margin: 10px 0;">
+        <div class="stat-box">
+          <div class="stat-number" style="color: #34d399;">R$ 0</div>
+          <div class="stat-label">Custo de Conectividade Veicular</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number">&lt; R$ 40</div>
+          <div class="stat-label">Hardware Veicular (ESP32)</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number">&lt; 350ms</div>
+          <div class="stat-label">Latência Streaming SSE</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number" style="color: #38bdf8;">100%</div>
+          <div class="stat-label">Conforme à LGPD</div>
+        </div>
+      </div>
+
+      <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid var(--border); border-radius: 14px; padding: 18px 24px; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <div style="font-weight: 700; color: #fff; font-size: 15px;">Guilherme Edgar C. S. R. Guedes &amp; Equipe LocBUS</div>
+          <div style="font-size: 13px; color: var(--text-muted); margin-top: 3px;">
+            Universidade Federal da Paraíba (UFPB) • Campus I (João Pessoa) / Campus IV (Rio Tinto)
+          </div>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <span class="badge">FastAPI</span>
+          <span class="badge">ESP32 BLE</span>
+          <span class="badge">Leaflet PWA</span>
+          <span class="badge">SSE Live</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SLIDE 2 ==================== -->
+    <section class="slide" data-index="2">
+      <div>
+        <div class="slide-badge-row">
+          <span class="badge">Contextualização Operacional</span>
+          <span class="slide-timing">⏱️ 00:45 - 02:00 (1m15s)</span>
+        </div>
+        <h2>O Cenário do Transporte Universitário Intercampi (UFPB)</h2>
+        <div class="subtitle">Deslocamento diário contínuo em malha urbana mista e tráfego saturado</div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>📍 Dimensão da Operação</h3>
+          <ul>
+            <li>Ligação obrigatória entre <strong>Campus I (Castelo Branco)</strong> e <strong>Centro de Informática (Mangabeira)</strong>;</li>
+            <li>Percurso viário superior a <strong>14 km por ciclo completo</strong>;</li>
+            <li>Atravessa corredores de tráfego intenso (Av. Sérgio Guerra / Bancários);</li>
+            <li><strong>8 paradas principais:</strong> Terminal CCHLA, Reitoria, RU, CCEN, CT, CE, Praça da Paz e CI Mangabeira.</li>
+          </ul>
+        </div>
+
+        <div class="card negative">
+          <h3 style="color: #fb7185;">⚠️ Impactos da Falta de Previsibilidade</h3>
+          <ul>
+            <li>Passageiros aguardam nas paradas no escuro, sem saber se o ônibus acabou de passar ou se atrasará 30 min;</li>
+            <li>Exposição a intempéries climáticas e vulnerabilidade de segurança pública nos pontos isolados;</li>
+            <li>Superlotação repentina nas paradas e atrasos em avaliações acadêmicas práticas.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card" style="padding: 14px 20px; background: #0c1324;">
+        <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--text-muted); margin-bottom: 6px;">
+          <span>Itinerário Estratégico da Linha Circular</span>
+          <span style="color: var(--accent-light);">31 waypoints georreferenciados</span>
+        </div>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+          <span class="badge" style="font-size: 11px;">1. CCHLA</span>
+          <span class="badge" style="font-size: 11px;">2. Reitoria</span>
+          <span class="badge" style="font-size: 11px;">3. Centro de Convivência</span>
+          <span class="badge" style="font-size: 11px;">4. CCEN</span>
+          <span class="badge" style="font-size: 11px;">5. CT</span>
+          <span class="badge" style="font-size: 11px;">6. Praça da Paz</span>
+          <span class="badge" style="font-size: 11px;">7. Mangabeira Shopping</span>
+          <span class="badge emerald" style="font-size: 11px;">8. Terminal CI Mangabeira</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SLIDE 3 ==================== -->
+    <section class="slide" data-index="3">
+      <div>
+        <div class="slide-badge-row">
+          <span class="badge rose">Problema de Pesquisa</span>
+          <span class="slide-timing">⏱️ 02:00 - 03:30 (1m30s)</span>
+        </div>
+        <h2>A Assimetria Informacional e o Dilema de Custos</h2>
+        <div class="subtitle">Por que o transporte público universitário ainda opera sem rastreamento em tempo real?</div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="color: #fbbf24;">🏛️ O Dilema da Universidade Pública</h3>
+          <ul>
+            <li><strong>Orçamento Custeio Rígido:</strong> Impossibilidade de assumir despesas de custeio mensal recorrente com chips M2M;</li>
+            <li><strong>Frotas Mistas e Terceirizadas:</strong> Ônibus alugados não permitem instalação invasiva na fiação elétrica ou computador de bordo CAN;</li>
+            <li><strong>Sistemas Proprietários Fechados:</strong> Softwares de mercado exigem contratos milionários de licenciamento.</li>
+          </ul>
+        </div>
+
+        <div class="card" style="border-color: rgba(2, 132, 199, 0.4); background: linear-gradient(180deg, #0e172a 0%, #0a1122 100%);">
+          <h3>🎯 A Pergunta Científica</h3>
+          <p style="font-size: 16px; color: #e2e8f0; font-style: italic; line-height: 1.7; margin-top: 10px;">
+            "É possível alcançar a mesma <strong>confiabilidade e precisão determinística</strong> de um rastreador veicular dedicado, aproveitando a <strong>conectividade e sensores dos smartphones dos passageiros</strong>, eliminando o custo de planos de dados e blindando o sistema contra o ruído de pedestres?"
+          </p>
+          <div style="margin-top: 16px; font-size: 13px; color: var(--accent-light); font-weight: 600;">
+            ➜ Tese LocBUS: Validação física por rádio de curto alcance + filtragem cinemática na nuvem.
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-3" style="margin-top: 8px;">
+        <div class="stat-box">
+          <div class="stat-number" style="color: #fb7185;">R$ 2.500</div>
+          <div class="stat-label">Custo Rastreador Industrial / Ônibus</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number" style="color: #fb7185;">R$ 100/mês</div>
+          <div class="stat-label">Mensalidade 4G M2M por Veículo</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number" style="color: #34d399;">R$ 0/mês</div>
+          <div class="stat-label">Gasto Mensal na Abordagem LocBUS</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SLIDE 4 ==================== -->
+    <section class="slide" data-index="4">
+      <div>
+        <div class="slide-badge-row">
+          <span class="badge">Estado da Arte I</span>
+          <span class="slide-timing">⏱️ 03:30 - 05:00 (1m30s)</span>
+        </div>
+        <h2>Sistemas AVL (Automatic Vehicle Location) Convencionais</h2>
+        <div class="subtitle">O padrão industrial da iniciativa privada e suas barreiras no setor público</div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card positive">
+          <h3 style="color: #34d399;">✓ Vantagens Técnicas</h3>
+          <ul>
+            <li>Receptores GNSS veiculares de alta sensibilidade com taxa de atualização de 1 a 5 Hz;</li>
+            <li>Transmissão ininterrupta via modem celular embarcado (GPRS/4G/LTE);</li>
+            <li>Independente da presença ou ação de qualquer passageiro;</li>
+            <li>Possibilidade de telemetria CAN (velocidade de roda, hodômetro, combustível).</li>
+          </ul>
+        </div>
+
+        <div class="card negative">
+          <h3 style="color: #fb7185;">✕ Desvantagens e Barreiras Críticas</h3>
+          <ul>
+            <li><strong>Custo de Aquisição:</strong> R$ 1.500 a R$ 2.500 por equipamento homologado;</li>
+            <li><strong>Custo Recorrente Vitalício:</strong> R$ 60 a R$ 120 mensais por chip M2M contratado;</li>
+            <li><strong>Instalação Invasiva:</strong> Corte de chicote elétrico e conexão na bateria do veículo, gerando conflito com operadoras terceirizadas;</li>
+            <li><strong>Inviabilidade em Frotas de Médio/Pequeno Porte:</strong> Risco financeiro alto em caso de quebra ou rescisão contratual.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="formula-card" style="font-family: 'Inter', sans-serif; font-size: 13.5px; color: var(--text-sub);">
+        <strong>Diagnóstico:</strong> Excelente para grandes concessionárias metropolitanas com capital intensivo; inviável e deficitário para o transporte institucional universitário.
+      </div>
+    </section>
+
+    <!-- ==================== SLIDE 5 ==================== -->
+    <section class="slide" data-index="5">
+      <div>
+        <div class="slide-badge-row">
+          <span class="badge">Estado da Arte II</span>
+          <span class="slide-timing">⏱️ 05:00 - 06:30 (1m30s)</span>
+        </div>
+        <h2>Crowdsourcing Comunitário e Tecnologias de Proximidade (BLE)</h2>
+        <div class="subtitle">A contraposição entre sensoriamento puramente móvel e balizas locais de rádio</div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="color: #38bdf8;">📱 Crowdsourcing Puro (Waze / Moovit)</h3>
+          <ul>
+            <li><strong>Custo de Hardware Zero:</strong> Aproveita os sensores já existentes nos celulares da população;</li>
+            <li><strong style="color: #fb7185;">Falha Crítica 1 (Falso Positivo):</strong> Não diferencia se a pessoa está no ônibus ou caminhando a pé na calçada ao lado da parada;</li>
+            <li><strong style="color: #fb7185;">Falha Crítica 2 (Vulnerabilidade):</strong> Totalmente exposto a injeção de rotas falsas (<em>GPS spoofing</em>) ou motoristas de aplicativo que abrem o app por engano.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3 style="color: #34d399;">📻 Balizas de Proximidade (Bluetooth Low Energy)</h3>
+          <ul>
+            <li><strong>Microtransmissores Autônomos (ESP32 / iBeacon):</strong> Custo de hardware unitário inferior a <strong>R$ 40</strong>;</li>
+            <li><strong>Alimentação Passiva:</strong> Conectado diretamente na tomada USB 5V do painel do motorista (consumo &lt; 0.4W);</li>
+            <li><strong>Imunidade Determinística:</strong> Alcance calibrado para 6 a 8 metros garante que somente quem está <em>dentro da carroceria</em> capture o identificador do veículo.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; padding: 12px 20px; font-size: 13.5px; color: #a7f3d0;">
+        💡 <strong>Oportunidade Científica:</strong> E se usássemos a precisão local do rádio BLE para validar a presença física e desbloquear com segurança a telemetria do smartphone do passageiro?
+      </div>
+    </section>
+
+    <!-- ==================== SLIDE 6 ==================== -->
+    <section class="slide" data-index="6">
+      <div>
+        <div class="slide-badge-row">
+          <span class="badge amber">A Lacuna Tecnológica</span>
+          <span class="slide-timing">⏱️ 06:30 - 08:00 (1m30s)</span>
+        </div>
+        <h2>Matriz de Decisão: Onde as Soluções Atuais Falham</h2>
+        <div class="subtitle">Identificação da oportunidade que fundamenta a arquitetura LocBUS</div>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Dimensão de Análise</th>
+              <th>AVL Comercial 4G</th>
+              <th>Crowdsourcing Puro</th>
+              <th class="col-highlight">LocBUS (Nossa Proposta)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Custo de Hardware Veicular</strong></td>
+              <td>Alto (&gt; R$ 1.500)</td>
+              <td>Nulo (R$ 0)</td>
+              <td class="col-highlight">Mínimo (&lt; R$ 40 - ESP32)</td>
+            </tr>
+            <tr>
+              <td><strong>Mensalidade de Conectividade (SIM Card)</strong></td>
+              <td>Obrigatório (R$ 60-120/mês)</td>
+              <td>Não (Dados do usuário)</td>
+              <td class="col-highlight">Zero (Planos dos passageiros)</td>
+            </tr>
+            <tr>
+              <td><strong>Imunidade a Ruídos de Pedestres</strong></td>
+              <td>Total</td>
+              <td style="color: #fb7185;">Vulnerável (Confunde pedestres)</td>
+              <td class="col-highlight">Total (Autenticação Rádio BLE)</td>
+            </tr>
+            <tr>
+              <td><strong>Blindagem contra GPS Spoofing</strong></td>
+              <td>Alta</td>
+              <td style="color: #fb7185;">Baixa (Injeção de coordenadas)</td>
+              <td class="col-highlight">Alta (BLE + Geofencing 80m)</td>
+            </tr>
+            <tr>
+              <td><strong>Latência de Transmissão ao Usuário</strong></td>
+              <td>5 a 15 segundos</td>
+              <td>15 a 60 segundos</td>
+              <td class="col-highlight">&lt; 350 ms (Streaming SSE)</td>
+            </tr>
+            <tr>
+              <td><strong>Instalação no Veículo</strong></td>
+              <td>Invasiva (Chicote / CAN)</td>
+              <td>Nenhuma</td>
+              <td class="col-highlight">Plug &amp; Play (USB 5V do painel)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-top: 12px; font-size: 14px; color: var(--accent-light); font-weight: 600; text-align: center;">
+        🎯 O LocBUS preenche a lacuna exata: custo de conectividade zero com a confiabilidade determinística de um rastreador embarcado.
+      </div>
+    </section>
+
+    <!-- ==================== SLIDE 7 ==================== -->
+    <section class="slide" data-index="7">
+      <div>
+        <div class="slide-badge-row">
+          <span class="badge emerald">A Solução Proposta</span>
+          <span class="slide-timing">⏱️ 08:00 - 09:30 (1m30s)</span>
+        </div>
+        <h2>A Proposta LocBUS: Telemetria Híbrida Simbiótica</h2>
+        <div class="subtitle">Fusão inteligente entre rádio veicular de curto alcance e sensoriamento móvel participativo</div>
+      </div>
+
+      <div class="grid-2" style="align-items: center;">
+        <div class="card" style="padding: 22px;">
+          <h3 style="margin-bottom: 16px;">⚙️ Fluxo Operacional Simbiótico</h3>
+          <div style="display: flex; flex-direction: column; gap: 14px;">
+            <div style="display: flex; gap: 12px; align-items: flex-start;">
+              <span class="badge" style="background: rgba(2, 132, 199, 0.2); color: #38bdf8; font-weight: 700; min-width: 28px; justify-content: center;">1</span>
+              <div>
+                <strong style="color: #fff; font-size: 14px;">Validação de Presença Física</strong>
+                <p style="margin: 2px 0 0 0; font-size: 13px; color: #cbd5e1;">O estudante embarca no ônibus. A PWA detecta o sinal de rádio RSSI do ESP32 veicular (> -75 dBm) via Web Bluetooth.</p>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 12px; align-items: flex-start;">
+              <span class="badge emerald" style="background: rgba(16, 185, 129, 0.2); color: #34d399; font-weight: 700; min-width: 28px; justify-content: center;">2</span>
+              <div>
+                <strong style="color: #fff; font-size: 14px;">Coleta Oportunista GNSS</strong>
+                <p style="margin: 2px 0 0 0; font-size: 13px; color: #cbd5e1;">O smartphone inicia a transmissão do seu GPS com intervalo fixo de <strong>Δt = 4 segundos</strong> para preservar bateria.</p>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 12px; align-items: flex-start;">
+              <span class="badge amber" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24; font-weight: 700; min-width: 28px; justify-content: center;">3</span>
+              <div>
+                <strong style="color: #fff; font-size: 14px;">Filtragem e Limpeza em Nuvem</strong>
+                <p style="margin: 2px 0 0 0; font-size: 13px; color: #cbd5e1;">O backend FastAPI valida a posição no geofence da rota (80m) e descarta saltos anômalos acima de 65 km/h.</p>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 12px; align-items: flex-start;">
+              <span class="badge" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; font-weight: 700; min-width: 28px; justify-content: center;">4</span>
+              <div>
+                <strong style="color: #fff; font-size: 14px;">Difusão Instantânea aos Usuários</strong>
+                <p style="margin: 2px 0 0 0; font-size: 13px; color: #cbd5e1;">A posição consolidada é distribuída instantaneamente para quem espera nas paradas via Server-Sent Events (&lt; 350 ms).</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: center;">
+          <div class="image-preview-frame" style="max-width: 320px; border-radius: 24px; border: 2px solid #334155; box-shadow: 0 20px 40px rgba(0,0,0,0.8);">
+            <div class="preview-header" style="border-radius: 22px 22px 0 0; padding: 6px 14px;">
+              <div class="preview-dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+              <span style="font-size: 11px;">PWA Mobile</span>
+              <span style="color: #34d399; font-weight: 600; font-size: 11px;">● 4G</span>
+            </div>
+            <div style="padding: 4px; background: #080d1a; text-align: center;">
+              <img src="assets/mobile_interface_pwa.png" alt="Interface Móvel PWA LocBUS" onclick="openZoom(this.src)" style="max-height: 420px; width: 100%; object-fit: contain; cursor: zoom-in;" title="Clique para ampliar">
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SLIDE 8 ==================== -->
+    <section class="slide" data-index="8">
+      <div>
+        <div class="slide-badge-row">
+          <span class="badge">Engenharia de Software</span>
+          <span class="slide-timing">⏱️ 09:30 - 10:30 (1m00s)</span>
+        </div>
+        <h2>Requisitos de Engenharia (RFs e RNFs)</h2>
+        <div class="subtitle">Critérios rigorosos de especificação técnica para viabilidade em produção</div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="color: #38bdf8;">📋 Requisitos Funcionais (RFs)</h3>
+          <ul>
+            <li><strong>RF01 (Autenticação BLE):</strong> Rastreamento colaborativo só é aceito mediante validação do rádio veicular;</li>
+            <li><strong>RF02 (Geofencing Contínuo):</strong> Descarte imediato de telemetria além de 80 metros do eixo viário oficial;</li>
+            <li><strong>RF03 (Filtro Cinemático):</strong> Descarte de saltos de GPS ou velocidades computadas superiores a 65 km/h;</li>
+            <li><strong>RF04 (Clustering Ponderado):</strong> Agregação de múltiplos passageiros ponderada pelo inverso da acurácia ($1/\sigma$);</li>
+            <li><strong>RF05 (Difusão SSE):</strong> Publicação contínua unidirecional para os passageiros.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3 style="color: #34d399;">⚡ Requisitos Não-Funcionais (RNFs)</h3>
+          <ul>
+            <li><strong>RNF01 (Latência Estrita):</strong> Latência fim a fim inferior a 500 ms (alcançado ~220 ms);</li>
+            <li><strong>RNF02 (Eficiência Energética):</strong> Throttling de 4 segundos e uso de cache rápido de GNSS;</li>
+            <li><strong>RNF03 (Universalidade PWA):</strong> Execução direta no navegador sem exigir download em lojas (Google Play / App Store);</li>
+            <li><strong>RNF04 (Privacidade e LGPD):</strong> Transmissão anônima em memória volátil com TTL; zero armazenamento de CPF, IMEI ou dados pessoais.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SLIDE 9 ==================== -->
+    <section class="slide" data-index="9">
+      <div>
+        <div class="slide-badge-row">
+          <span class="badge">Arquitetura de Sistemas</span>
+          <span class="slide-timing">⏱️ 10:30 - 12:00 (1m30s)</span>
+        </div>
+        <h2>Arquitetura Desacoplada em 4 Camadas</h2>
+        <div class="subtitle">Do nó veicular físico à difusão em tempo real no navegador do passageiro</div>
+      </div>
+
+      <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; margin: 6px 0;">
+        <div class="image-preview-frame" style="width: 100%; max-height: 420px; background: #ffffff; border: 2px solid #334155;">
+          <div class="preview-header" style="background: #0f172a; color: #cbd5e1;">
+            <div class="preview-dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+            <span style="font-weight: 600;">Diagrama Arquitetural Completo (Submetido ao IEEE Latin America)</span>
+            <span style="color: var(--accent-light); font-size: 11px; cursor: pointer;" onclick="openZoom('assets/fig1_arquitetura.png')">🔍 [Clique para Tela Cheia]</span>
+          </div>
+          <div style="padding: 12px; display: flex; align-items: center; justify-content: center; background: #ffffff;">
+            <img src="assets/fig1_arquitetura.png" alt="Arquitetura em 4 Camadas do LocBUS" onclick="openZoom(this.src)" style="max-height: 340px; width: 100%; object-fit: contain; cursor: zoom-in;" title="Clique para ampliar em tela cheia">
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-4" style="margin-top: 10px;">
+        <div style="font-size: 12px; color: var(--text-sub); background: #0c1324; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);">
+          <strong style="color: var(--accent-light);">1. Veículo:</strong> ESP32 iBeacon USB (0.4W)
+        </div>
+        <div style="font-size: 12px; color: var(--text-sub); background: #0c1324; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);">
+          <strong style="color: var(--accent-light);">2. Borda:</strong> PWA + Web Bluetooth + W3C GPS
+        </div>
+        <div style="font-size: 12px; color: var(--text-sub); background: #0c1324; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);">
+          <strong style="color: var(--accent-light);">3. Nuvem:</strong> FastAPI + Geofence + SSE Broker
+        </div>
+        <div style="font-size: 12px; color: var(--text-sub); background: #0c1324; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);">
+          <strong style="color: var(--accent-light);">4. Cliente:</strong> Leaflet.js + ETA Dinâmico
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SLIDE 10 ==================== -->
+    <section class="slide" data-index="10">
+      <div>
+        <div class="slide-badge-row">
+          <span class="badge">Modelagem Matemática</span>
+          <span class="slide-timing">⏱️ 12:00 - 13:15 (1m15s)</span>
+        </div>
+        <h2>Geofencing Haversine e Clustering Ponderado</h2>
+        <div class="subtitle">Como o sistema garante estabilidade espacial e elimina coordenadas aberrantes</div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>📐 Validação Esférica de Geofencing</h3>
+          <p style="font-size: 13.5px;">Cálculo da distância geodésica mínima entre o ponto recebido do smartphone $P(\phi_p, \lambda_p)$ e o eixo do segmento viário $S(\phi_s, \lambda_s)$:</p>
+          
+          <div class="formula-card">
+            d = 2R · arcsin(√(sin²(Δφ/2) + cos φ₁ · cos φ₂ · sin²(Δλ/2)))<br>
+            <span style="color: #34d399; font-weight: 700;">Condição de Aceite: d ≤ 80 metros</span>
+          </div>
+
+          <p style="font-size: 13px; color: var(--text-muted); margin-top: 8px;">
+            Qualquer ponto recebido de passageiro com desvio perpendicular superior a 80m é automaticamente descartado pelo backend antes do clustering.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3>🎯 Centróide Ponderado por Inverso da Acurácia</h3>
+          <p style="font-size: 13.5px;">Quando múltiplos passageiros transmitem simultaneamente a bordo do mesmo veículo:</p>
+
+          <div class="formula-card">
+            wₖ = 1 / max(σₖ, 1.0)<br>
+            <span style="color: #38bdf8; font-weight: 700;">X_bus = ( Σ wₖ · Xₖ ) / ( Σ wₖ )</span>
+          </div>
+
+          <p style="font-size: 13px; color: #cbd5e1; margin-top: 8px;">
+            <strong>Efeito Estatístico:</strong> Se um passageiro com smartphone moderno possui acurácia de 3m ($w = 0.33$) e outro com sinal fraco possui 20m ($w = 0.05$), a coordenada de alta precisão tem peso <strong>6.6 vezes superior</strong> na posição do ônibus.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SLIDE 11 ==================== -->
+    <section class="slide" data-index="11">
+      <div>
+        <div class="slide-badge-row">
+          <span class="badge emerald">Validação Experimental</span>
+          <span class="slide-timing">⏱️ 13:15 - 14:15 (1m00s)</span>
+        </div>
+        <h2>Resultados da PoC: Simulação e Teste de Campo Real</h2>
+        <div class="subtitle">Evidências empíricas da estabilidade do sistema em bancada e em vias públicas</div>
+      </div>
+
+      <div class="grid-2" style="margin-bottom: 12px;">
+        <!-- Left Image: Desktop Live System -->
+        <div class="image-preview-frame">
+          <div class="preview-header">
+            <div class="preview-dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+            <span>Aplicação Principal: Linha Circular UFPB</span>
+            <span class="badge emerald" style="padding: 2px 8px; font-size: 10px;">24 Testes OK</span>
+          </div>
+          <div style="flex: 1; display: flex; align-items: center; justify-content: center; background: #080d1a;">
+            <img src="assets/desktop_mapa_ao_vivo.png" alt="Interface Desktop LocBUS" onclick="openZoom(this.src)" style="cursor: zoom-in;" title="Clique para ampliar">
+          </div>
+        </div>
+
+        <!-- Right Image: Field Test Pedras de Fogo -->
+        <div class="image-preview-frame">
+          <div class="preview-header">
+            <div class="preview-dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+            <span>Teste de Campo em Vias Reais (Pedras de Fogo - PB)</span>
+            <span class="badge" style="padding: 2px 8px; font-size: 10px;">Latência ~220ms</span>
+          </div>
+          <div style="flex: 1; display: flex; align-items: center; justify-content: center; background: #080d1a;">
+            <img src="assets/validacao_campo_telemetria.png" alt="Validação em Campo Pedras de Fogo" onclick="openZoom(this.src)" style="cursor: zoom-in;" title="Clique para ampliar">
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-4">
+        <div class="stat-box" style="padding: 10px;">
+          <div class="stat-number" style="font-size: 22px; color: #34d399;">24 / 24</div>
+          <div class="stat-label">Testes Pytest Aprovados</div>
+        </div>
+        <div class="stat-box" style="padding: 10px;">
+          <div class="stat-number" style="font-size: 22px;">~220 ms</div>
+          <div class="stat-label">Latência Média SSE</div>
+        </div>
+        <div class="stat-box" style="padding: 10px;">
+          <div class="stat-number" style="font-size: 22px;">31 Pts</div>
+          <div class="stat-label">Ciclo Completo Simulado</div>
+        </div>
+        <div class="stat-box" style="padding: 10px;">
+          <div class="stat-number" style="font-size: 22px; color: #38bdf8;">100%</div>
+          <div class="stat-label">Continuidade em Campo</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SLIDE 12 ==================== -->
+    <section class="slide" data-index="12">
+      <div>
+        <div class="slide-badge-row">
+          <span class="badge">Conclusão &amp; Impacto</span>
+          <span class="slide-timing">⏱️ 14:15 - 15:00 (45s)</span>
+        </div>
+        <h2>Conclusão, Próximos Passos e Contribuição</h2>
+        <div class="subtitle">Democratização da telemetria de transporte público com engenharia frugal e aberta</div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card positive">
+          <h3 style="color: #34d399;">🎓 Conclusão Científica &amp; Técnica</h3>
+          <ul>
+            <li>A fusão de microbalizas de rádio BLE (< R$ 40) com a conectividade oportunista de passageiros <strong>elimina definitivamente a dependência de modems 4G veiculares pagos</strong>;</li>
+            <li>A combinação de <strong>geofencing contínuo e clustering ponderado</strong> resolveu a clássica fraqueza de ruído do crowdsourcing comum;</li>
+            <li>A arquitetura provou ser viável para implantação imediata em universidades públicas e frotas municipais de pequeno e médio porte.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3 style="color: #38bdf8;">🚀 Cronograma de Continuidade</h3>
+          <ol style="margin-left: 18px; font-size: 13.5px; line-height: 1.7; color: #cbd5e1;">
+            <li><strong>Fase 1 (Próximo Mês):</strong> Instalação física dos primeiros módulos ESP32 nos circulares oficiais da UFPB;</li>
+            <li><strong>Fase 2:</strong> Teste discente em larga escala com alunos do Centro de Informática (Mangabeira);</li>
+            <li><strong>Fase 3:</strong> Algoritmo preditivo de ETA baseado em histórico horário de tráfego na Av. Hilton Souto Maior.</li>
+          </ol>
+        </div>
+      </div>
+
+      <div style="background: linear-gradient(135deg, rgba(2, 132, 199, 0.15) 0%, rgba(16, 185, 129, 0.1) 100%); border: 1px solid var(--accent); border-radius: 14px; padding: 20px; text-align: center; margin-top: 10px;">
+        <div style="font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 4px;">
+          Muito obrigado pela atenção!
+        </div>
+        <div style="font-size: 14px; color: var(--accent-light);">
+          Estamos prontos para responder às perguntas, contribuições e questionamentos da banca.
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Speaker Notes Drawer (Toggled by 'N' key or button) -->
+  <div class="notes-drawer" id="notesDrawer">
+    <div class="notes-header">
+      <span id="notesTitle">🎙️ Roteiro de Fala — Slide 1</span>
+      <span style="font-size: 12px; color: var(--text-muted); cursor: pointer;" onclick="toggleNotes()">✕ Fechar (N)</span>
+    </div>
+    <div class="notes-content" id="notesContent">
+      <!-- Injected via Javascript -->
+    </div>
+  </div>
+
+  <!-- Modal Image Zoom -->
+  <div class="image-zoom-overlay" id="zoomOverlay" onclick="closeZoom()">
+    <img id="zoomImg" src="" alt="Imagem Ampliada">
+  </div>
+
+  <!-- Footer Navigation -->
+  <footer>
+    <div class="footer-nav">
+      <button class="nav-btn" id="prevBtn" onclick="prevSlide()" title="Atalho: Seta Esquerda">
+        ◀ <span>Anterior</span>
+      </button>
+      <button class="nav-btn" id="nextBtn" onclick="nextSlide()" title="Atalho: Seta Direita ou Espaço">
+        <span>Próximo</span> ▶
+      </button>
+    </div>
+
+    <!-- Dots Indicators -->
+    <div class="slide-dots" id="dotsContainer"></div>
+
+    <div style="display: flex; align-items: center; gap: 14px;">
+      <span class="indicator-badge" id="indicator">Slide 1 de 12</span>
+      <div style="display: flex; gap: 6px;">
+        <span class="key-hint">←</span>
+        <span class="key-hint">→</span>
+        <span class="key-hint">Espaço</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Speech script aligned with ROTEIRO_APRESENTACAO_15MIN.md
+    const speechNotes = {
+      1: "<em>Tempo sugerido: 45s</em><br><br><strong>O que falar:</strong> 'Olá a todos, bom dia/boa tarde. Meu nome é Guilherme Guedes e hoje vou apresentar a proposta do nosso projeto intitulado <strong>LocBUS: Uma arquitetura híbrida de telemetria e rastreamento veicular colaborativo de baixo custo para o transporte universitário intercampi</strong>. Nosso trabalho foca em resolver um problema histórico de imprevisibilidade no deslocamento dos estudantes da UFPB, propondo uma solução de alta fidelidade técnica, mas com custo de implantação e operação praticamente nulo.'",
+      2: "<em>Tempo sugerido: 1m15s</em><br><br><strong>O que falar:</strong> 'Para contextualizar: a UFPB possui uma estrutura multicampi em João Pessoa. Diariamente, centenas de alunos precisam transitar entre o Campus I, no Castelo Branco, e o Centro de Informática, em Mangabeira. O trajeto do ônibus circular intercampi possui mais de 14 quilômetros, atravessando corredores urbanos com semáforos e trânsito intenso. Hoje, o passageiro não sabe se o ônibus acabou de passar ou se ainda vai demorar 30 minutos, gerando ansiedade e perda de aulas.'",
+      3: "<em>Tempo sugerido: 1m30s</em><br><br><strong>O que falar:</strong> 'Identificamos um problema claro: a falta de previsibilidade do transporte universitário. A solução óbvia do mercado privado seria instalar rastreadores AVL industriais nos ônibus. No entanto, em universidades federais e frotas terceirizadas, isso custaria de R$ 1.500 a R$ 2.500 por veículo, além de mensalidades de chips 4G M2M que o orçamento institucional não suporta. Nossa pergunta de pesquisa foi: é possível alcançar a mesma confiabilidade de um rastreador dedicado, aproveitando a conectividade dos próprios passageiros, mas sem cair nas falhas típicas de aplicativos comunitários?'",
+      4: "<em>Tempo sugerido: 1m30s</em><br><br><strong>O que falar:</strong> 'No Estado da Arte, analisamos inicialmente os sistemas AVL industriais. Eles são consagrados em grandes operadores comerciais: possuem receptores GPS potentes e transmitem a posição via modem 4G direto para a nuvem. Eles funcionam muito bem, mas apresentam grandes barreiras para o nosso cenário: exigem modificação elétrica no veículo, geram custos mensais contínuos e são financeiramente inviáveis para frotas públicas de pequeno e médio porte.'",
+      5: "<em>Tempo sugerido: 1m30s</em><br><br><strong>O que falar:</strong> 'Na outra ponta, olhamos para as soluções de Crowdsourcing puro, como Moovit e Waze. Elas não exigem nenhum hardware no ônibus, o que é ótimo. Mas têm uma falha fatal: se um aluno com o app aberto estiver caminhando a pé na calçada perto da parada, o sistema pode achar que o ônibus está ali! Além disso, qualquer usuário mal-intencionado pode injetar coordenadas falsas. Por outro lado, a tecnologia Bluetooth Low Energy (BLE) nos dá uma ferramenta de ouro: balizas de proximidade de menos de 40 reais que transmitem identificadores criptografados a poucos metros.'",
+      6: "<em>Tempo sugerido: 1m30s</em><br><br><strong>O que falar:</strong> 'Aqui chegamos ao coração da nossa contribuição: a Lacuna Tecnológica. Existe um abismo entre o rastreador veicular caro e o aplicativo comunitário impreciso. O que faltava na literatura e na indústria é uma solução híbrida: um sistema que utilize a presença física confirmada por um rádio de baixíssimo custo no ônibus para validar e canalizar o GPS dos smartphones dos passageiros, filtrando matematicamente todo o ruído. Essa é a proposta do LocBUS.'",
+      7: "<em>Tempo sugerido: 1m30s</em><br><br><strong>O que falar:</strong> 'O LocBUS funciona como uma simbiose inteligente: colocamos um pequeno beacon BLE alimentado na entrada USB do ônibus. Quando o estudante entra no veículo, o smartphone dele detecta o rádio com sinal forte e valida: estou fisicamente dentro do ônibus. A partir desse momento, e apenas enquanto estiver a bordo, a aplicação web transmite a posição do GPS do celular com intervalo de 4 segundos. O ônibus é rastreado sem gastar 1 centavo com chip 4G institucional.'",
+      8: "<em>Tempo sugerido: 1m00s</em><br><br><strong>O que falar:</strong> 'Estruturamos nosso projeto sobre requisitos de engenharia rigorosos. Do lado funcional: geofencing com limite estrito de 80 metros da rota viária, teto cinemático de 65 km/h e clustering de múltiplos colaboradores. Do lado não funcional: latência de atualização abaixo de 500 milissegundos via Server-Sent Events, proteção estrita de bateria móvel e conformidade total com a LGPD, sem coletar CPF, nome, IMEI ou identificadores de usuário.'",
+      9: "<em>Tempo sugerido: 1m30s</em><br><br><strong>O que falar:</strong> 'Nossa arquitetura é desacoplada em quatro camadas: na base física veicular, temos o ESP32 operando como iBeacon. Na borda, o passageiro roda uma PWA leve que dispensa instalação pela Google Play ou App Store. No backend, escolhemos Python assíncrono com FastAPI e um buffer volátil de alta velocidade em memória. E na apresentação, um mapa interativo em Leaflet que renderiza em tempo real as coordenadas e o rastro viário.'",
+      10: "<em>Tempo sugerido: 1m15s</em><br><br><strong>O que falar:</strong> 'Como resolvemos o problema da imprecisão do GPS dentro do ônibus? Criamos um estimador ponderado: quando vários passageiros estão a bordo ao mesmo tempo, cada celular envia sua coordenada e sua margem de erro. O nosso backend calcula o centróide ponderado pelo inverso da acurácia. Ou seja: um celular topo de linha com acurácia de 3 metros terá um peso estatístico muito superior a um aparelho antigo com margem de 20 metros. O resultado é uma posição veicular consolidada muito mais estável do que a de qualquer passageiro isolado.'",
+      11: "<em>Tempo sugerido: 1m00s</em><br><br><strong>O que falar:</strong> 'Nossos resultados preliminares da Prova de Conceito comprovam a tese: temos 24 testes unitários e de integração cobrindo todo o ciclo circular de 31 pontos da rota da UFPB. Além disso, executamos um teste de campo com telemetria contínua em condições móveis reais em vias públicas, validando o streaming de dados, o algoritmo de fallback de GPS e a contagem contínua de pontos com latência abaixo de 300 milissegundos.'",
+      12: "<em>Tempo sugerido: 45s</em><br><br><strong>O que falar:</strong> 'Para concluir: o LocBUS comprova que com engenharia de software e fusão sensorial inteligente é possível entregar um serviço de alto nível à comunidade acadêmica sem depender de grandes licitações de hardware caro. Nossos próximos passos envolvem a instalação piloto das balizas nos ônibus da UFPB e testes de usabilidade com os estudantes. Muito obrigado pela atenção de todos e estamos abertos às dúvidas da banca!'"
+    };
+
+    let currentSlide = 1;
+    const totalSlides = 12;
+    const slides = document.querySelectorAll('.slide');
+    const indicator = document.getElementById('indicator');
+    const topProgress = document.getElementById('topProgress');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const dotsContainer = document.getElementById('dotsContainer');
+    const notesDrawer = document.getElementById('notesDrawer');
+    const notesTitle = document.getElementById('notesTitle');
+    const notesContent = document.getElementById('notesContent');
+    const btnToggleNotes = document.getElementById('btnToggleNotes');
+
+    // Create thumbnail dots
+    for (let i = 1; i <= totalSlides; i++) {
+      const dot = document.createElement('div');
+      dot.className = `slide-dot ${i === 1 ? 'active' : ''}`;
+      dot.title = `Ir para Slide ${i}`;
+      dot.addEventListener('click', () => showSlide(i));
+      dotsContainer.appendChild(dot);
+    }
+    const dots = document.querySelectorAll('.slide-dot');
+
+    function showSlide(n) {
+      if (n < 1) n = 1;
+      if (n > totalSlides) n = totalSlides;
+      currentSlide = n;
+
+      slides.forEach((s, idx) => {
+        s.classList.toggle('active', (idx + 1) === currentSlide);
+      });
+
+      dots.forEach((dot, idx) => {
+        dot.classList.toggle('active', (idx + 1) === currentSlide);
+      });
+
+      indicator.textContent = `Slide ${currentSlide} de ${totalSlides}`;
+      topProgress.style.width = `${(currentSlide / totalSlides) * 100}%`;
+
+      prevBtn.disabled = (currentSlide === 1);
+      nextBtn.disabled = (currentSlide === totalSlides);
+
+      // Update speaker notes
+      notesTitle.textContent = `🎙️ Roteiro de Fala — Slide ${currentSlide} de ${totalSlides}`;
+      notesContent.innerHTML = speechNotes[currentSlide] || "Sem anotações.";
+    }
+
+    function nextSlide() { showSlide(currentSlide + 1); }
+    function prevSlide() { showSlide(currentSlide - 1); }
+
+    function toggleNotes() {
+      const isOpen = notesDrawer.classList.toggle('open');
+      btnToggleNotes.classList.toggle('active', isOpen);
+    }
+
+    // Modal Image Zoom
+    function openZoom(src) {
+      const overlay = document.getElementById('zoomOverlay');
+      const img = document.getElementById('zoomImg');
+      img.src = src;
+      overlay.classList.add('open');
+    }
+    function closeZoom() {
+      document.getElementById('zoomOverlay').classList.remove('open');
+    }
+
+    // Fullscreen Toggle
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => alert(err.message));
+      } else {
+        document.exitFullscreen();
+      }
+    }
+
+    // Event Listeners
+    btnToggleNotes.addEventListener('click', toggleNotes);
+    document.getElementById('btnFullscreen').addEventListener('click', toggleFullscreen);
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      // Don't trigger if modal zoom is open
+      if (document.getElementById('zoomOverlay').classList.contains('open')) {
+        if (e.key === 'Escape') closeZoom();
+        return;
+      }
+
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        prevSlide();
+      } else if (e.key === 'Home') {
+        e.preventDefault();
+        showSlide(1);
+      } else if (e.key === 'End') {
+        e.preventDefault();
+        showSlide(totalSlides);
+      } else if (e.key === 'n' || e.key === 'N') {
+        toggleNotes();
+      } else if (e.key === 'f' || e.key === 'F') {
+        toggleFullscreen();
+      }
+    });
+
+    // Stopwatch logic
+    let secondsElapsed = 0;
+    let timerRunning = true;
+    let timerInterval = null;
+
+    function startTimer() {
+      timerInterval = setInterval(() => {
+        if (!timerRunning) return;
+        secondsElapsed++;
+        const mins = String(Math.floor(secondsElapsed / 60)).padStart(2, '0');
+        const secs = String(secondsElapsed % 60).padStart(2, '0');
+        const timerEl = document.getElementById('timer');
+        timerEl.textContent = `${mins}:${secs} / 15:00`;
+
+        if (secondsElapsed >= 14 * 60 + 30) {
+          timerEl.style.color = '#f43f5e';
+          document.getElementById('timerIcon').textContent = '🚨';
+        } else if (secondsElapsed >= 13 * 60) {
+          timerEl.style.color = '#f59e0b';
+          document.getElementById('timerIcon').textContent = '⚠️';
+        } else {
+          timerEl.style.color = '#38bdf8';
+          document.getElementById('timerIcon').textContent = '⏱️';
+        }
+      }, 1000);
+    }
+
+    document.getElementById('timerPill').addEventListener('click', () => {
+      timerRunning = !timerRunning;
+      if (timerRunning) {
+        document.getElementById('timerIcon').textContent = '⏱️';
+      } else {
+        document.getElementById('timerIcon').textContent = '⏸️';
+      }
+    });
+
+    // Initialize
+    showSlide(1);
+    startTimer();
+  </script>
+</body>
+</html>

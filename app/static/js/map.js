@@ -79,21 +79,13 @@ function initMap() {
     attribution: 'Tiles &copy; <a href="https://www.esri.com/" target="_blank">Esri</a>'
   });
 
-  // 3. Camada Carto Voyager (Moderna / Clean)
-  const voyagerLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-    maxZoom: 19,
-    subdomains: 'abcd',
-    attribution: '&copy; <a href="https://carto.com/" target="_blank">CARTO</a>'
-  });
-
   // Define OpenStreetMap como camada ativa padrão
   osmLayer.addTo(map);
 
-  // Controle de alternância de camadas
+  // Controle de alternância de camadas (100% livres e sem exigência de API)
   const baseMaps = {
     "🗺️ Mapa Real (Ruas OSM)": osmLayer,
-    "🛰️ Satélite Real (Esri HD)": satelliteLayer,
-    "🏙️ Carto Voyager (Clean)": voyagerLayer
+    "🛰️ Satélite Real (Esri HD)": satelliteLayer
   };
   L.control.layers(baseMaps, null, { position: 'topright' }).addTo(map);
 
@@ -137,6 +129,10 @@ function initMap() {
   });
 
   // Ajusta a visão para enquadrar todo o percurso
+  // Garante marcador inicial do ônibus no ponto de origem
+  updateBusMarker(CCHLA_COORDS[0], CCHLA_COORDS[1], 15.0, false);
+
+  // Ajusta a visão para enquadrar todo o percurso
   map.fitBounds(routeLine.getBounds(), { padding: [40, 40] });
 
   // Exporta referência global para redimensionamento dinâmico
@@ -148,6 +144,23 @@ function initMap() {
   }, 250);
 }
 
+let isAutoFollowActive = false;
+let userHasInteractedWithMap = false;
+
+function getAdjustedCenter(targetLatLng, targetZoom) {
+  if (window.innerWidth <= 768) {
+    const point = map.project(targetLatLng, targetZoom);
+    const offsetY = window.innerHeight * 0.22;
+    const adjustedPoint = L.point(point.x, point.y + offsetY);
+    return map.unproject(adjustedPoint, targetZoom);
+  } else {
+    const point = map.project(targetLatLng, targetZoom);
+    const offsetX = 190;
+    const adjustedPoint = L.point(point.x - offsetX, point.y);
+    return map.unproject(adjustedPoint, targetZoom);
+  }
+}
+
 function updateBusMarker(lat, lon, accuracy = null, isCollab = false) {
   if (!map) return;
 
@@ -157,7 +170,7 @@ function updateBusMarker(lat, lon, accuracy = null, isCollab = false) {
   const busIcon = L.divIcon({
     className: 'custom-bus-icon',
     html: `
-      <div style="
+      <div id="bus-marker-element" style="
         background: ${busColor}; 
         color: #ffffff; 
         width: 38px; 
@@ -201,7 +214,72 @@ function updateBusMarker(lat, lon, accuracy = null, isCollab = false) {
     map.removeLayer(accuracyCircle);
     accuracyCircle = null;
   }
+
+  // Acompanhamento suave da câmera se modo Foco estiver ativo
+  if (isAutoFollowActive) {
+    const targetCenter = getAdjustedCenter(L.latLng(lat, lon), map.getZoom());
+    map.panTo(targetCenter, { animate: true, duration: 0.6 });
+  }
 }
 
+// Centraliza a visão do mapa suavemente no ônibus com compensação de painel (estilo Uber / Transit)
+function recenterBus() {
+  if (!map) return;
+  
+  if (!busMarker) {
+    updateBusMarker(CCHLA_COORDS[0], CCHLA_COORDS[1], 15.0, false);
+  }
+
+  isAutoFollowActive = true;
+  const targetLatLng = busMarker.getLatLng();
+  const targetZoom = Math.max(map.getZoom(), 16);
+
+  map.invalidateSize();
+  const targetCenter = getAdjustedCenter(targetLatLng, targetZoom);
+  map.flyTo(targetCenter, targetZoom, { duration: 0.8 });
+
+  // Feedback visual no botão
+  const btnRecenter = document.getElementById('btn-recenter-bus');
+  if (btnRecenter) {
+    btnRecenter.classList.add('focused-active');
+    const label = btnRecenter.querySelector('.recenter-label');
+    const prevText = label ? label.textContent : '';
+    if (label) label.textContent = 'Seguindo Ônibus';
+    setTimeout(() => {
+      if (label && isAutoFollowActive) label.textContent = '🎯 Focado';
+    }, 1800);
+  }
+
+  // Efeito de destaque no elemento visual do ônibus
+  const markerElem = document.getElementById('bus-marker-element');
+  if (markerElem) {
+    markerElem.style.transform = 'scale(1.35)';
+    setTimeout(() => {
+      if (markerElem) markerElem.style.transform = 'scale(1)';
+    }, 450);
+  }
+}
+
+window.recenterBus = recenterBus;
+
 // Inicializa quando o DOM estiver pronto
-document.addEventListener('DOMContentLoaded', initMap);
+document.addEventListener('DOMContentLoaded', () => {
+  initMap();
+  const btnRecenter = document.getElementById('btn-recenter-bus');
+  if (btnRecenter) {
+    btnRecenter.addEventListener('click', recenterBus);
+  }
+
+  // Se o usuário arrastar o mapa manualmente, desativa o auto-follow para não conflitar com a navegação do usuário
+  if (map) {
+    map.on('dragstart', () => {
+      isAutoFollowActive = false;
+      userHasInteractedWithMap = true;
+      if (btnRecenter) {
+        btnRecenter.classList.remove('focused-active');
+        const label = btnRecenter.querySelector('.recenter-label');
+        if (label) label.textContent = 'Focar Ônibus';
+      }
+    });
+  }
+});

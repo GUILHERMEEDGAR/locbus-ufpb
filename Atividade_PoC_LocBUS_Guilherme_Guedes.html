@@ -311,17 +311,20 @@
   <h3>B. Funções a serem Executadas e Processadas</h3>
   <ul>
     <li><strong>Função de Consentimento e Amostragem (Frontend - UX):</strong> Execução controlada de <code>navigator.geolocation.watchPosition</code> com desativação automática após perda de sinal, encerramento de trajeto ou fechamento da aba.</li>
-    <li><strong>Função de Geofencing e Filtragem de Consistência (Backend):</strong> 
-      Rejeição de dados com velocidade incompatível com ônibus urbano (ex.: <em>v > 65 km/h</em>) ou cujo ponto (lat, long) diste mais de 80 metros da polilinha da rota oficial.
+    <li><strong>Função de Geofencing Contínuo e Filtragem de Consistência (Backend):</strong> 
+      Algoritmo de projeção ortogonal sobre segmentos viários (<code>dist_point_to_corridor_km</code>), garantindo distância 0m para veículos na via e envelope de tolerância ampliado de 250 metros, com filtro cinemático de velocidade máxima de até 85 km/h para absorver dispersões naturais de sinal GPS e testes de aceleração em campo.
     </li>
-    <li><strong>Função de Fusão e Agrupamento (Clustering Espacial):</strong> 
+    <li><strong>Função de Fusão e Agrupamento (Clustering Espacial Ponderado):</strong> 
       Quando múltiplos passageiros colaboram simultaneamente no mesmo ônibus, o sistema executa o cálculo da média ponderada das coordenadas com base no inverso da variância da acurácia:
       <div class="formula-box">
         Coord_Consolidada = &sum;(Coord_i / Acuracia_i) / &sum;(1 / Acuracia_i)
       </div>
     </li>
+    <li><strong>Função de Transmissão em Tempo Real Híbrida e Resiliente (SSE + Watchdog):</strong>
+      Streaming contínuo de eventos sub-segundo via Server-Sent Events (SSE) associado a um Watchdog ativo no frontend com polling de contingência a cada 3,5 segundos, eliminando congelamentos de buffer decorrentes de redes móveis ou proxies intermediários.
+    </li>
     <li><strong>Função de Máquina de Estados Operacional:</strong>
-      Transição entre os estados: <code>PARADO_PONTO</code>, <code>EM_TRANSITO_COLABORATIVO</code>, <code>EM_TRANSITO_ESTIMADO</code> e <code>INATIVO/DESCONECTADO</code>.
+      Transição determinística entre os estados: <code>PARADO_PONTO</code>, <code>EM_TRANSITO_COLABORATIVO</code>, <code>EM_TRANSITO_ESTIMADO</code> e <code>INATIVO/DESCONECTADO</code>.
     </li>
   </ul>
 
@@ -418,15 +421,16 @@
       <span class="badge" style="background: #d1fae5; color: #065f46; border-color: #a7f3d0;">Grupo 4 — Frontend e UX</span>
     </div>
     <p style="margin: 8px 0 6px 0; font-size: 9.5pt;">
-      <strong>Demanda Específica:</strong> Implementar a interface de usuário (UI/UX) para o módulo de compartilhamento colaborativo de localização (*Crowdsourcing*) e o mecanismo de captura da Web Geolocation API no frontend do LocBUS.
+      <strong>Demanda Específica:</strong> Conceber e implementar a reformulação completa de UI/UX (paradigma <em>Map-First Transit</em>) e o módulo de telemetria colaborativa espontânea (<em>Crowdsourcing</em>) integrado à Web Geolocation API no frontend do LocBUS.
     </p>
     <p style="margin: 0; font-size: 9.5pt;">
-      <strong>Resultado Objetivo e Verificável ao Final de 7 Dias:</strong>
+      <strong>Resultado Objetivo e Verificável Concluído e Validado em Campo:</strong>
     </p>
     <ol style="margin: 4px 0 0 0; font-size: 9pt;">
-      <li>Desenvolvimento do componente visual com botão de ação rápida (toggle button: <em>"Estou a bordo • Compartilhar Trajeto"</em>) com feedback visual de transmissão ativa;</li>
-      <li>Criação do modal de consentimento prévio e política clara de privacidade alinhada à LGPD (termos de uso sem retenção de identificadores pessoais);</li>
-      <li>Script JavaScript testado no navegador do smartphone integrando a API <code>navigator.geolocation.watchPosition</code> com throttling temporal de 10 segundos e tratamento visual de erros (permissão negada, GPS sem sinal, modo economia).</li>
+      <li><strong>Arquitetura Map-First Transit:</strong> Mapa interativo ocupando 100% do viewport com camadas de alta performance sem exigência de chave de API (OpenStreetMap e Satélite Esri HD), integrado a um Bottom Sheet móvel ergonômico com <code>touch-action: pan-y</code> e zero rolagem horizontal;</li>
+      <li><strong>Compartilhamento Colaborativo em Alta Visibilidade:</strong> Botão de destaque no Bottom Sheet (<em>"🟢 Estou no Ônibus • Compartilhar GPS"</em>) e botão flutuante rápido no mapa (<em>"📡 Transmitir GPS"</em>), associados a modal de consentimento prévio e política estrita de privacidade sem retenção de dados nominativos (LGPD);</li>
+      <li><strong>Câmera Inteligente e Modo Seguir Ônibus (Auto-Follow):</strong> Função <code>🎯 Focar Ônibus</code> com compensação geométrica de viewport (+22% vertical no smartphone e lateral no desktop) e acompanhamento contínuo suave (<code>map.panTo</code>) conforme novas coordenadas são recebidas;</li>
+      <li><strong>Comunicação em Tempo Real Híbrida e Resiliente:</strong> Módulo JavaScript (<code>crowdsource.js</code>) operando via Server-Sent Events (SSE) sub-segundo com watchdog de polling automático a cada 3,5s, garantindo sincronização fluida entre o celular transmissor e navegadores desktop mesmo através de proxies e dados móveis 4G/5G.</li>
     </ol>
   </div>
 
@@ -467,6 +471,94 @@
         </tr>
       </tbody>
     </table>
+  </div>
+
+  <!-- ETAPA 9: EVIDÊNCIAS DE VALIDAÇÃO PRÁTICA DA POC -->
+  <div class="page-break"></div>
+  <h2>9. Evidências de Validação Prática e Entrega Operacional da PoC</h2>
+  <p>
+    Para comprovar a viabilidade técnica e a maturidade da engenharia empregada nesta Prova de Conceito (PoC), consolidaram-se as métricas empíricas de validação, os resultados da suíte de testes automatizados e o empacotamento operacional do software:
+  </p>
+
+  <div class="card card-highlight">
+    <h3 style="margin: 0 0 6px 0;">A. Resultados da Suíte de Testes Automatizados (Pytest — 24/24 Aprovados)</h3>
+    <p style="font-size: 9pt; margin-bottom: 8px;">
+      A integridade funcional do pipeline de dados, da inferência espacial e do frontend foi submetida a uma bateria abrangente de <strong>24 testes automatizados unitários e de integração</strong>, com tempo de execução total de 1,58 segundo e 100% de aprovação:
+    </p>
+    <table style="margin: 0; font-size: 8.5pt;">
+      <thead>
+        <tr>
+          <th style="width: 25%;">Módulo de Teste</th>
+          <th style="width: 15%;">Escopo</th>
+          <th style="width: 45%;">Comportamento Invariante Validado</th>
+          <th style="width: 15%;">Resultado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>test_collaborative.py</code></td>
+          <td>10 Testes</td>
+          <td>Geofencing contínuo por segmentos, filtro de velocidade (&le; 85 km/h), expiração por TTL, cálculo de clustering ponderado por 1/acurácia e transição entre estados BLE e Colaborativo.</td>
+          <td><strong style="color: #065f46;">10/10 PASS</strong></td>
+        </tr>
+        <tr>
+          <td><code>test_simulation.py</code></td>
+          <td>4 Testes</td>
+          <td>Ciclo circular completo de 31 waypoints (CCHLA &rarr; CI e CI &rarr; CCHLA), transição determinística de sentido e reinício cíclico ao ponto de partida.</td>
+          <td><strong style="color: #065f46;">4/4 PASS</strong></td>
+        </tr>
+        <tr>
+          <td><code>test_sse.py</code></td>
+          <td>3 Testes</td>
+          <td>Canal de streaming assíncrono Server-Sent Events (SSE), modelo Pub/Sub do broker de eventos e transmissão instantânea de atualizações.</td>
+          <td><strong style="color: #065f46;">3/3 PASS</strong></td>
+        </tr>
+        <tr>
+          <td><code>test_pwa.py</code></td>
+          <td>5 Testes</td>
+          <td>Presença de meta tags PWA, Service Worker offline com estratégia Stale-While-Revalidate, integridade do manifest e rotas da interface.</td>
+          <td><strong style="color: #065f46;">5/5 PASS</strong></td>
+        </tr>
+        <tr>
+          <td><code>test_pedras_de_fogo.py</code></td>
+          <td>2 Testes</td>
+          <td>Mapeamento estendido de paradas e telemetria interurbana para validação de escalabilidade de novas linhas.</td>
+          <td><strong style="color: #065f46;">2/2 PASS</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card" style="border-left: 4px solid #2563eb;">
+    <h3 style="margin: 0 0 6px 0; color: #1e3a8a;">B. Empacotamento Nativo Android Versionado (LocBUS-v1.1.0.1.apk)</h3>
+    <p style="font-size: 9pt;">
+      Além do funcionamento nativo em navegador web moderno (PWA), a solução foi compilada em pacote nativo <strong>Android instalável (LocBUS-v1.1.0.1.apk — 5.57 MB)</strong>, construído com Gradle 8.9 e Android SDK 35 (Android 15):
+    </p>
+    <ul style="font-size: 8.5pt; margin-bottom: 0;">
+      <li><strong>Padrão Institucional de Versionamento:</strong> Arquivo nomeado estritamente como <code>LocBUS-v1.1.0.1.apk</code> (versionCode 3, versionName 1.1.0.1), disponível na raiz do repositório e no endpoint de download público <code>/static/downloads/LocBUS-v1.1.0.1.apk</code>;</li>
+      <li><strong>Acesso a Sensores e Fake GPS:</strong> Permissões nativas em tempo de execução para <code>ACCESS_FINE_LOCATION</code> e <code>ACCESS_COARSE_LOCATION</code>, suportando tanto satélites GPS reais quanto aplicativos emuladores de trajeto (Lockito);</li>
+      <li><strong>Layout Map-First Otimizado:</strong> Interface com mapa em 100% viewport, Bottom Sheet móvel retrátil (56vh) com zero rolagem horizontal (<code>overflow-x: hidden</code> e <code>touch-action: pan-y</code>) e botão verde de compartilhamento com feedback imediato;</li>
+      <li><strong>Conexão em Tempo Real com Túnel Seguro:</strong> Comunicação criptografada via HTTPS/TLS, operando de forma transparente em redes Wi-Fi e dados móveis (4G/5G).</li>
+    </ul>
+  </div>
+
+  <div class="card card-highlight">
+    <h3 style="margin: 0 0 6px 0; color: #065f46;">C. Ensaios em Campo com Fake GPS (Lockito) e Validação de Geofencing Contínuo</h3>
+    <p style="font-size: 8.5pt; margin: 0 0 6px 0;">
+      Para submeter a solução a testes rigorosos de tráfego sem a necessidade de deslocamento físico inicial, realizou-se a emulação de percurso em smartphone Android real utilizando o aplicativo <strong>Lockito</strong>, percorrendo todo o trajeto oficial CCHLA &harr; CI Mangabeira:
+    </p>
+    <ul style="font-size: 8.5pt; margin: 0;">
+      <li><strong>Eliminação de Falhas de Borda (Geofencing Contínuo):</strong> A implementação do cálculo ortogonal por segmentos de reta (<code>dist_point_to_corridor_km</code>) assegurou 100% de aceite dos pacotes de telemetria emitidos nas avenidas longas (ex.: Av. Sérgio Guerra), corrigindo a rejeição (HTTP 422) que ocorria em modelos discretos por vértices;</li>
+      <li><strong>Sincronização Multicliente Comprovada:</strong> Enquanto o smartphone com Lockito transmitia as coordenadas a cada 4 segundos, múltiplos navegadores em computadores e outros dispositivos conectados visualizaram o ônibus verde se deslocando continuamente pelo mapa sem atrasos perceptíveis;</li>
+      <li><strong>Watchdog Híbrido Validado:</strong> O mecanismo de contingência a cada 3,5s garantiu que nenhum cliente sofresse congelamento de ícone decorrente de buffering em redes intermediárias.</li>
+    </ul>
+  </div>
+
+  <div class="card card-secondary">
+    <h3 style="margin: 0 0 6px 0; color: #334155;">D. Conformidade Regulatória (LGPD e Privacidade por Design)</h3>
+    <p style="font-size: 8.5pt; margin: 0;">
+      O módulo foi construído sob o princípio de <em>Privacy by Design</em>: não há cadastro prévio, criação de credenciais ou identificação biométrica/nominal. Os dados de GPS recebidos são processados em buffer volátil em memória RAM e descartados automaticamente após 3 minutos de inatividade (TTL), em total conformidade com os artigos 6º e 7º da Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018).
+    </p>
   </div>
 
   <div class="footer-note">

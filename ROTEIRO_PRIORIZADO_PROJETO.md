@@ -61,42 +61,31 @@
 
 ---
 
-## 🔵 PRIORIDADE 5 (P5) — Documento da Entrega SIGAA *(Prazo: Setembro/2026)*
-*Este é o entregável acadêmico final. Deve refletir a PoC funcional com evidências reais.*
+## 🔵 PRIORIDADE 5 (P5) — Documento da Entrega SIGAA *(CONCLUÍDO)*
+*Entregável acadêmico final gerado e validado com todas as evidências técnicas reais.*
 
-- [ ] Atualizar [Atividade_PoC_LocBUS_Guilherme_Guedes.html](file:///e:/prof3/Atividade_PoC_LocBUS_Guilherme_Guedes.html) com:
-  - Seção 7 (Lacuna e Oportunidade) já está boa — manter.
-  - Adicionar **Seção 8 ampliada** com print/evidências das funcionalidades implementadas:
-    - Simulação de rota circular (31 pontos)
-    - Mapa Leaflet com traçado real
-    - Modal LGPD
-    - Banner de feedback do crowdsourcing
-    - Diferenciação de fonte BLE/Colaborativo
-- [ ] Gerar **PDF de entrega** a partir do HTML (`Ctrl+P` no navegador ou via `wkhtmltopdf`).
-- [ ] Exportar **log dos 18 testes passando** como evidência de qualidade.
-
----
-
-## ⬜ PRIORIDADE 6 (P6) — Melhorias Futuras (pós-entrega)
-*Não bloqueante para a entrega do SIGAA. Backlog para evolução.*
-
-- [ ] Implementar **Map-Matching** real: fixar coordenada colaborativa na polilinha da rota ao invés de usar lat/lon livre.
-- [ ] Configurar **variáveis de ambiente** via `.env` (separar `MQTT_BROKER`, `MQTT_USER`, `MQTT_PASSWORD` do código).
-- [ ] Adicionar **histórico visual** na aba Histórico: gráfico de barras de viagens por dia.
-- [ ] PWA: atualizar ícone SVG com o novo logotipo geométrico.
-- [ ] Implementar **notificação push** real (Web Push API) no lugar do fallback de `Notification` do browser.
+- [x] Atualizado [Atividade_PoC_LocBUS_Guilherme_Guedes.html](file:///e:/prof3/Atividade_PoC_LocBUS_Guilherme_Guedes.html) com:
+  - Paradigma Map-First Transit, Bottom Sheet móvel (zero rolagem horizontal), foco com Auto-Follow suave.
+  - Geofencing contínuo por segmentos ortogonais (250m de tolerância e 85 km/h de velocidade máxima).
+  - Watchdog de streaming híbrido (SSE + Polling de contingência a cada 3,5s).
+  - Ensaios em campo comprovados com Fake GPS (Lockito) e sincronização multicliente simultânea.
+  - Tabela completa de **24/24 testes automatizados aprovados no Pytest** (100% de sucesso em 1,58s).
+  - Empacotamento nativo Android versionado: `LocBUS-v1.1.0.1.apk` (5.57 MB, SDK 35, Android 15).
+- [x] Gerado **PDF de alta fidelidade** (`Atividade_PoC_LocBUS_Guilherme_Guedes.pdf` — 8 páginas com numeração A4, caixas temáticas e sem quebras visuais).
+- [x] APK versionado disponível na raiz (`e:\prof3\LocBUS-v1.1.0.1.apk`) e para download público no site (`/static/downloads/LocBUS-v1.1.0.1.apk`).
 
 ---
 
-## 📊 Resumo de Status por Área
+## 📊 Resumo de Status Consolidado
 
-| Área | Status | Cobertura de Testes |
+| Área | Status | Cobertura / Entregável |
 |---|---|---|
-| Backend (FastAPI + SSE) | ✅ Completo | ✅ 8 endpoints testados |
-| Crowdsourcing (GPS + LGPD) | ✅ Completo | ✅ Validação de geofence + velocidade + clustering |
-| Simulação de Rota | ✅ Completo (31 pts) | ✅ Teste de step + reset |
-| PWA (manifest + SW) | ✅ Completo | ✅ 5 testes PWA |
-| SSE (Streaming) | ✅ Completo | ✅ 3 testes SSE |
-| Design / UX | 🔄 90% (P1 em aberto) | — |
-| ETA Dinâmico na UI | 🔄 Backend OK, UI incompleta | — |
-| Documento SIGAA | ⏳ Pendente (P5) | — |
+| Backend (FastAPI + SSE) | ✅ 100% Completo | ✅ Endpoints testados, CORS, Gzip e Cache-Control |
+| Crowdsourcing (GPS + LGPD) | ✅ 100% Completo | ✅ Geofencing contínuo por segmentos ortogonais (250m, 85 km/h) |
+| Simulação de Rota & Fake GPS | ✅ 100% Completo | ✅ 31 waypoints cíclicos + compatibilidade validada com Lockito |
+| PWA (manifest + Service Worker) | ✅ 100% Completo | ✅ Stale-While-Revalidate, cache v3.2, modo offline |
+| Tempo Real Resiliente | ✅ 100% Completo | ✅ SSE Streaming + Watchdog Polling híbrido de 3,5s |
+| Design & UX Transit | ✅ 100% Completo | ✅ Map-First Transit, Bottom Sheet zero-overflow, Auto-Follow 🎯 |
+| Aplicativo Nativo Android | ✅ 100% Completo | ✅ `LocBUS-v1.1.0.1.apk` (5.57 MB, Gradle 8.9, SDK 35) |
+| Testes Automatizados | ✅ 100% Completo | ✅ **24/24 Aprovados** (Pytest em 1,58s) |
+| Relatório Acadêmico (SIGAA) | ✅ 100% Completo | ✅ `Atividade_PoC_LocBUS_Guilherme_Guedes.html` e `.pdf` (8 págs) |

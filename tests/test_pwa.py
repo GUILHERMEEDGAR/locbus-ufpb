@@ -80,4 +80,4 @@ def test_home_page_pwa_meta_tags():
     assert 'name="apple-mobile-web-app-capable" content="yes"' in html
     assert 'id="btn-install-pwa"' in html
     assert 'id="offline-banner"' in html
-    assert 'src="/static/js/pwa.js"' in html
+    assert '/static/js/pwa.js' in html

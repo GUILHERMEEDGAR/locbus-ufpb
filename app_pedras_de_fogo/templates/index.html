@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>LocBUS — Teste de Compartilhamento GPS (Pedras de Fogo)</title>
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <!-- Cabeçalho -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-icon">📍</div>
+      <div class="brand-info">
+        <h1>LocBUS • Teste de Localização</h1>
+        <p>Ambiente Local: Pedras de Fogo - PB</p>
+      </div>
+    </div>
+    <div class="header-status">
+      <div class="status-badge" id="gps-status-badge">
+        <span class="dot"></span>
+        <span class="status-text">GPS Inativo</span>
+      </div>
+      <div class="status-badge" id="sse-status-badge">
+        <span class="dot"></span>
+        <span class="status-text">SSE Conectando</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Container Principal -->
+  <main class="main-container">
+    <!-- Barra Lateral de Telemetria e Controles -->
+    <aside class="sidebar">
+      <div class="info-box">
+        <strong>Modo de Teste em Pedras de Fogo:</strong><br>
+        Esta aplicação remove as restrições de geofencing do campus da UFPB, permitindo validar o compartilhamento colaborativo, acurácia e envio contínuo diretamente da sua cidade.
+      </div>
+
+      <!-- Banner de Diagnóstico / Contexto Inseguro (Exibido dinamicamente se necessário) -->
+      <div id="context-warning-banner" class="warning-banner" style="display: none;">
+        <div class="warning-header">
+          <span class="warning-icon">⚠️</span>
+          <strong>Atenção: Acesso via Celular / IP Local</strong>
+        </div>
+        <p id="context-warning-text">Navegadores móveis exigem conexão segura (HTTPS ou localhost) para liberar o GPS.</p>
+        <button id="btn-show-help" class="btn btn-outline btn-sm" style="margin-top: 8px; font-size: 12px; padding: 6px 10px;">
+          📖 Ver como liberar o GPS no celular
+        </button>
+      </div>
+
+      <!-- Ações -->
+      <div class="action-box">
+        <button id="btn-start-gps" class="btn btn-primary">
+          📡 Compartilhar Minha Localização Real
+        </button>
+        <button id="btn-stop-gps" class="btn btn-danger" style="display: none;">
+          ⏹ Parar Compartilhamento
+        </button>
+        <button id="btn-send-manual" class="btn btn-outline" style="border-color: #38bdf8; color: #38bdf8; font-weight: 600;">
+          📍 Enviar Ponto Manual Agora (1 Toque)
+        </button>
+        <button id="btn-simulate" class="btn btn-outline">
+          🚶 Simular Movimento em Pedras de Fogo
+        </button>
+        <div style="font-size: 11px; color: #94a3b8; text-align: center; margin-top: -4px;">
+          💡 Dica: Você também pode tocar diretamente em qualquer rua do mapa.
+        </div>
+      </div>
+
+      <!-- Grid de Métricas em Tempo Real -->
+      <div class="metrics-grid">
+        <div class="metric-card full-width">
+          <span class="metric-label">Qualidade do GPS</span>
+          <div class="gps-quality-indicator">
+            <span id="val-quality-pill" class="quality-pill regular">Aguardando sinal...</span>
+          </div>
+          <div id="gps-searching-banner" style="display: none; margin-top: 8px; font-size: 11px; color: #38bdf8; display: flex; align-items: center; gap: 6px;">
+            <span class="searching-spinner">⏳</span>
+            <span id="gps-searching-text">Buscando satélites GPS do celular...</span>
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <span class="metric-label">Latitude</span>
+          <span id="val-lat" class="metric-value">--</span>
+          <span class="metric-sub" id="sub-lat">Aguardando GPS</span>
+        </div>
+
+        <div class="metric-card">
+          <span class="metric-label">Longitude</span>
+          <span id="val-lon" class="metric-value">--</span>
+          <span class="metric-sub" id="sub-lon">Aguardando GPS</span>
+        </div>
+
+        <div class="metric-card">
+          <span class="metric-label">Acurácia</span>
+          <span id="val-acc" class="metric-value">-- m</span>
+        </div>
+
+        <div class="metric-card">
+          <span class="metric-label">Velocidade</span>
+          <span id="val-speed" class="metric-value">0 km/h</span>
+        </div>
+
+        <div class="metric-card">
+          <span class="metric-label">Distância do Centro</span>
+          <span id="val-distance" class="metric-value">0 m</span>
+          <span class="metric-sub">Ref: Igreja Matriz</span>
+        </div>
+
+        <div class="metric-card">
+          <span class="metric-label">Pontos Enviados</span>
+          <span id="val-points-sent" class="metric-value">0</span>
+          <span class="metric-sub">Throttling: 4s</span>
+        </div>
+      </div>
+
+      <!-- Log de Eventos -->
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span class="metric-label">Log de Transmissão</span>
+        <button id="btn-clear-trail" class="btn btn-outline" style="padding: 4px 8px; font-size: 11px; width: auto;">
+          Limpar Rastro
+        </button>
+      </div>
+      <div id="log-container" class="log-box">
+        <div class="log-item"><span class="time">[Sistema]</span> Pronto para iniciar o teste em Pedras de Fogo.</div>
+      </div>
+    </aside>
+
+    <!-- Área do Mapa -->
+    <section class="map-wrapper">
+      <div class="map-floating-panel">
+        <span>📍 <b>Pedras de Fogo (PB)</b> — Coordenadas Reais</span>
+      </div>
+      <div id="map"></div>
+    </section>
+  </main>
+
+  <!-- Modal de Instruções para Celular (Contexto Seguro / GPS) -->
+  <div id="help-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>📱 Como Ativar o GPS no Celular (Rede Wi-Fi Local)</h3>
+        <button id="btn-close-modal" class="btn-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Por normas internacionais de segurança (W3C), navegadores móveis desativam o GPS em conexões <code>http://</code> via IP de rede local. Escolha uma das opções abaixo para testar:</p>
+
+        <div class="help-section">
+          <h4>Opção 1: Chrome no Android (Recomendado - 30 segundos)</h4>
+          <ol>
+            <li>No Chrome do celular, acerte a barra de endereços e digite: <code>chrome://flags</code></li>
+            <li>No campo de busca, digite: <code>unsafely-treat-insecure-origin-as-secure</code></li>
+            <li>Adicione a URL do teste: <code id="help-current-url">http://...:8001</code></li>
+            <li>Altere a caixinha de <b>Disabled</b> para <b>Enabled</b>.</li>
+            <li>Clique no botão azul <b>Relaunch</b> no canto inferior do Chrome.</li>
+            <li>Pronto! Recarregue a página e o GPS funcionará com precisão total.</li>
+          </ol>
+        </div>
+
+        <div class="help-section">
+          <h4>Opção 2: Simulação de Movimento ou Posição Manual</h4>
+          <p>Você pode testar a transmissão de telemetria e o broadcast imediatamente clicando no botão <b>"🚶 Simular Movimento"</b> ou <b>"📍 Marcar Local no Mapa"</b>.</p>
+        </div>
+
+        <div class="help-section">
+          <h4>Opção 3: No PC (Localhost)</h4>
+          <p>Se estiver testando no computador, abra diretamente por <a href="http://localhost:8001" target="_blank" style="color: var(--accent-blue);">http://localhost:8001</a> e autorize a permissão no pop-up do navegador.</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-modal-ok" class="btn btn-primary" style="width: auto; padding: 8px 20px;">Entendido</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- App JS -->
+  <script src="/static/app.js"></script>
+</body>
+</html>
