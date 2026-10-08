@@ -113,7 +113,7 @@ SIMULATION_WAYPOINTS = [
 sim_state = {"index": 0}
 
 
-@app.get("/", response_class=HTMLResponse)
+@app.api_route("/", methods=["GET", "HEAD"], response_class=HTMLResponse)
 async def home(request: Request):
     """Página principal do LocBUS com abas completas (Mapa, Histórico, Itinerário, Sobre)."""
     status = calcular_status_geral()
@@ -164,7 +164,7 @@ async def get_favicon():
     return FileResponse(icon_file, media_type="image/png")
 
 
-@app.get("/api/v1/status")
+@app.api_route("/api/v1/status", methods=["GET", "HEAD"])
 async def get_status():
     """Retorna o estado consolidado da linha e do ônibus."""
     return calcular_status_geral()
