@@ -84,6 +84,7 @@
 
 ---
 
+| 07/10/2026 | Publicação do repositório no GitHub: criação do repositório público `GUILHERMEEDGAR/locbus-ufpb`, push inicial completo da branch `main` com Dockerfile, infra CEAR, APKs e automação Render | Git / GitHub CLI | ✅ Concluído (`https://github.com/GUILHERMEEDGAR/locbus-ufpb`) |
 | 07/10/2026 | Preparação Cloud & CEAR (v1.2.1): criação de Dockerfile, render.yaml, docker-compose.yml e Nginx para o CEAR; APK recompilado e assinado (`LocBUS-v1.2.1.apk`) apontando para URL fixa na nuvem (`locbus-ufpb.onrender.com`) | `Dockerfile`, `render.yaml`, `docker-compose.yml`, `infra_cear/`, `LocBUS-v1.2.1.apk` | ✅ Concluído (Guia gerado) |
 | 07/10/2026 | Correção e Lançamento da v1.2.0 final: assinatura digital adicionada (`signingConfig signingConfigs.debug` em release), eliminando erro de "pacote inválido" no Android; remoção completa de simulação e testes da UI; novo APK assinado gerado (`LocBUS-v1.2.0.apk`) | `build.gradle`, `AndroidManifest.xml`, `LocBUS-v1.2.0.apk`, `LocBUS.apk` | ✅ Concluído (APK 4.56 MB assinado) |
 | 01/10/2026 | Resolução do erro do LibreOffice no Windows: troca de `soffice.exe` para `soffice.com` (evita timeout de stdio pipe do Node.js) | `.vscode/settings.json`, `Antigravity IDE/User/settings.json`, `libreoffice-converter.js` | ✅ Concluído (`soffice.com` testado e validado) |
