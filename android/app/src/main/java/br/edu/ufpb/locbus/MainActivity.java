@@ -23,12 +23,18 @@ public class MainActivity extends Activity {
 
     private WebView webView;
     private static final int PERMISSION_REQUEST_CODE = 1001;
-    // URL de Produção na Nuvem (Render / HTTPS Fixo Permanente)
-    private static final String APP_URL = "https://locbus-ufpb.onrender.com";
+    // URL e Modo dinâmicos compilados via Gradle Flavor (Passenger vs Tracker)
+    private static final String APP_URL = BuildConfig.APP_URL;
+    private static final boolean IS_TRACKER = BuildConfig.IS_TRACKER;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        if (IS_TRACKER) {
+            // No modo Ônibus, mantém a tela 100% ativa no painel do veículo
+            getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        }
 
         checkAndRequestPermissions();
 
@@ -99,6 +105,10 @@ public class MainActivity extends Activity {
         });
 
         webView.loadUrl(APP_URL);
+
+        if (IS_TRACKER) {
+            startTrackerServiceIfPermitted();
+        }
     }
 
     private void checkAndRequestPermissions() {
@@ -120,6 +130,32 @@ public class MainActivity extends Activity {
 
             if (!permissionsNeeded.isEmpty()) {
                 requestPermissions(permissionsNeeded.toArray(new String[0]), PERMISSION_REQUEST_CODE);
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == PERMISSION_REQUEST_CODE && IS_TRACKER) {
+            startTrackerServiceIfPermitted();
+        }
+    }
+
+    private void startTrackerServiceIfPermitted() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                if (!LocationService.isRunning) {
+                    Intent intent = new Intent(this, LocationService.class);
+                    intent.setAction(LocationService.ACTION_START);
+                    ContextCompat.startForegroundService(this, intent);
+                }
+            }
+        } else {
+            if (!LocationService.isRunning) {
+                Intent intent = new Intent(this, LocationService.class);
+                intent.setAction(LocationService.ACTION_START);
+                ContextCompat.startForegroundService(this, intent);
             }
         }
     }
@@ -159,6 +195,11 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public boolean isNativeApp() {
             return true;
+        }
+
+        @JavascriptInterface
+        public boolean isTrackerApp() {
+            return IS_TRACKER;
         }
     }
 
