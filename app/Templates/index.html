@@ -19,6 +19,10 @@
       <span class="float-btn-icon">🎯</span>
       <span class="recenter-label">Focar Ônibus</span>
     </button>
+    <button id="btn-focus-campus" class="btn-map-float btn-focus-campus" type="button" title="Visualizar todas as 12 Paradas do Campus I">
+      <span class="float-btn-icon">🚏</span>
+      <span class="campus-label">12 Paradas</span>
+    </button>
     <button id="btn-floating-share" class="btn-map-float btn-share-gps" type="button" title="Compartilhar localização GPS no ônibus">
       <span class="pulse-beacon-dot"></span>
       <span class="float-btn-icon">📡</span>
@@ -28,6 +32,7 @@
 
   <!-- LEGENDA FLUTUANTE DO MAPA -->
   <div class="map-legend-floating">
+    <div class="legend-item"><span class="legend-dot dot-stop"></span> 12 Paradas (Campus I)</div>
     <div class="legend-item"><span class="legend-dot dot-terminal"></span> Terminais (CCHLA/CI)</div>
     <div class="legend-item"><span class="legend-dot dot-bus"></span> Ônibus Ao Vivo</div>
   </div>
@@ -77,6 +82,76 @@
           <span class="eta-value" id="eta-value">{{ status.eta_minutos }}</span>
           <span class="live-dot-pulse" title="Transmissão ao vivo"></span>
         </div>
+      </div>
+    </div>
+
+    <!-- SELEÇÃO DA MINHA PARADA & CONFIRMAÇÃO DE CHEGADA DO ÔNIBUS -->
+    <div class="user-stop-card glass-panel" id="user-stop-card">
+      <div class="user-stop-header">
+        <div class="user-stop-title-group">
+          <span class="user-stop-icon">🚏</span>
+          <div>
+            <div class="user-stop-title">Estou Esperando no Ponto</div>
+            <div class="user-stop-subtitle">Selecione onde você está e ajude a comunidade avisando se o circular chegou</div>
+          </div>
+        </div>
+        <button id="btn-auto-detect-stop" class="btn-auto-detect" type="button" title="Detectar parada mais próxima via GPS">
+          📍 Perto de mim
+        </button>
+      </div>
+
+      <!-- SELETOR DA PARADA -->
+      <div class="user-stop-select-wrapper">
+        <select id="user-stop-select" class="user-stop-select" aria-label="Selecione sua parada de embarque">
+          <option value="">-- Escolha o seu ponto de espera --</option>
+          <optgroup label="Campus I (12 Paradas Oficiais)">
+            <option value="1" data-name="ETS (Escola Técnica de Saúde)" data-lat="-7.13410" data-lon="-34.84226">1. ETS (Escola Técnica de Saúde)</option>
+            <option value="2" data-name="Complexo Esportivo (DEF)" data-lat="-7.13432" data-lon="-34.84318">2. Complexo Esportivo (DEF)</option>
+            <option value="3" data-name="Editora UFPB" data-lat="-7.13600" data-lon="-34.84650">3. Editora UFPB (Alameda Oiticica)</option>
+            <option value="4" data-name="CCTA (Comunicação e Artes)" data-lat="-7.13804" data-lon="-34.84950">4. CCTA (Comunicação e Artes)</option>
+            <option value="5" data-name="CCHLA (Terminal Campus I)" data-lat="-7.13955" data-lon="-34.85062">5. CCHLA (Terminal Campus I)</option>
+            <option value="6" data-name="CT (Centro de Tecnologia)" data-lat="-7.14493" data-lon="-34.85066">6. CT (Centro de Tecnologia)</option>
+            <option value="7" data-name="CCJ (Direito)" data-lat="-7.14187" data-lon="-34.84888">7. CCJ (Direito / Ciências Jurídicas)</option>
+            <option value="8" data-name="Centro de Biotecnologia" data-lat="-7.14100" data-lon="-34.84661">8. Centro de Biotecnologia (CBIOTEC)</option>
+            <option value="9" data-name="CCEN (Exatas e Natureza)" data-lat="-7.13944" data-lon="-34.84522">9. CCEN (Ciências Exatas e Natureza)</option>
+            <option value="10" data-name="INOVA" data-lat="-7.13756" data-lon="-34.84350">10. INOVA (Agência de Inovação / Sucupira)</option>
+            <option value="11" data-name="CCS (Ciências da Saúde)" data-lat="-7.13539" data-lon="-34.84191">11. CCS (Ciências da Saúde)</option>
+            <option value="12" data-name="Departamento de Fonoaudiologia" data-lat="-7.13454" data-lon="-34.84103">12. Departamento de Fonoaudiologia</option>
+          </optgroup>
+          <optgroup label="Terminais e Conexões">
+            <option value="100" data-name="Praça da Paz (Bancários)" data-lat="-7.1510" data-lon="-34.8335">Praça da Paz (Bancários)</option>
+            <option value="101" data-name="Terminal CI (Mangabeira)" data-lat="-7.1627" data-lon="-34.8182">Terminal CI (Mangabeira)</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <!-- PAINEL DE CONFIRMAÇÃO DO ÔNIBUS (APARECE QUANDO O USUÁRIO SELECIONA A PARADA) -->
+      <div class="user-stop-action-box" id="user-stop-action-box" style="display: none;">
+        <div class="stop-status-banner" id="stop-status-banner">
+          <span class="status-banner-icon" id="stop-status-icon">📢</span>
+          <span class="status-banner-text" id="stop-status-text">Sem relatos recentes nesta parada. Seja o primeiro a avisar!</span>
+        </div>
+
+        <div class="stop-confirm-prompt">
+          <span>O ônibus circular já chegou no seu ponto?</span>
+        </div>
+
+        <div class="stop-confirm-buttons">
+          <button id="btn-report-arrived" class="btn-report-arrived" type="button" title="Confirmar que o ônibus acabou de chegar">
+            <span class="btn-emoji">🚌</span>
+            <span class="btn-txt">Chegou no Ponto!</span>
+          </button>
+          <button id="btn-report-waiting" class="btn-report-waiting" type="button" title="Informar que você está esperando e ele ainda não chegou">
+            <span class="btn-emoji">⏳</span>
+            <span class="btn-txt">Ainda Não Chegou</span>
+          </button>
+          <button id="btn-report-departed" class="btn-report-departed" type="button" title="Informar que o ônibus acabou de partir">
+            <span class="btn-emoji">💨</span>
+            <span class="btn-txt">Acabou de Partir</span>
+          </button>
+        </div>
+
+        <div class="stop-feedback-msg" id="stop-feedback-msg" style="display: none;"></div>
       </div>
     </div>
 
@@ -405,10 +480,39 @@
       </div>
     </div>
 
-    <!-- SEQUÊNCIA COMPLETA DAS PARADAS -->
+    <!-- 12 PARADAS OFICIAIS DO CAMPUS I -->
+    <div class="stops-section glass-panel" style="margin-bottom: 20px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 8px;">
+        <h2 class="section-title" style="margin-bottom: 0;">🚏 12 Paradas Oficiais do Campus I</h2>
+        <button type="button" class="btn-focus-all-stops" onclick="window.switchTab('mapa'); setTimeout(window.focusCampusArea, 200);" style="padding: 6px 14px; background: rgba(37, 99, 235, 0.2); border: 1px solid #3b82f6; color: #93c5fd; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+          <span>🗺️ Ver Todas no Mapa</span>
+        </button>
+      </div>
+      <p class="section-sub">Circuito interno completo dos centros de aula, reitoria e órgãos suplementares da UFPB Campus I</p>
+
+      <div class="stops-list">
+        {% for parada in itinerario.paradas_campus_1 %}
+        <div class="stop-row" style="cursor: pointer;" onclick="window.switchTab('mapa'); setTimeout(() => window.focusStop({{ parada.ordem }}), 250);" title="Clique para focar no mapa">
+          <div class="stop-num" style="background: linear-gradient(135deg, #0284c7, #2563eb); color: #fff; font-weight: bold;">{{ parada.ordem }}</div>
+          <div class="stop-main">
+            <div class="stop-name-row">
+              <strong class="stop-name">{{ parada.nome }}</strong>
+              <span class="stop-tag tag-stop">{{ parada.sigla }}</span>
+            </div>
+            <div class="stop-desc">{{ parada.detalhe }}</div>
+          </div>
+          <button type="button" style="background: none; border: 1px solid rgba(255, 255, 255, 0.15); color: #38bdf8; border-radius: 6px; padding: 4px 10px; font-size: 11px; cursor: pointer; flex-shrink: 0;">
+            🎯 Ver Ponto
+          </button>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- SEQUÊNCIA COMPLETA DAS PARADAS (CORREDOR INTERCAMPI) -->
     <div class="stops-section glass-panel">
-      <h2 class="section-title">Paradas e Pontos de Referência</h2>
-      <p class="section-sub">Trajeto viário da linha circular ao longo dos 6.8 km do corredor universitário</p>
+      <h2 class="section-title">Corredor Intercampi (CCHLA ↔ CI)</h2>
+      <p class="section-sub">Trajeto viário da linha circular ao longo dos 6.8 km do corredor universitário e Bancários</p>
 
       <div class="stops-list">
         {% for parada in itinerario.paradas %}
@@ -551,8 +655,9 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="/static/js/map.js?v=1.2.0"></script>
-<script src="/static/js/crowdsource.js?v=1.2.0"></script>
-<script src="/static/js/tabs.js?v=1.2.0"></script>
-<script src="/static/js/pwa.js?v=1.2.0"></script>
+<script src="/static/js/route_geometry.js?v=1.5.0"></script>
+<script src="/static/js/map.js?v=1.5.0"></script>
+<script src="/static/js/crowdsource.js?v=1.5.0"></script>
+<script src="/static/js/tabs.js?v=1.5.0"></script>
+<script src="/static/js/pwa.js?v=1.5.0"></script>
 {% endblock %}

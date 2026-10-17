@@ -25,7 +25,126 @@
 
 ---
 
-## 2. 📍 Estado Real do Projeto (01/10/2026 · Atualizado)
+## 2. 📍 Estado Real do Projeto (17/10/2026 · Atualizado)
+
+### ✅ Integração das 12 Paradas Oficiais do Campus I ao Mapa Interativo
+- **Implementação Realizada:**
+  - **Mapeamento Georreferenciado Oficial (OpenStreetMap / UFPB):**
+    1. ETS (Escola Técnica de Saúde): `[-7.13410, -34.84226]`
+    2. Complexo Esportivo (DEF / Ginásio): `[-7.13432, -34.84318]`
+    3. Editora UFPB (Alameda da Oiticica): `[-7.13600, -34.84650]`
+    4. CCTA (Centro de Comunicação, Turismo e Artes): `[-7.13804, -34.84950]`
+    5. CCHLA (Centro de Ciências Humanas, Letras e Artes): `[-7.13955, -34.85062]`
+    6. CT (Centro de Tecnologia): `[-7.14493, -34.85066]`
+    7. CCJ (Centro de Ciências Jurídicas): `[-7.14187, -34.84888]`
+    8. Centro de Biotecnologia (CBIOTEC): `[-7.14100, -34.84661]`
+    9. CCEN (Centro de Ciências Exatas e da Natureza): `[-7.13944, -34.84522]`
+    10. INOVA (Agência UFPB de Inovação Tecnológica / Sucupira): `[-7.13756, -34.84350]`
+    11. CCS (Centro de Ciências da Saúde): `[-7.13539, -34.84191]`
+    12. Departamento de Fonoaudiologia: `[-7.13454, -34.84103]`
+  - **Marcadores Interativos no Leaflet (`app/static/js/map.js`):**
+    - Pins com numeração sequencial (1 a 12), visual gradiente azul real e borda branca em alto contraste.
+    - Tooltips dinâmicos ao passar o cursor e Popups completos com botão "🎯 Centralizar Aqui".
+    - Circuito viário interno traçado em linha pontilhada (`CAMPUS_LOOP_POLYLINE`).
+    - Camada dedicada `🚏 12 Paradas do Campus I` integrada ao controle de camadas do Leaflet.
+    - Botão flutuante `🚏 12 Paradas` no mapa (`window.focusCampusArea`) para enquadrar todas as paradas em um clique.
+  - **Interface & Itinerário (`app/Templates/index.html` e `app/services.py`):**
+    - Seção dedicada na Aba 3 (Itinerário) com lista interativa das 12 paradas e atalhos para focar no mapa.
+### ✅ Arquitetura Store-and-Forward para Rede eduroam (Wi-Fi UFPB) (v1.6.1)
+- **Cenário Real & Solução de Engenharia:**
+  - O ônibus utiliza exclusivamente o Wi-Fi acadêmico **eduroam**, que possui sinal nos Campi (Campus I e CI Mangabeira), mas perde conexão durante o deslocamento pelas vias públicas intermediárias (Via Expressa, Bancários).
+  - Implementação do paradigma **Store-and-Forward (Tolerância a Desconexões)**:
+    - **A coleta de GPS nunca para**: Mesmo 100% offline, os satélites de GPS continuam sendo capturados e alimentam os mostradores de bordo em tempo real.
+    - **Fila Persistente no Veículo (`eduroamQueue`)**: Coordenadas com timestamps UTC precisos são armazenadas localmente no buffer com persistência (`localStorage`), suportando até 400 pontos (mais de 25 minutos contínuos sem sinal).
+    - **Endpoint de Ingestão em Lote (`POST /api/v1/telemetry/collaborative/batch`)**: Novo endpoint backend em `main.py` e `services.py` que recebe o lote acumulado e incorpora os waypoints no buffer do sistema.
+    - **Auto-Despejo na Reconexão**: Assim que o veículo ingressa no alcance de qualquer antena eduroam, o rastreador detecta a rede e descarrega todo o lote acumulado instantaneamente, posicionando o circular no mapa com exatidão histórica.
+    - **Feedback Visual no Cockpit**: Mostrador dedicado `🌐 Buffer Offline (eduroam)` indicando quantos pontos estão salvos no veículo e o estado da rede (`eduroam: Conectado` / `Sem eduroam (Gravando)`).
+  - **Testes Backend:** 33 testes aprovados com 100% no Pytest (`test_tracker.py` com `test_eduroam_batch_telemetry`).
+
+---
+- **Implementação Realizada:**
+  - **Aplicativo Embarcado Dedicado (`/tracker`, `/onibus`, `/motorista`):**
+    - Desenvolvido especificamente para rodar **100% do tempo no celular, tablet ou central multimídia fixada no painel do ônibus**.
+    - **Zero-Click Auto-Start**: Ao abrir a página, o transmissor de GPS inicia imediatamente sem necessidade de login ou cliques adicionais.
+    - **Screen Wake Lock API Integrada**: Mantém a tela do dispositivo permanentemente acesa, impedindo que o Android/iOS suspenda o processo ou desligue a antena de GPS em modo de economia de energia.
+    - **Motor de Transmissão Contínua (WatchPosition + Watchdog)**: Envio a cada 3.5 segundos com timer de contingência automático caso o veículo esteja parado em semáforos ou terminais.
+    - **Cockpit Industrial Dark Mode**:
+      - Status visual gigante: `🟢 TRANSMITINDO AO VIVO` com taxa e pulso.
+      - Velocímetro digital em destaque (`km/h`).
+      - Coordenadas geográficas com precisão métrica (`± X m`).
+      - Contador de pontos transmitidos e cronômetro contínuo de Uptime.
+      - Monitor de nível de bateria e status de carregador (`🔌`).
+      - Mini radar tático com Leaflet e Google Maps mostrando o veículo se movendo ao longo do traçado viário.
+      - Suporte a Modo Tela Cheia (`⛶`).
+  - **Manifesto PWA Dedicado (`/manifest-tracker.webmanifest`):**
+    - Permite instalar como aplicativo nativo standalone no tablet do ônibus.
+  - **Link de Acesso Rápido:**
+    - Adicionado botão `📡 Modo Ônibus` na barra superior do aplicativo de passageiros para chaveamento instantâneo.
+  - **Testes Backend:** 32 testes aprovados com 100% no Pytest (`test_tracker.py`).
+
+---
+- **Implementação Realizada:**
+  - **Componente "Estou Esperando no Ponto" (`index.html` e `style.css`):**
+    - Card flutuante interativo que permite ao passageiro escolher onde está esperando entre as 12 paradas oficiais do Campus I e os terminais CCHLA, CI e Praça da Paz.
+    - Botão *"📍 Perto de mim"* para detecção automática da parada mais próxima via GPS nativo do dispositivo.
+    - Destaque visual no mapa com marcador animado de halo pulsante (`👤 Você está aqui: [Nome da Parada]`).
+    - Integração direta nos Popups do Leaflet: botão *"📍 Esperando aqui"* em cada pin da parada para seleção rápida no mapa.
+  - **Confirmação Colaborativa de Chegada do Ônibus (Crowdsourcing de Espera):**
+    - Painel tátil de ações quando a parada está selecionada:
+      - 🚌 **"Chegou no Ponto!"** (Confirmação verde de chegada instantânea do circular)
+      - ⏳ **"Ainda Não Chegou"** (Sinaliza passageiro em espera)
+      - 💨 **"Acabou de Partir"** (Registra que o ônibus já passou pelo ponto)
+    - Banner de status com histórico recente de relatos daquela parada (ex: *"Confirmado por passageiro local há 2 min"*).
+  - **Backend & Tempo Real (FastAPI + SSE):**
+    - Criação dos modelos `StopReportIn` e `StopReportOut` em `domain.py`.
+    - Gerenciador em memória `StopReportsManager` em `services.py` com expiração controlada (TTL).
+    - Endpoints `POST /api/v1/stops/report` e `GET /api/v1/stops/reports`.
+    - Transmissão instantânea do evento SSE `stop_report` para todos os clientes conectados.
+    - Pins das paradas no mapa recebem badge animado `🚌 Chegou!` quando um relato de chegada é recebido.
+  - **Testes Backend:** 29 testes aprovados com 100% no Pytest (`test_stop_reports.py`).
+  - **Versionamento:** Atualizado para `v1.5.0` no Service Worker, HTML e CSS.
+
+---
+- **Causa Raiz Identificada no Feedback do Usuário:**
+  - O print do usuário mostrou o mapa com o visual anterior (bolinhas azuis e polylines retas ligando 4 -> 5 -> 6 -> 7 -> 8 cortando blocos e prédios).
+  - O Service Worker estava operando com estratégia Cache-First para a raiz HTML (`/`), mantendo a versão anterior sem as curvas em cache do navegador. Além disso, o array `ROUTE_POLYLINE` de fallback continha apenas as coordenadas puras dos 12 pontos em linha reta.
+- **Implementação e Blindagem Total (v1.4.3):**
+  - **Injeção Nativa da Geometria Viária OSRM no `map.js`**: Os 855 pontos do OSRM (curvas do asfalto, rotatórias, Alameda da Oiticica, Via Expressa Padre Zé, contornos e avenidas) foram injetados diretamente em `ROUTE_POLYLINE` e `CAMPUS_LOOP_POLYLINE` no próprio `map.js`. Não há mais nenhum ponto em linha reta nem risco de race condition.
+  - **Atualização do Service Worker para Network-First no HTML**: O Service Worker agora busca sempre o HTML mais atualizado da rede (`fetch(req)`) e apenas faz fallback para cache se estiver sem internet.
+  - **Auto-Update e Purga de Cache Imediata**: `pwa.js` chama `reg.update()` e o Service Worker deleta imediatamente todos os caches legados ao subir para `locbus-v1.4.3-cache`.
+  - **Camadas e Marcadores Oficiais Google Maps**: Google Roadmap HD ativado, pins 3D Teardrop SVG estilizados no padrão clássico Google com numeração e popups com link para Google Maps.
+  - **Testes Backend:** 25 testes aprovados com 100% no Pytest.
+
+---
+
+## 3. 📍 Histórico (07/10/2026)
+
+### ✅ Rastreamento em Segundo Plano & APK v1.3.0 — CONCLUÍDOS
+- **Problema Solucionado:** O aplicativo Android WebView suspendia a coleta de GPS quando a tela era desligada ou o app ficava em segundo plano.
+- **Implementação Realizada:**
+  - **Foreground Service Android Nativo (`LocationForegroundService`/`LocationService.java`):**
+    - Executa em segundo plano com permissão `FOREGROUND_SERVICE_LOCATION` e `WAKE_LOCK`.
+    - Notificação persistente de baixo ruído na barra de status: exibe contador de pontos transmitidos, acurácia e velocidade em tempo real.
+    - Notifica `MainActivity` e envia telemetria periodicamente via HTTP direto para a nuvem FastAPI (`https://locbus-ufpb.onrender.com/api/v1/telemetry/collaborative`).
+  - **Ponte Nativa JavaScript (`AndroidBridge`):**
+    - `@JavascriptInterface` acoplado ao WebView (`startBackgroundTracking`, `stopBackgroundTracking`, `isBackgroundTrackingActive`).
+    - Integração no `app/static/js/crowdsource.js` para ligar o serviço ao clicar em "Transmitir GPS" e parar ao encerrar.
+  - **Versionamento & Build:**
+    - Versão atualizada para `v1.3.0` (versionCode `6`).
+    - Binários gerados e sincronizados: `LocBUS-v1.3.0.apk` e `LocBUS.apk` (na raiz e em `app/static/downloads/`).
+  - **Testes Backend:** 24 testes executados com 100% de aprovação no Pytest.
+
+### ✅ Correção do Buffer de Telemetria & Clustering por Raio de Vizinhança
+- **Problema Solucionado:** Ao reiniciar simulações no Ponto A (CCHLA) após concluir o trajeto no Ponto B (CI), o buffer acumulava pontos dos dois terminais (janela TTL de 3 min), calculando uma média ponderada no meio do caminho (~4 km de erro) e retendo o sentido invertido.
+- **Implementação Realizada:**
+  - **Clustering Espacial de Vizinhança (`app/services.py`):** A consolidação geográfica agora ancora no ponto mais recente (`active_points[-1]`) e só agrega pontos vizinhos dentro do raio de tolerância (`COLLABORATIVE_CLUSTER_RADIUS_METERS = 350.0`). Pontos antigos de outro terminal a quilômetros de distância são 100% isolados.
+  - **Detecção de Salto Espacial Abrupto:** Ao receber um novo ponto com salto $> 600\text{ m}$ em relação ao último registrado (reinício de simulação), o buffer purga automaticamente os resíduos defasados.
+  - **Tolerância de Terminais & Reset de Sentido:** Expansão da detecção de terminal para $350\text{ m}$, garantindo que inícios no CCHLA forcem sentido `"CI"`, além da função `reset_direcao_circular("CI")` acoplada ao endpoint `/api/v1/simulation/reset`.
+  - **Suíte de Testes:** Adicionado `test_simulation_restart_isolation_from_previous_terminal` (25 testes passando 100% no Pytest).
+
+---
+
+## 3. 📍 Histórico Anterior (01/10/2026)
 
 ### ✅ Slides Interativos — CONCLUÍDOS
 - **Arquivo:** `apresentacao_15min/slides_interativos.html` (60KB, 12 slides)

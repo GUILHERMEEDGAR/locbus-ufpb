@@ -36,6 +36,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // Função global para alternar abas programaticamente
+  window.switchTab = function(tabName) {
+    const targetId = tabName === 'mapa' ? 'tab-view-mapa' : (tabName.startsWith('tab-view-') ? tabName : `tab-view-${tabName}`);
+    const btn = document.querySelector(`.tab-btn[data-tab="${targetId}"]`);
+    if (btn) btn.click();
+  };
+
   // 2. Alternância de Turnos no Itinerário (Manhã, Tarde, Noite)
   const shiftButtons = document.querySelectorAll('.shift-btn');
   const shiftPanels = document.querySelectorAll('.shift-panel');

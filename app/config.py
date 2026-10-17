@@ -20,6 +20,7 @@ class Settings(BaseModel):
     # Parâmetros da Janela de Telemetria Colaborativa
     COLLABORATIVE_TTL_SECONDS: int = 180  # Coordenada expira após 3 minutos sem atualização
     COLLABORATIVE_GEOFENCE_TOLERANCE_METERS: float = 250.0  # Envelope de tolerância do corredor viário (250m)
+    COLLABORATIVE_CLUSTER_RADIUS_METERS: float = 350.0  # Raio de vizinhança espacial para agregação/fusão
     COLLABORATIVE_MIN_ACCURACY_METERS: float = 250.0  # Descartar leituras com erro maior que 250m
     COLLABORATIVE_MAX_SPEED_KMH: float = 85.0  # Descarte se v > 85km/h (incompatível com ônibus urbano)
     COLLABORATIVE_SAMPLING_INTERVAL_SEC: int = 10  # Intervalo recomendado de envio pelo frontend

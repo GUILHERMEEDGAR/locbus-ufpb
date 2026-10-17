@@ -1467,8 +1467,19 @@ body {
 }
 
 .dot-terminal { background: #3b82f6; }
+.dot-stop { background: #0284c7; box-shadow: 0 0 6px #38bdf8; }
 .dot-route { background: #60a5fa; }
 .dot-bus { background: #10b981; box-shadow: 0 0 6px #10b981; }
+
+.btn-focus-campus {
+  border-color: rgba(56, 189, 248, 0.45);
+}
+
+.btn-focus-campus:hover {
+  border-color: #38bdf8 !important;
+  color: #38bdf8;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.45) !important;
+}
 
 /* SIDEBAR & ITINERÁRIO */
 .sidebar-column {
@@ -2522,3 +2533,654 @@ body {
   border-color: rgba(16, 185, 129, 0.45);
   box-shadow: 0 0 10px rgba(16, 185, 129, 0.35);
 }
+
+/* ===================================================
+   12 PARADAS OFICIAIS DO CAMPUS I - MAPA LEAFLET
+   =================================================== */
+.custom-stop-marker-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent !important;
+  border: none !important;
+}
+
+.campus-stop-pin {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+  border: 2px solid #ffffff;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4), 0 0 10px rgba(56, 189, 248, 0.35);
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.campus-stop-pin:hover {
+  transform: scale(1.32);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6), 0 0 16px rgba(56, 189, 248, 0.85);
+  border-color: #38bdf8;
+  z-index: 1000 !important;
+}
+
+.campus-stop-pin .stop-pin-num {
+  line-height: 1;
+}
+
+/* Tooltip customizada das paradas */
+.campus-stop-tooltip {
+  background: #0f172a !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(56, 189, 248, 0.4) !important;
+  border-radius: 6px !important;
+  font-size: 11px !important;
+  font-family: 'Inter', system-ui, sans-serif !important;
+  padding: 4px 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+}
+
+.campus-stop-tooltip::before {
+  border-top-color: #0f172a !important;
+}
+
+/* Popup customizado das paradas */
+.campus-stop-leaflet-popup .leaflet-popup-content-wrapper {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5), 0 0 16px rgba(56, 189, 248, 0.2) !important;
+  padding: 4px !important;
+}
+
+.campus-stop-leaflet-popup .leaflet-popup-tip {
+  background: #0f172a !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+.campus-stop-popup {
+  padding: 6px 8px;
+  font-family: 'Inter', system-ui, sans-serif;
+  min-width: 200px;
+}
+
+.popup-top-badge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.popup-top-badge .badge-num {
+  background: #0284c7;
+  color: #ffffff;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.popup-top-badge .badge-campus {
+  color: #94a3b8;
+  font-size: 10px;
+}
+
+.campus-stop-popup .popup-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #f8fafc;
+  line-height: 1.3;
+  margin-bottom: 4px;
+}
+
+.campus-stop-popup .popup-desc {
+  font-size: 11.5px;
+  color: #cbd5e1;
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+.campus-stop-popup .popup-coords {
+  font-size: 10px;
+  color: #64748b;
+  font-family: monospace;
+  margin-bottom: 10px;
+}
+
+.campus-stop-popup .popup-focus-btn {
+  width: 100%;
+  padding: 6px 10px;
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.2s ease;
+}
+
+.campus-stop-popup .popup-focus-btn:hover {
+  background: #1d4ed8;
+}
+
+/* ===================================================
+   PIN ESTILO GOOGLE MAPS & POPUP CARD
+   =================================================== */
+.custom-google-pin-marker {
+  background: transparent !important;
+  border: none !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.google-pin-container {
+  cursor: pointer;
+  transform-origin: bottom center;
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.google-pin-container:hover {
+  transform: translateY(-5px) scale(1.15);
+}
+
+.google-pin-tooltip {
+  background: #202124 !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 6px !important;
+  font-size: 11.5px !important;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+  font-weight: 500 !important;
+  padding: 5px 10px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
+}
+
+.google-pin-tooltip::before {
+  border-top-color: #202124 !important;
+}
+
+/* Google Maps InfoWindow Popup */
+.google-leaflet-popup .leaflet-popup-content-wrapper {
+  background: #ffffff !important;
+  color: #202124 !important;
+  border-radius: 14px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25), 0 0 1px rgba(0, 0, 0, 0.2) !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border: none !important;
+}
+
+.google-leaflet-popup .leaflet-popup-tip {
+  background: #ffffff !important;
+}
+
+.google-card-popup {
+  padding: 14px 16px;
+  min-width: 230px;
+  max-width: 290px;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.gcard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.gcard-badge {
+  background: #1a73e8;
+  color: #ffffff;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2.5px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.3px;
+}
+
+.gcard-campus {
+  font-size: 11px;
+  color: #5f6368;
+  font-weight: 500;
+}
+
+.gcard-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #202124;
+  line-height: 1.35;
+  margin-bottom: 6px;
+}
+
+.gcard-desc {
+  font-size: 12px;
+  color: #3c4043;
+  line-height: 1.45;
+  margin-bottom: 8px;
+}
+
+.gcard-meta {
+  font-size: 10.5px;
+  color: #70757a;
+  font-family: monospace;
+  margin-bottom: 12px;
+}
+
+.gcard-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.gcard-btn-focus {
+  flex: 1;
+  padding: 7px 10px;
+  background: #1a73e8;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.gcard-btn-focus:hover {
+  background: #1557b0;
+  transform: translateY(-1px);
+}
+
+.gcard-btn-gmaps {
+  flex: 1.2;
+  padding: 7px 10px;
+  background: #f1f3f4;
+  color: #1a73e8;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.gcard-btn-gmaps:hover {
+  background: #e8f0fe;
+  border-color: #aecbfa;
+}
+
+.gcard-btn-waiting {
+  flex: 1.3;
+  padding: 7px 10px;
+  background: #0ea5e9;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+}
+
+.gcard-btn-waiting:hover {
+  background: #0284c7;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(14, 165, 233, 0.4);
+}
+
+/* ==========================================================================
+   CARD DE SELEÇÃO DE PARADA DO USUÁRIO & CONFIRMAÇÃO DE CHEGADA (CROWDSOURCING)
+   ========================================================================== */
+.user-stop-card {
+  margin-top: 14px;
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.92));
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.user-stop-card.has-selected-stop {
+  border-color: rgba(56, 189, 248, 0.65);
+  box-shadow: 0 8px 30px rgba(14, 165, 233, 0.2);
+}
+
+.user-stop-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.user-stop-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-stop-icon {
+  font-size: 24px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+.user-stop-title {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #f8fafc;
+  letter-spacing: -0.2px;
+}
+
+.user-stop-subtitle {
+  font-size: 11.5px;
+  color: #94a3b8;
+  line-height: 1.3;
+}
+
+.btn-auto-detect {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+}
+
+.btn-auto-detect:hover {
+  background: rgba(56, 189, 248, 0.28);
+  border-color: #38bdf8;
+  transform: translateY(-1px);
+}
+
+.user-stop-select-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.user-stop-select {
+  width: 100%;
+  padding: 10px 14px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  color: #f1f5f9;
+  font-size: 13.5px;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2338bdf8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 16px;
+}
+
+.user-stop-select:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25);
+}
+
+.user-stop-select optgroup {
+  background: #0f172a;
+  color: #94a3b8;
+  font-weight: 700;
+}
+
+.user-stop-select option {
+  background: #1e293b;
+  color: #f8fafc;
+  padding: 8px;
+}
+
+/* AÇÃO DE CONFIRMAÇÃO */
+.user-stop-action-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.12);
+  animation: fadeInDown 0.3s ease;
+}
+
+.stop-status-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(30, 41, 59, 0.7);
+  border-radius: 10px;
+  font-size: 12px;
+  color: #cbd5e1;
+  border-left: 3px solid #38bdf8;
+}
+
+.status-banner-icon {
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.stop-confirm-prompt {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.stop-confirm-buttons {
+  display: grid;
+  grid-template-columns: 1.4fr 1.1fr 1.1fr;
+  gap: 8px;
+}
+
+@media (max-width: 480px) {
+  .stop-confirm-buttons {
+    grid-template-columns: 1fr;
+  }
+}
+
+.btn-report-arrived,
+.btn-report-waiting,
+.btn-report-departed {
+  padding: 10px 12px;
+  border: none;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+/* Botão Verde de Chegada */
+.btn-report-arrived {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #ffffff;
+  box-shadow: 0 3px 10px rgba(16, 185, 129, 0.35);
+}
+
+.btn-report-arrived:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+  transform: translateY(-1.5px);
+  box-shadow: 0 5px 14px rgba(16, 185, 129, 0.5);
+}
+
+/* Botão Âmbar de Espera */
+.btn-report-waiting {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.btn-report-waiting:hover {
+  background: rgba(245, 158, 11, 0.25);
+  border-color: #fbbf24;
+  transform: translateY(-1.5px);
+}
+
+/* Botão Azul de Partida */
+.btn-report-departed {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.35);
+}
+
+.btn-report-departed:hover {
+  background: rgba(59, 130, 246, 0.25);
+  border-color: #60a5fa;
+  transform: translateY(-1.5px);
+}
+
+.stop-feedback-msg {
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  animation: fadeIn 0.3s ease;
+}
+
+.stop-feedback-msg.success {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.stop-feedback-msg.info {
+  background: rgba(56, 189, 248, 0.2);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+}
+
+/* HALO DA PARADA ONDE O USUÁRIO ESTÁ ESPERANDO */
+.user-waiting-halo-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  position: relative;
+}
+
+.waiting-pulse-circle {
+  width: 44px;
+  height: 44px;
+  background: rgba(14, 165, 233, 0.3);
+  border: 2px solid #0ea5e9;
+  border-radius: 50%;
+  animation: waitingPulse 1.8s infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 16px rgba(14, 165, 233, 0.6);
+}
+
+.waiting-user-avatar {
+  font-size: 18px;
+  line-height: 1;
+}
+
+@keyframes waitingPulse {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(0.85);
+    opacity: 0.9;
+  }
+}
+
+/* BADGE DE CHEGADA CONFIRMADA NO PIN DO MAPA */
+.stop-arrived-pulse-badge {
+  position: absolute;
+  top: -12px;
+  right: -14px;
+  background: #10b981;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 12px;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  border: 1px solid #ffffff;
+  animation: arrivedBadgeBounce 1s infinite alternate ease-in-out;
+}
+
+@keyframes arrivedBadgeBounce {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-3px); }
+}
+
+/* BOTÃO DE ACESSO AO MODO RASTREADOR EMBARCADO */
+.btn-tracker-mode {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: var(--radius-full);
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-tracker-mode:hover {
+  background: rgba(16, 185, 129, 0.28);
+  border-color: #34d399;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+
+
+

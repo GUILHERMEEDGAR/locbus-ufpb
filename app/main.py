@@ -15,13 +15,15 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from app.config import settings
-from app.domain import CollaborativeIn, CollaborativeStatusOut
+from app.domain import CollaborativeIn, CollaborativeBatchIn, CollaborativeStatusOut, StopReportIn, StopReportOut
 from app.events import event_broker
 from app.services import (
     collaborative_buffer,
+    stop_reports_manager,
     calcular_status_geral,
     obter_historico_viagens,
     obter_itinerario_oficial,
+    reset_direcao_circular,
 )
 
 logger = logging.getLogger("locbus.main")
@@ -133,6 +135,31 @@ async def home(request: Request):
             "app_version": settings.APP_VERSION,
         }
     )
+
+
+@app.api_route("/tracker", methods=["GET", "HEAD"], response_class=HTMLResponse)
+@app.api_route("/onibus", methods=["GET", "HEAD"], response_class=HTMLResponse)
+@app.api_route("/motorista", methods=["GET", "HEAD"], response_class=HTMLResponse)
+async def tracker_page(request: Request):
+    """
+    Versão Embarcada do Aplicativo (Dispositivo Fixo do Ônibus / Painel do Motorista).
+    Foco 100% em telemetria ininterrupta, tela ativa via Screen Wake Lock e cockpit industrial.
+    """
+    return templates.TemplateResponse(
+        request=request,
+        name="tracker.html",
+        context={
+            "app_name": settings.APP_NAME,
+            "app_version": settings.APP_VERSION,
+        }
+    )
+
+
+@app.get("/manifest-tracker.webmanifest", include_in_schema=False)
+async def get_tracker_manifest():
+    """Entrega o manifesto PWA do Rastreador Embarcado."""
+    manifest_file = settings.STATIC_DIR / "manifest-tracker.webmanifest"
+    return FileResponse(manifest_file, media_type="application/manifest+json")
 
 
 @app.get("/manifest.webmanifest", include_in_schema=False)
@@ -285,10 +312,68 @@ async def post_collaborative_telemetry(payload: CollaborativeIn):
     }
 
 
+@app.post("/api/v1/telemetry/collaborative/batch")
+async def post_collaborative_telemetry_batch(batch: CollaborativeBatchIn):
+    """
+    Endpoint de recepção em lote para telemetria acumulada offline (Store-and-Forward da eduroam).
+    Processa todos os waypoints registrados durante períodos sem Wi-Fi e atualiza o estado atual.
+    """
+    total, accepted, message = collaborative_buffer.add_batch(batch.points)
+
+    if accepted > 0:
+        current_status = calcular_status_geral().model_dump()
+        await event_broker.broadcast("status", current_status)
+
+    return {
+        "status": "success",
+        "total_points": total,
+        "accepted_points": accepted,
+        "message": message,
+        "consolidated": collaborative_buffer.get_consolidated_status()
+    }
+
+
 @app.get("/api/v1/telemetry/collaborative/latest", response_model=CollaborativeStatusOut)
 async def get_latest_collaborative():
     """Retorna a posição geográfica colaborativa ativa (ou status inativo se expirada)."""
     return collaborative_buffer.get_consolidated_status()
+
+
+@app.post("/api/v1/stops/report")
+async def report_stop_status(report: StopReportIn):
+    """
+    Recebe confirmação colaborativa de usuário aguardando em uma parada específica
+    (ex: 'chegou', 'nao_chegou', 'partiu'). Transmite o relato instantaneamente via SSE.
+    """
+    summary = stop_reports_manager.add_report(report)
+
+    # Notifica todos os ouvintes do evento de parada
+    await event_broker.broadcast("stop_report", {
+        "event_type": "stop_status_update",
+        "report": summary,
+        "all_reports": stop_reports_manager.get_all_summaries()
+    })
+
+    # Se o ônibus chegou, atualiza o status geral imediatamente
+    if report.status == "chegou":
+        status_geral = calcular_status_geral().model_dump()
+        await event_broker.broadcast("status", status_geral)
+
+    return {
+        "status": "success",
+        "message": f"Confirmação registrada para {report.stop_name}!",
+        "summary": summary
+    }
+
+
+@app.get("/api/v1/stops/reports")
+async def get_all_stop_reports():
+    """Retorna o resumo consolidado de confirmações ativas para todas as paradas."""
+    return {
+        "reports": stop_reports_manager.get_all_summaries(),
+        "total_active_stops": len(stop_reports_manager.get_all_summaries())
+    }
+
 
 
 @app.post("/api/v1/simulation/step")
@@ -330,6 +415,7 @@ async def simulation_step():
 async def simulation_reset():
     """Reinicia a simulação para o CCHLA e transmite atualização imediata."""
     sim_state["index"] = 0
+    reset_direcao_circular("CI")
     collaborative_buffer._points.clear()
     status_atual = calcular_status_geral()
     await event_broker.broadcast("status", status_atual.model_dump())

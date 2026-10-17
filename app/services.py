@@ -11,6 +11,8 @@ from app.domain import (
     CollaborativeIn,
     CollaborativePoint,
     CollaborativeStatusOut,
+    StopReportIn,
+    StopReportOut,
 )
 
 def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
@@ -28,12 +30,20 @@ def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
 
 # Traçado oficial de referência para envelope de tolerância do geofencing
 CORREDOR_ROTA_WAYPOINTS = [
-    # Sentido Ida (CCHLA -> CI)
-    {"lat": -7.1397, "lon": -34.8450},
-    {"lat": -7.1404, "lon": -34.8442},
-    {"lat": -7.1415, "lon": -34.8430},
-    {"lat": -7.1425, "lon": -34.8420},
-    {"lat": -7.1438, "lon": -34.8410},
+    # Circuito das 12 Paradas no Campus I
+    {"lat": -7.13410, "lon": -34.84226},  # 1. ETS
+    {"lat": -7.13432, "lon": -34.84318},  # 2. Complexo Esportivo
+    {"lat": -7.13600, "lon": -34.84650},  # 3. Editora UFPB
+    {"lat": -7.13804, "lon": -34.84950},  # 4. CCTA
+    {"lat": -7.13955, "lon": -34.85062},  # 5. CCHLA
+    {"lat": -7.14493, "lon": -34.85066},  # 6. CT
+    {"lat": -7.14187, "lon": -34.84888},  # 7. CCJ
+    {"lat": -7.14100, "lon": -34.84661},  # 8. CBIOTEC
+    {"lat": -7.13944, "lon": -34.84522},  # 9. CCEN
+    {"lat": -7.13756, "lon": -34.84350},  # 10. INOVA
+    {"lat": -7.13539, "lon": -34.84191},  # 11. CCS
+    {"lat": -7.13454, "lon": -34.84103},  # 12. Fonoaudiologia
+    # Sentido Ida em direção a Mangabeira (Bancários)
     {"lat": -7.1448, "lon": -34.8404},
     {"lat": -7.1458, "lon": -34.8395},
     {"lat": -7.1472, "lon": -34.8378},
@@ -45,7 +55,7 @@ CORREDOR_ROTA_WAYPOINTS = [
     {"lat": -7.1598, "lon": -34.8218},
     {"lat": -7.1615, "lon": -34.8196},
     {"lat": -7.1627, "lon": -34.8182},
-    # Sentido Volta (CI -> CCHLA)
+    # Sentido Volta (CI -> Campus I)
     {"lat": -7.1615, "lon": -34.8196},
     {"lat": -7.1598, "lon": -34.8218},
     {"lat": -7.1578, "lon": -34.8242},
@@ -56,10 +66,7 @@ CORREDOR_ROTA_WAYPOINTS = [
     {"lat": -7.1472, "lon": -34.8378},
     {"lat": -7.1458, "lon": -34.8395},
     {"lat": -7.1448, "lon": -34.8404},
-    {"lat": -7.1438, "lon": -34.8410},
-    {"lat": -7.1425, "lon": -34.8420},
-    {"lat": -7.1408, "lon": -34.8436},
-    {"lat": -7.1397, "lon": -34.8450},
+    {"lat": -7.13410, "lon": -34.84226},
 ]
 
 
@@ -130,6 +137,14 @@ class CollaborativeBuffer:
         if dist_min_km > tolerance_km:
             return False, f"Ponto fora da rota homologada (distância de {dist_min_km*1000:.0f}m > tolerância de {settings.COLLABORATIVE_GEOFENCE_TOLERANCE_METERS:.0f}m)."
 
+        # 5. Detecção de Salto Espacial Abrupto (Reinício de Simulação ou Nova Viagem)
+        # Se o novo ponto dista mais de 600m do último recebido, descarta pontos do percurso anterior
+        if self._points:
+            last_p = self._points[-1]
+            dist_salto_km = haversine_km(data.latitude, data.longitude, last_p.latitude, last_p.longitude)
+            if dist_salto_km > 0.6:
+                self._points.clear()
+
         now = datetime.now(timezone.utc)
         point = CollaborativePoint(
             latitude=data.latitude,
@@ -143,6 +158,19 @@ class CollaborativeBuffer:
         self._points.append(point)
         self._clean_expired(now)
         return True, "Posição colaborativa registrada com sucesso."
+
+    def add_batch(self, points: List[CollaborativeIn]) -> tuple[int, int, str]:
+        """
+        Processa um lote de pontos acumulados offline (Store-and-Forward da eduroam).
+        Retorna (total, aceitos, mensagem descritiva).
+        """
+        accepted = 0
+        for pt in points:
+            ok, _ = self.add_point(pt)
+            if ok:
+                accepted += 1
+        return len(points), accepted, f"Buffer Eduroam: {accepted}/{len(points)} pontos válidos descarregados."
+
 
     def _clean_expired(self, current_time: datetime):
         """Remove pontos com idade superior a 2x o TTL configurado."""
@@ -166,9 +194,24 @@ class CollaborativeBuffer:
                 human_status="Sem passageiro transmitindo no momento. Exibindo estimativa de trajeto."
             )
 
-        # Se houver apenas 1 ponto ativo
-        if len(active_points) == 1:
-            latest = active_points[-1]
+        # 1. Âncora temporal: o ponto mais recente determina o foco espacial atual
+        latest_point = active_points[-1]
+
+        # 2. Clustering Espacial com Raio de Vizinhança:
+        # Agrupa apenas pontos que estejam dentro do raio de tolerância do ponto mais recente.
+        # Pontos defasados em outro terminal a quilômetros de distância são descartados da média.
+        cluster_radius_km = settings.COLLABORATIVE_CLUSTER_RADIUS_METERS / 1000.0
+        cluster_points = [
+            p for p in active_points
+            if haversine_km(p.latitude, p.longitude, latest_point.latitude, latest_point.longitude) <= cluster_radius_km
+        ]
+
+        if not cluster_points:
+            cluster_points = [latest_point]
+
+        # Se houver apenas 1 ponto ativo no cluster
+        if len(cluster_points) == 1:
+            latest = cluster_points[-1]
             age = int((now - latest.received_at).total_seconds())
             return CollaborativeStatusOut(
                 active=True,
@@ -182,18 +225,18 @@ class CollaborativeBuffer:
                 human_status=f"Localização colaborativa em tempo real (atualizada há {age}s por 1 passageiro a bordo)."
             )
 
-        # Múltiplos pontos: calcula a média ponderada pelo inverso da acurácia
-        weights = [1.0 / max(p.accuracy, 1.0) for p in active_points]
+        # Múltiplos pontos no cluster: calcula a média ponderada pelo inverso da acurácia
+        weights = [1.0 / max(p.accuracy, 1.0) for p in cluster_points]
         total_weight = sum(weights)
         
-        weighted_lat = sum(p.latitude * w for p, w in zip(active_points, weights)) / total_weight
-        weighted_lon = sum(p.longitude * w for p, w in zip(active_points, weights)) / total_weight
-        avg_acc = sum(p.accuracy for p in active_points) / len(active_points)
+        weighted_lat = sum(p.latitude * w for p, w in zip(cluster_points, weights)) / total_weight
+        weighted_lon = sum(p.longitude * w for p, w in zip(cluster_points, weights)) / total_weight
+        avg_acc = sum(p.accuracy for p in cluster_points) / len(cluster_points)
         
-        latest_time = max(p.received_at for p in active_points)
+        latest_time = max(p.received_at for p in cluster_points)
         age = int((now - latest_time).total_seconds())
         
-        speeds = [p.speed for p in active_points if p.speed is not None]
+        speeds = [p.speed for p in cluster_points if p.speed is not None]
         avg_speed = (sum(speeds) / len(speeds)) if speeds else None
 
         return CollaborativeStatusOut(
@@ -202,14 +245,107 @@ class CollaborativeBuffer:
             longitude=round(weighted_lon, 6),
             accuracy=round(avg_acc, 1),
             speed_kmh=round(avg_speed, 1) if avg_speed else None,
-            heading=active_points[-1].heading,
-            collaborators_count=len(active_points),
+            heading=cluster_points[-1].heading,
+            collaborators_count=len(cluster_points),
             age_seconds=age,
-            human_status=f"Localização consolidada em tempo real ({len(active_points)} passageiros a bordo • há {age}s)."
+            human_status=f"Localização consolidada em tempo real ({len(cluster_points)} passageiros a bordo • há {age}s)."
         )
 
 # Instância única em memória
 collaborative_buffer = CollaborativeBuffer()
+
+
+class StopReportsManager:
+    """
+    Gerenciador de confirmações colaborativas de usuários aguardando nas paradas.
+    Permite registrar chegadas, esperas e partidas do ônibus em tempo real.
+    """
+    def __init__(self, ttl_minutes: int = 20):
+        self.ttl_seconds = ttl_minutes * 60
+        self._reports: dict[int, list[dict]] = {}
+
+    def add_report(self, report: StopReportIn) -> dict:
+        now = datetime.now(timezone.utc)
+        self._purge_expired(now)
+
+        if report.stop_id not in self._reports:
+            self._reports[report.stop_id] = []
+
+        entry = {
+            "stop_id": report.stop_id,
+            "stop_name": report.stop_name,
+            "status": report.status,
+            "timestamp": now,
+            "latitude": report.latitude,
+            "longitude": report.longitude
+        }
+        self._reports[report.stop_id].append(entry)
+
+        # Se o passageiro confirmou que o ônibus CHEGOU no ponto e passou coordenadas da parada,
+        # injeta esse sinal de alta relevância como um ponto no buffer colaborativo
+        if report.status == "chegou" and report.latitude and report.longitude:
+            try:
+                collab_in = CollaborativeIn(
+                    latitude=report.latitude,
+                    longitude=report.longitude,
+                    accuracy=10.0,
+                    speed=0.0,
+                    heading=None,
+                    client_timestamp=now
+                )
+                collaborative_buffer.add_point(collab_in)
+            except Exception:
+                pass
+
+        return self.get_stop_summary(report.stop_id, now)
+
+    def get_all_summaries(self) -> dict[int, dict]:
+        now = datetime.now(timezone.utc)
+        self._purge_expired(now)
+        summaries = {}
+        for stop_id in list(self._reports.keys()):
+            summary = self.get_stop_summary(stop_id, now)
+            if summary:
+                summaries[stop_id] = summary
+        return summaries
+
+    def get_stop_summary(self, stop_id: int, current_time: Optional[datetime] = None) -> Optional[dict]:
+        now = current_time or datetime.now(timezone.utc)
+        reports = self._reports.get(stop_id, [])
+        valid_reports = [r for r in reports if (now - r["timestamp"]).total_seconds() <= self.ttl_seconds]
+        if not valid_reports:
+            return None
+
+        last = valid_reports[-1]
+        age_sec = int((now - last["timestamp"]).total_seconds())
+        if age_sec < 60:
+            human_time = "agora mesmo"
+        elif age_sec < 3600:
+            human_time = f"há {age_sec // 60} min"
+        else:
+            human_time = f"há {age_sec // 3600}h"
+
+        return {
+            "stop_id": stop_id,
+            "stop_name": last["stop_name"],
+            "status": last["status"],
+            "timestamp": last["timestamp"].isoformat(),
+            "age_seconds": age_sec,
+            "human_time": human_time,
+            "total_confirmacoes": len(valid_reports)
+        }
+
+    def _purge_expired(self, current_time: datetime):
+        for stop_id in list(self._reports.keys()):
+            self._reports[stop_id] = [
+                r for r in self._reports[stop_id]
+                if (current_time - r["timestamp"]).total_seconds() <= self.ttl_seconds
+            ]
+            if not self._reports[stop_id]:
+                del self._reports[stop_id]
+
+
+stop_reports_manager = StopReportsManager()
 
 
 PARADAS_OFICIAIS = [
@@ -244,6 +380,12 @@ def identificar_proxima_parada(lat: float, lon: float, sentido: str) -> tuple[st
 
 _direcao_atual_circular = "CI"
 
+def reset_direcao_circular(sentido: str = "CI"):
+    """Redefine o sentido operacional circular (CI para ida, CCHLA para volta)."""
+    global _direcao_atual_circular
+    _direcao_atual_circular = sentido
+
+
 def calcular_status_geral() -> StatusLocBUS:
     """
     Calcula o estado geral do ônibus com base na fusão de telemetria.
@@ -258,8 +400,8 @@ def calcular_status_geral() -> StatusLocBUS:
         dist_cchla = haversine_km(collab.latitude, collab.longitude, settings.PONTO_CCHLA[0], settings.PONTO_CCHLA[1])
         dist_ci = haversine_km(collab.latitude, collab.longitude, settings.PONTO_CI[0], settings.PONTO_CI[1])
 
-        # Se estiver muito próximo ao CI (< 180m), chegou ao CI e o próximo sentido é retorno (CCHLA)
-        if dist_ci < 0.18:
+        # Se estiver muito próximo ao CI (< 350m), chegou ao CI e o próximo sentido é retorno (CCHLA)
+        if dist_ci < 0.35:
             _direcao_atual_circular = "CCHLA"
             estado = "AGUARDANDO"
             origem = "CI"
@@ -269,8 +411,8 @@ def calcular_status_geral() -> StatusLocBUS:
             modo_rastreamento = "BLE_FIXO"
             confiabilidade = "Presença Física Confirmada no Terminal (BLE)"
             dist_restante = 0.0
-        # Se estiver muito próximo ao CCHLA (< 180m), chegou ao CCHLA e o próximo sentido é ida (CI)
-        elif dist_cchla < 0.18:
+        # Se estiver muito próximo ao CCHLA (< 350m), chegou ao CCHLA e o próximo sentido é ida (CI)
+        elif dist_cchla < 0.35:
             _direcao_atual_circular = "CI"
             estado = "AGUARDANDO"
             origem = "CCHLA"
@@ -485,6 +627,20 @@ def obter_itinerario_oficial() -> dict:
             {"ordem": 6, "nome": "Praça da Paz (Bancários)", "tipo": "Parada Intermediária", "tempo_estimado": "+17 min", "detalhe": "Ponto de grande movimentação estudantil"},
             {"ordem": 7, "nome": "Trevo / Viaduto de Mangabeira", "tipo": "Em Trânsito", "tempo_estimado": "+20 min", "detalhe": "Entrada do bairro de Mangabeira"},
             {"ordem": 8, "nome": "Terminal CI (Mangabeira)", "tipo": "Terminal", "tempo_estimado": "+24 min", "detalhe": "Ponto final em frente ao Centro de Informática"},
+        ],
+        "paradas_campus_1": [
+            {"ordem": 1, "nome": "ETS (Escola Técnica de Saúde)", "sigla": "ETS", "detalhe": "Ponto de embarque em frente à Escola Técnica de Saúde", "coords": [-7.13410, -34.84226]},
+            {"ordem": 2, "nome": "Complexo Esportivo", "sigla": "DEF", "detalhe": "Ginásio Desportivo, Pista de Atletismo e Piscina (DEF)", "coords": [-7.13432, -34.84318]},
+            {"ordem": 3, "nome": "Editora UFPB", "sigla": "EDITORA", "detalhe": "Alameda da Oiticica / Gráfica e Editora Universitária", "coords": [-7.13600, -34.84650]},
+            {"ordem": 4, "nome": "CCTA (Centro de Comunicação, Turismo e Artes)", "sigla": "CCTA", "detalhe": "Parada CCTA / Rádio e TV Universitária", "coords": [-7.13804, -34.84950]},
+            {"ordem": 5, "nome": "CCHLA (Centro de Ciências Humanas, Letras e Artes)", "sigla": "CCHLA", "detalhe": "Terminal e Girador do CCHLA / Praça da Alegria", "coords": [-7.13955, -34.85062]},
+            {"ordem": 6, "nome": "CT (Centro de Tecnologia)", "sigla": "CT", "detalhe": "Girador e Blocos do Centro de Tecnologia", "coords": [-7.14493, -34.85066]},
+            {"ordem": 7, "nome": "CCJ (Centro de Ciências Jurídicas)", "sigla": "CCJ", "detalhe": "Faculdade de Direito / Praça do CCJ", "coords": [-7.14187, -34.84888]},
+            {"ordem": 8, "nome": "Centro de Biotecnologia", "sigla": "CBIOTEC", "detalhe": "CBIOTEC / Prédio de Pesquisa e Pós-Graduação", "coords": [-7.14100, -34.84661]},
+            {"ordem": 9, "nome": "CCEN (Centro de Ciências Exatas e da Natureza)", "sigla": "CCEN", "detalhe": "Parada CCEN / Química, Física e Matemática", "coords": [-7.13944, -34.84522]},
+            {"ordem": 10, "nome": "INOVA", "sigla": "INOVA", "detalhe": "Agência UFPB de Inovação / Curva da Sucupira", "coords": [-7.13756, -34.84350]},
+            {"ordem": 11, "nome": "CCS (Centro de Ciências da Saúde)", "sigla": "CCS", "detalhe": "Bloco Administrativo e Salas de Aula do CCS", "coords": [-7.13539, -34.84191]},
+            {"ordem": 12, "nome": "Departamento de Fonoaudiologia", "sigla": "FONO", "detalhe": "Bloco de Fonoaudiologia e Terapia Ocupacional", "coords": [-7.13454, -34.84103]},
         ],
         "horarios": {
             "manha": [

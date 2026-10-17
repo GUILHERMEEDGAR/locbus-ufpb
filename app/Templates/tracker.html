@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>LocBUS Tracker • Dispositivo Embarcado</title>
+
+  <!-- PWA Embarcado -->
+  <link rel="manifest" href="/manifest-tracker.webmanifest">
+  <meta name="theme-color" content="#060913">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="LocBUS Tracker">
+
+  <link rel="icon" type="image/png" sizes="192x192" href="/static/icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+  <!-- Leaflet para Mini Radar Tático -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script src="/static/js/route_geometry.js?v=1.5.0"></script>
+
+  <style>
+    :root {
+      --bg-dark: #060913;
+      --bg-card: rgba(15, 23, 42, 0.85);
+      --bg-card-hover: rgba(30, 41, 59, 0.95);
+      --border: rgba(255, 255, 255, 0.1);
+      --accent-green: #10b981;
+      --accent-green-glow: rgba(16, 185, 129, 0.4);
+      --accent-cyan: #38bdf8;
+      --accent-amber: #f59e0b;
+      --accent-red: #ef4444;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      padding-bottom: env(safe-area-inset-bottom, 16px);
+    }
+
+    /* BARRA SUPERIOR DO COCKPIT */
+    .cockpit-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      background: rgba(10, 15, 29, 0.95);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .cockpit-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .cockpit-logo-icon {
+      font-size: 26px;
+      line-height: 1;
+    }
+
+    .cockpit-title-group h1 {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tag-vehicle {
+      background: #1e3a8a;
+      color: #60a5fa;
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+    }
+
+    .cockpit-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .cockpit-top-indicators {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .top-pill {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-family: var(--font-mono);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #e2e8f0;
+    }
+
+    .wakelock-pill.active {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: rgba(16, 185, 129, 0.4);
+      color: #34d399;
+    }
+
+    /* CONTAINER PRINCIPAL DO COCKPIT */
+    .cockpit-container {
+      flex: 1;
+      padding: 16px 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 900px) {
+      .cockpit-container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* COLUNA DA ESQUERDA: STATUS E TELEMETRIA */
+    .telemetry-column {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* CARD PRINCIPAL DE STATUS DO TRANSMISSOR */
+    .status-hero-card {
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      transition: all 0.3s ease;
+    }
+
+    .status-hero-card.transmitting {
+      border-color: var(--accent-green);
+      box-shadow: 0 0 35px var(--accent-green-glow);
+    }
+
+    .status-hero-card.waiting {
+      border-color: var(--accent-amber);
+      box-shadow: 0 0 25px rgba(245, 158, 11, 0.25);
+    }
+
+    .status-hero-card.error {
+      border-color: var(--accent-red);
+      box-shadow: 0 0 25px rgba(239, 68, 68, 0.3);
+    }
+
+    .status-hero-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 6px 14px;
+      border-radius: 30px;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .status-hero-card.transmitting .status-badge {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+    }
+
+    .pulse-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      box-shadow: 0 0 12px var(--accent-green);
+      animation: pulseAnimation 1.5s infinite;
+    }
+
+    @keyframes pulseAnimation {
+      0% { transform: scale(0.9); opacity: 1; }
+      50% { transform: scale(1.4); opacity: 0.4; }
+      100% { transform: scale(0.9); opacity: 1; }
+    }
+
+    .status-main-message {
+      font-size: 26px;
+      font-weight: 900;
+      color: #ffffff;
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+
+    .status-sub-message {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* VELOCÍMETRO DIGITAL */
+    .speedometer-box {
+      margin-top: 20px;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.45);
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .speed-number {
+      font-size: 74px;
+      font-weight: 900;
+      font-family: var(--font-mono);
+      color: #ffffff;
+      line-height: 1;
+      letter-spacing: -2px;
+    }
+
+    .speed-unit {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      text-transform: uppercase;
+    }
+
+    /* GRID DE MÉTRICAS EM TEMPO REAL */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .metric-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .metric-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .metric-value {
+      font-size: 20px;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      color: #ffffff;
+      word-break: break-all;
+    }
+
+    .metric-value.highlight {
+      color: var(--accent-green);
+    }
+
+    /* COLUNA DA DIREITA: RADAR TÁTICO & CONTROLES */
+    .radar-column {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .radar-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 420px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .radar-header {
+      padding: 12px 18px;
+      background: rgba(15, 23, 42, 0.95);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .radar-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    #mini-radar-map {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      background: #0f172a;
+    }
+
+    /* PAINEL DE CONTROLES INFERIOR */
+    .control-actions-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .btn-action-primary {
+      flex: 1;
+      padding: 14px 20px;
+      background: linear-gradient(135deg, #10b981, #059669);
+      border: none;
+      border-radius: 12px;
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
+      transition: all 0.2s ease;
+    }
+
+    .btn-action-primary:active {
+      transform: scale(0.98);
+    }
+
+    .btn-action-primary.is-active {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
+    }
+
+    .btn-action-secondary {
+      padding: 14px 18px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: #cbd5e1;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-action-secondary:hover {
+      background: rgba(255, 255, 255, 0.14);
+      color: #ffffff;
+    }
+
+    /* FOOTER COM LGPD E MENSAGEM */
+    .cockpit-footer {
+      text-align: center;
+      padding: 14px 20px;
+      font-size: 11px;
+      color: #64748b;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .cockpit-footer a {
+      color: var(--accent-cyan);
+      text-decoration: none;
+    }
+
+    /* MARCADOR TÁTICO DO ÔNIBUS */
+    .tracker-bus-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      background: #10b981;
+      border: 3px solid #ffffff;
+      border-radius: 50%;
+      box-shadow: 0 0 16px rgba(16, 185, 129, 0.8);
+      font-size: 16px;
+      animation: trackerPulse 1.6s infinite alternate;
+    }
+
+    @keyframes trackerPulse {
+      0% { transform: scale(0.95); }
+      100% { transform: scale(1.15); box-shadow: 0 0 24px rgba(16, 185, 129, 1); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- BARRA SUPERIOR DO COCKPIT -->
+  <header class="cockpit-topbar">
+    <div class="cockpit-brand">
+      <span class="cockpit-logo-icon">🚌</span>
+      <div class="cockpit-title-group">
+        <h1>LocBUS Tracker <span class="tag-vehicle">CIRCULAR #01</span></h1>
+        <span class="cockpit-subtitle">Transmissor Contínuo Embarcado • 100% do Tempo</span>
+      </div>
+    </div>
+
+    <div class="cockpit-top-indicators">
+      <div class="top-pill wakelock-pill" id="wakelock-status" title="Tela ativa sem desligar">
+        <span>🔆</span>
+        <span id="wakelock-label">Wake Lock: Off</span>
+      </div>
+      <div class="top-pill" id="battery-status" title="Nível de bateria e carregador">
+        <span>🔋</span>
+        <span id="battery-label">--%</span>
+      </div>
+      <div class="top-pill" id="network-status" title="Status de conexão à internet">
+        <span>📶</span>
+        <span id="network-label">Online</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTEÚDO PRINCIPAL DO COCKPIT -->
+  <main class="cockpit-container">
+    
+    <!-- COLUNA DA ESQUERDA: STATUS DO RASTREADOR E TELEMETRIA -->
+    <div class="telemetry-column">
+      
+      <!-- HERO CARD: STATUS PRINCIPAL -->
+      <div class="status-hero-card transmitting" id="status-hero-card">
+        <div class="status-hero-header">
+          <div class="status-badge" id="status-badge">
+            <span class="pulse-dot" id="status-pulse-dot"></span>
+            <span id="status-badge-text">TRANSMISSÃO ATIVA (EDUROAM)</span>
+          </div>
+          <span style="font-family: var(--font-mono); font-size: 12px; color: var(--accent-cyan);" id="ping-rate">Amostragem: 3.5s</span>
+        </div>
+
+        <div class="status-main-message" id="status-main-message">
+          Transmitindo Posição do Ônibus
+        </div>
+        <div class="status-sub-message" id="status-sub-message">
+          Conectado à rede eduroam. Se o ônibus sair da cobertura, o percurso será gravado e transmitido na reconexão.
+        </div>
+
+        <!-- VELOCÍMETRO -->
+        <div class="speedometer-box">
+          <span class="speed-number" id="speed-val">00</span>
+          <span class="speed-unit">km/h</span>
+        </div>
+      </div>
+
+      <!-- MÉTRICAS DE ENGENHARIA -->
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <span class="metric-label">📍 Coordenadas Atuais</span>
+          <span class="metric-value" id="coords-val" style="font-size: 15px;">Aguardando GPS...</span>
+        </div>
+
+        <div class="metric-card">
+          <span class="metric-label">🎯 Precisão GPS (Acurácia)</span>
+          <span class="metric-value highlight" id="accuracy-val">± -- m</span>
+        </div>
+
+        <div class="metric-card">
+          <span class="metric-label">📦 Pontos Entregues</span>
+          <span class="metric-value" id="points-count-val">0</span>
+        </div>
+
+        <div class="metric-card">
+          <span class="metric-label">🌐 Buffer Offline (eduroam)</span>
+          <span class="metric-value" id="buffer-count-val" style="color: #38bdf8;">0 pontos</span>
+          <span style="font-size: 11px; color: var(--text-muted);" id="buffer-status-desc">Transmissão em tempo real</span>
+        </div>
+
+        <div class="metric-card" style="grid-column: span 2;">
+          <span class="metric-label">⏱️ Tempo de Rota Contínua (Uptime)</span>
+          <span class="metric-value" id="uptime-val">00:00:00</span>
+        </div>
+      </div>
+
+      <!-- PAINEL DE CONTROLES INFERIORES -->
+      <div class="control-actions-card">
+        <button id="btn-toggle-tracking" class="btn-action-primary" type="button">
+          <span id="btn-action-icon">⏸️</span>
+          <span id="btn-action-label">Pausar Transmissor</span>
+        </button>
+        <button id="btn-fullscreen" class="btn-action-secondary" type="button" title="Ativar tela cheia">
+          <span>⛶</span> Tela Cheia
+        </button>
+        <button id="btn-install-app" class="btn-action-secondary" type="button" style="display: none;" title="Instalar aplicativo no tablet">
+          <span>📲</span> Instalar App
+        </button>
+      </div>
+
+    </div>
+
+    <!-- COLUNA DA DIREITA: RADAR TÁTICO (MINI MAPA) -->
+    <div class="radar-column">
+      <div class="radar-card">
+        <div class="radar-header">
+          <span class="radar-title">🛰️ Mini Radar Tático da Rota</span>
+          <span style="font-size: 11px; color: var(--text-muted);" id="radar-stop-info">Campus I ↔ CI Mangabeira</span>
+        </div>
+        <div id="mini-radar-map"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="cockpit-footer">
+    LocBUS Tracker v1.6.0 • Módulo de Telemetria Embarcada (eduroam Resiliente / Store-and-Forward) • UFPB • <a href="/" target="_blank">Abrir Mapa de Passageiros ↗</a>
+  </footer>
+
+  <!-- MOTOR JAVASCRIPT AUTÔNOMO EMBARCADO (STORE-AND-FORWARD EDUROAM) -->
+  <script>
+    // ESTADO DO TRANSMISSOR EMBARCADO
+    let isTracking = true;
+    let watchId = null;
+    let watchdogTimer = null;
+    let flushRetryTimer = null;
+    let wakeLock = null;
+    let pointsSentCount = 0;
+    let lastSendTimestamp = 0;
+    const THROTTLE_MS = 3500; // Coleta de 3.5 em 3.5 segundos
+    let startTime = Date.now();
+    let uptimeTimer = null;
+    let isFlushingQueue = false;
+
+    // FILA PERSISTENTE OFFLINE EDUROAM (STORE-AND-FORWARD)
+    let eduroamQueue = [];
+    try {
+      const savedQueue = localStorage.getItem('locbus_eduroam_queue');
+      if (savedQueue) {
+        eduroamQueue = JSON.parse(savedQueue);
+      }
+    } catch (e) {
+      eduroamQueue = [];
+    }
+
+    // ELEMENTOS DOM
+    const statusHeroCard = document.getElementById('status-hero-card');
+    const statusBadge = document.getElementById('status-badge');
+    const statusBadgeText = document.getElementById('status-badge-text');
+    const statusPulseDot = document.getElementById('status-pulse-dot');
+    const statusMainMessage = document.getElementById('status-main-message');
+    const statusSubMessage = document.getElementById('status-sub-message');
+    const speedVal = document.getElementById('speed-val');
+    const coordsVal = document.getElementById('coords-val');
+    const accuracyVal = document.getElementById('accuracy-val');
+    const pointsCountVal = document.getElementById('points-count-val');
+    const bufferCountVal = document.getElementById('buffer-count-val');
+    const bufferStatusDesc = document.getElementById('buffer-status-desc');
+    const uptimeVal = document.getElementById('uptime-val');
+    const btnToggleTracking = document.getElementById('btn-toggle-tracking');
+    const btnActionLabel = document.getElementById('btn-action-label');
+    const btnActionIcon = document.getElementById('btn-action-icon');
+    const btnFullscreen = document.getElementById('btn-fullscreen');
+    const wakelockStatus = document.getElementById('wakelock-status');
+    const wakelockLabel = document.getElementById('wakelock-label');
+    const batteryLabel = document.getElementById('battery-label');
+    const networkLabel = document.getElementById('network-label');
+
+    function saveQueueToStorage() {
+      try {
+        localStorage.setItem('locbus_eduroam_queue', JSON.stringify(eduroamQueue.slice(-350)));
+      } catch (e) {}
+    }
+
+    function updateBufferUI() {
+      if (bufferCountVal) {
+        bufferCountVal.textContent = `${eduroamQueue.length} ${eduroamQueue.length === 1 ? 'ponto' : 'pontos'}`;
+        if (eduroamQueue.length > 0) {
+          bufferCountVal.style.color = 'var(--accent-amber)';
+          if (bufferStatusDesc) bufferStatusDesc.textContent = 'Guardado no veículo para despejo na eduroam';
+        } else {
+          bufferCountVal.style.color = '#38bdf8';
+          if (bufferStatusDesc) bufferStatusDesc.textContent = 'Transmissão em tempo real';
+        }
+      }
+    }
+
+    // 1. SCREEN WAKE LOCK: IMPEDE QUE O APARELHO APAGUE A TELA
+    async function requestWakeLock() {
+      if ('wakeLock' in navigator) {
+        try {
+          wakeLock = await navigator.wakeLock.request('screen');
+          if (wakelockStatus && wakelockLabel) {
+            wakelockStatus.classList.add('active');
+            wakelockLabel.textContent = 'Wake Lock: Ativo';
+          }
+          wakeLock.addEventListener('release', () => {
+            if (wakelockStatus && wakelockLabel) {
+              wakelockStatus.classList.remove('active');
+              wakelockLabel.textContent = 'Wake Lock: Off';
+            }
+          });
+        } catch (err) {
+          console.warn('[WakeLock] Aviso ao solicitar:', err);
+        }
+      }
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && isTracking) {
+        requestWakeLock();
+      }
+    });
+
+    // 2. MONITOR DE BATERIA
+    if ('getBattery' in navigator) {
+      navigator.getBattery().then(battery => {
+        function updateBatteryUI() {
+          const level = Math.round(battery.level * 100);
+          const charging = battery.charging ? ' 🔌' : '';
+          if (batteryLabel) batteryLabel.textContent = `${level}%${charging}`;
+        }
+        updateBatteryUI();
+        battery.addEventListener('levelchange', updateBatteryUI);
+        battery.addEventListener('chargingchange', updateBatteryUI);
+      });
+    }
+
+    // 3. MONITOR DE CONEXÃO E RECONEXÃO EDUROAM
+    function updateNetworkStatus() {
+      const isOnline = navigator.onLine;
+      if (networkLabel) networkLabel.textContent = isOnline ? 'eduroam (Online)' : 'Sem eduroam (Offline)';
+      if (isOnline) {
+        triggerEduroamFlush();
+      } else {
+        setHeroStatus('waiting', 'Sem Sinal da eduroam (Gravando)', `O ônibus está em trecho sem Wi-Fi. ${eduroamQueue.length} pontos guardados.`);
+      }
+    }
+    window.addEventListener('online', updateNetworkStatus);
+    window.addEventListener('offline', updateNetworkStatus);
+
+    // 4. UPTIME TIMER
+    function startUptime() {
+      uptimeTimer = setInterval(() => {
+        const diffSec = Math.floor((Date.now() - startTime) / 1000);
+        const h = String(Math.floor(diffSec / 3600)).padStart(2, '0');
+        const m = String(Math.floor((diffSec % 3600) / 60)).padStart(2, '0');
+        const s = String(diffSec % 60).padStart(2, '0');
+        if (uptimeVal) uptimeVal.textContent = `${h}:${m}:${s}`;
+      }, 1000);
+    }
+
+    function setHeroStatus(state, mainMsg, subMsg) {
+      if (!statusHeroCard) return;
+      statusHeroCard.className = `status-hero-card ${state}`;
+      if (statusMainMessage) statusMainMessage.textContent = mainMsg;
+      if (statusSubMessage) statusSubMessage.textContent = subMsg;
+
+      if (state === 'transmitting') {
+        if (statusBadgeText) statusBadgeText.textContent = 'TRANSMISSÃO ATIVA (EDUROAM)';
+        if (statusPulseDot) statusPulseDot.style.background = 'var(--accent-green)';
+      } else if (state === 'waiting') {
+        if (statusBadgeText) statusBadgeText.textContent = 'BUFFER OFFLINE ATIVO';
+        if (statusPulseDot) statusPulseDot.style.background = 'var(--accent-amber)';
+      } else {
+        if (statusBadgeText) statusBadgeText.textContent = 'ALERTA / PARADO';
+        if (statusPulseDot) statusPulseDot.style.background = 'var(--accent-red)';
+      }
+    }
+
+    // 5. INICIALIZAÇÃO DO MINI RADAR TÁTICO COM LEAFLET
+    let radarMap = null;
+    let busRadarMarker = null;
+
+    function initRadarMap() {
+      const radarElem = document.getElementById('mini-radar-map');
+      if (!radarElem) return;
+
+      radarMap = L.map('mini-radar-map', {
+        zoomControl: false,
+        attributionControl: false
+      }).setView([-7.1440, -34.8430], 14);
+
+      L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+        maxZoom: 19
+      }).addTo(radarMap);
+
+      const routeCoords = (window.OSRM_FULL_ROUTE && window.OSRM_FULL_ROUTE.length > 0)
+        ? window.OSRM_FULL_ROUTE
+        : [[-7.1397, -34.8450], [-7.1627, -34.8182]];
+
+      L.polyline(routeCoords, {
+        color: '#174ea6',
+        weight: 6,
+        opacity: 0.9
+      }).addTo(radarMap);
+
+      L.polyline(routeCoords, {
+        color: '#38bdf8',
+        weight: 3.5,
+        opacity: 1
+      }).addTo(radarMap);
+
+      const busIcon = L.divIcon({
+        className: 'custom-tracker-bus',
+        html: '<div class="tracker-bus-icon">🚌</div>',
+        iconSize: [36, 36],
+        iconAnchor: [18, 18]
+      });
+
+      busRadarMarker = L.marker([-7.1397, -34.8450], { icon: busIcon }).addTo(radarMap);
+    }
+
+    function updateRadarBus(lat, lon) {
+      if (!busRadarMarker || !radarMap) return;
+      busRadarMarker.setLatLng([lat, lon]);
+      radarMap.panTo([lat, lon], { animate: true, duration: 1.0 });
+    }
+
+    // 6. MOTOR STORE-AND-FORWARD (TOLERANTE A DESCONEXÕES DA EDUROAM)
+    function triggerEduroamFlush() {
+      if (isFlushingQueue || eduroamQueue.length === 0) return;
+
+      isFlushingQueue = true;
+      const batchToSend = [...eduroamQueue];
+
+      // Se temos apenas 1 ponto
+      if (batchToSend.length === 1) {
+        const singlePoint = batchToSend[0];
+        fetch('/api/v1/telemetry/collaborative', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(singlePoint)
+        })
+        .then(res => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json();
+        })
+        .then(() => {
+          eduroamQueue.shift();
+          saveQueueToStorage();
+          pointsSentCount++;
+          if (pointsCountVal) pointsCountVal.textContent = pointsSentCount;
+          updateBufferUI();
+          setHeroStatus('transmitting', 'Transmitindo Posição do Ônibus', `Posição entregue via eduroam (Ponto #${pointsSentCount}).`);
+          isFlushingQueue = false;
+        })
+        .catch(err => {
+          isFlushingQueue = false;
+          handleEduroamDisconnect(err);
+        });
+      } else {
+        // Envio em Lote (Batch) acumulado durante o trecho sem sinal eduroam
+        fetch('/api/v1/telemetry/collaborative/batch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ points: batchToSend })
+        })
+        .then(res => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json();
+        })
+        .then(data => {
+          const sentLen = batchToSend.length;
+          eduroamQueue.splice(0, sentLen);
+          saveQueueToStorage();
+          pointsSentCount += (data.accepted_points || sentLen);
+          if (pointsCountVal) pointsCountVal.textContent = pointsSentCount;
+          updateBufferUI();
+          setHeroStatus('transmitting', 'Sinal eduroam Reconectado!', `Descarregado lote de ${sentLen} pontos acumulados offline.`);
+          isFlushingQueue = false;
+        })
+        .catch(err => {
+          isFlushingQueue = false;
+          handleEduroamDisconnect(err);
+        });
+      }
+    }
+
+    function handleEduroamDisconnect(err) {
+      console.debug('[Eduroam Offline] Aguardando sinal Wi-Fi...', err);
+      updateBufferUI();
+      setHeroStatus(
+        'waiting',
+        'Gravando Percurso Offline (Sem eduroam)',
+        `Ônibus em trânsito fora do sinal Wi-Fi. ${eduroamQueue.length} pontos salvos no veículo prontos para transmissão.`
+      );
+
+      // Reagenda tentativa em 2.5 segundos
+      if (!flushRetryTimer) {
+        flushRetryTimer = setTimeout(() => {
+          flushRetryTimer = null;
+          if (eduroamQueue.length > 0) {
+            triggerEduroamFlush();
+          }
+        }, 2500);
+      }
+    }
+
+    function onLocationUpdate(position) {
+      const now = Date.now();
+      const coords = position.coords;
+      const lat = coords.latitude;
+      const lon = coords.longitude;
+      const acc = coords.accuracy || 10.0;
+      const speedKmh = coords.speed !== null && coords.speed !== undefined
+        ? Math.max(0, Math.round(coords.speed * 3.6))
+        : 0;
+      const heading = coords.heading || 0.0;
+
+      // O velocímetro, coordenadas e radar do cockpit atualizam sempre em tempo real!
+      if (coordsVal) coordsVal.textContent = `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+      if (accuracyVal) accuracyVal.textContent = `± ${acc.toFixed(1)} m`;
+      if (speedVal) speedVal.textContent = String(speedKmh).padStart(2, '0');
+
+      updateRadarBus(lat, lon);
+
+      // Throttle de coleta contínua (mínimo 3.5 segundos)
+      if (now - lastSendTimestamp >= THROTTLE_MS) {
+        lastSendTimestamp = now;
+
+        // Guarda o ponto na fila persistente
+        eduroamQueue.push({
+          latitude: lat,
+          longitude: lon,
+          accuracy: acc,
+          speed: speedKmh,
+          heading: heading,
+          client_timestamp: new Date().toISOString()
+        });
+
+        // Limita tamanho máximo de segurança a 400 pontos
+        if (eduroamQueue.length > 400) {
+          eduroamQueue = eduroamQueue.slice(-400);
+        }
+
+        saveQueueToStorage();
+        updateBufferUI();
+
+        // Tenta enviar imediatamente
+        triggerEduroamFlush();
+      }
+    }
+
+    function onLocationError(error) {
+      console.warn('[Tracker] Erro de GPS:', error);
+      let msg = 'Erro no sensor de GPS.';
+      if (error.code === 1) msg = 'Permissão de localização negada.';
+      else if (error.code === 2) msg = 'Sinal de GPS fraco ou indisponível.';
+      else if (error.code === 3) msg = 'Aguardando satélites de GPS...';
+      setHeroStatus('waiting', 'Buscando Satélites de GPS...', msg);
+    }
+
+    function startTracking() {
+      isTracking = true;
+      requestWakeLock();
+
+      const options = {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      };
+
+      if ('geolocation' in navigator) {
+        watchId = navigator.geolocation.watchPosition(onLocationUpdate, onLocationError, options);
+      } else {
+        setHeroStatus('error', 'GPS Não Suportado', 'Navegador sem suporte à Geolocation API.');
+      }
+
+      // Watchdog de contingência: a cada 3.5s tenta obter localização mesmo se o ônibus estiver parado
+      if (!watchdogTimer) {
+        watchdogTimer = setInterval(() => {
+          if (isTracking && 'geolocation' in navigator) {
+            navigator.geolocation.getCurrentPosition(onLocationUpdate, onLocationError, {
+              enableHighAccuracy: true,
+              timeout: 4000,
+              maximumAge: 0
+            });
+          }
+          // Garante tentativas de flush caso a eduroam tenha voltado
+          if (eduroamQueue.length > 0 && !isFlushingQueue) {
+            triggerEduroamFlush();
+          }
+        }, 3500);
+      }
+
+      if (btnActionLabel) btnActionLabel.textContent = 'Pausar Transmissor';
+      if (btnActionIcon) btnActionIcon.textContent = '⏸️';
+      if (btnToggleTracking) btnToggleTracking.classList.remove('is-active');
+    }
+
+    function stopTracking() {
+      isTracking = false;
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+      }
+      if (watchdogTimer) {
+        clearInterval(watchdogTimer);
+        watchdogTimer = null;
+      }
+      if (wakeLock) {
+        wakeLock.release().catch(() => {});
+        wakeLock = null;
+      }
+      setHeroStatus('waiting', 'Transmissor Pausado', 'O envio contínuo foi suspenso manualmente pelo motorista.');
+      if (btnActionLabel) btnActionLabel.textContent = 'Iniciar Transmissor';
+      if (btnActionIcon) btnActionIcon.textContent = '▶️';
+      if (btnToggleTracking) btnToggleTracking.classList.add('is-active');
+    }
+
+    // BOTÃO DE PAUSAR / INICIAR
+    if (btnToggleTracking) {
+      btnToggleTracking.addEventListener('click', () => {
+        if (isTracking) {
+          stopTracking();
+        } else {
+          startTracking();
+        }
+      });
+    }
+
+    // BOTÃO TELA CHEIA
+    if (btnFullscreen) {
+      btnFullscreen.addEventListener('click', () => {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen().catch(() => {});
+        }
+      });
+    }
+
+    // INICIALIZAÇÃO IMEDIATA (ZERO-CLICK AUTO START)
+    document.addEventListener('DOMContentLoaded', () => {
+      initRadarMap();
+      startUptime();
+      updateBufferUI();
+      startTracking();
+      updateNetworkStatus();
+
+      // Se já tinha pontos acumulados de uma sessão anterior, tenta descarregar agora
+      if (eduroamQueue.length > 0) {
+        triggerEduroamFlush();
+      }
+    });
+  </script>
+</body>
+</html>

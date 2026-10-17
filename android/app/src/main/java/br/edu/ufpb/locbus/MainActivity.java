@@ -2,19 +2,27 @@ package br.edu.ufpb.locbus;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.webkit.GeolocationPermissions;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Toast;
+
+import androidx.core.content.ContextCompat;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends Activity {
 
     private WebView webView;
-    private static final int LOCATION_PERMISSION_REQUEST = 1001;
+    private static final int PERMISSION_REQUEST_CODE = 1001;
     // URL de Produção na Nuvem (Render / HTTPS Fixo Permanente)
     private static final String APP_URL = "https://locbus-ufpb.onrender.com";
 
@@ -22,15 +30,7 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Solicita permissão de GPS em tempo de execução
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(new String[]{
-                        Manifest.permission.ACCESS_FINE_LOCATION,
-                        Manifest.permission.ACCESS_COARSE_LOCATION
-                }, LOCATION_PERMISSION_REQUEST);
-            }
-        }
+        checkAndRequestPermissions();
 
         webView = new WebView(this);
         setContentView(webView);
@@ -49,17 +49,117 @@ public class MainActivity extends Activity {
         settings.setLoadWithOverviewMode(false);
         settings.setSupportZoom(false);
 
-        webView.setWebViewClient(new WebViewClient());
+        // Adiciona a ponte nativa para o JavaScript da aplicação web
+        webView.addJavascriptInterface(new WebAppInterface(), "AndroidBridge");
+
+        webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                // Injeta garantia de acoplamento da ponte nativa diretamente no DOM
+                String injectHook =
+                        "(function() {" +
+                        "  if (window.__locbusBridgeAttached) return;" +
+                        "  window.__locbusBridgeAttached = true;" +
+                        "  console.log('[LocBUS] Conectando ponte nativa de segundo plano...');" +
+                        "  var btnConfirm = document.getElementById('btn-modal-confirm');" +
+                        "  if (btnConfirm) {" +
+                        "    btnConfirm.addEventListener('click', function() {" +
+                        "      if (window.AndroidBridge) window.AndroidBridge.startBackgroundTracking();" +
+                        "    });" +
+                        "  }" +
+                        "  var btnStop = document.getElementById('btn-stop-collab');" +
+                        "  if (btnStop) {" +
+                        "    btnStop.addEventListener('click', function() {" +
+                        "      if (window.AndroidBridge) window.AndroidBridge.stopBackgroundTracking();" +
+                        "    });" +
+                        "  }" +
+                        "})();";
+                view.evaluateJavascript(injectHook, null);
+            }
+        });
 
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
             public void onGeolocationPermissionsShowPrompt(String origin, GeolocationPermissions.Callback callback) {
-                // Concede permissão de geolocalização automaticamente para o app
                 callback.invoke(origin, true, false);
             }
         });
 
+        // Conecta o listener do serviço de segundo plano ao WebView
+        LocationService.setUpdateCallback((lat, lng, accuracy, speed, heading, pointsSent) -> {
+            runOnUiThread(() -> {
+                if (webView != null) {
+                    String js = String.format(java.util.Locale.US,
+                            "if (window.onNativeLocationUpdate) { window.onNativeLocationUpdate(%f, %f, %f, %f, %f, %d); }",
+                            lat, lng, accuracy, speed, heading, pointsSent);
+                    webView.evaluateJavascript(js, null);
+                }
+            });
+        });
+
         webView.loadUrl(APP_URL);
+    }
+
+    private void checkAndRequestPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            List<String> permissionsNeeded = new ArrayList<>();
+
+            if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                permissionsNeeded.add(Manifest.permission.ACCESS_FINE_LOCATION);
+            }
+            if (checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                permissionsNeeded.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                    permissionsNeeded.add(Manifest.permission.POST_NOTIFICATIONS);
+                }
+            }
+
+            if (!permissionsNeeded.isEmpty()) {
+                requestPermissions(permissionsNeeded.toArray(new String[0]), PERMISSION_REQUEST_CODE);
+            }
+        }
+    }
+
+    public class WebAppInterface {
+        @JavascriptInterface
+        public void startBackgroundTracking() {
+            runOnUiThread(() -> {
+                if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    checkAndRequestPermissions();
+                    Toast.makeText(MainActivity.this, "Permissão de localização necessária para segundo plano.", Toast.LENGTH_LONG).show();
+                    return;
+                }
+
+                Intent intent = new Intent(MainActivity.this, LocationService.class);
+                intent.setAction(LocationService.ACTION_START);
+                ContextCompat.startForegroundService(MainActivity.this, intent);
+                Toast.makeText(MainActivity.this, "Transmissão em 2º plano ATIVADA! (Tela pode ser bloqueada)", Toast.LENGTH_LONG).show();
+            });
+        }
+
+        @JavascriptInterface
+        public void stopBackgroundTracking() {
+            runOnUiThread(() -> {
+                Intent intent = new Intent(MainActivity.this, LocationService.class);
+                intent.setAction(LocationService.ACTION_STOP);
+                startService(intent);
+                Toast.makeText(MainActivity.this, "Transmissão em 2º plano pausada.", Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        @JavascriptInterface
+        public boolean isBackgroundTrackingActive() {
+            return LocationService.isRunning;
+        }
+
+        @JavascriptInterface
+        public boolean isNativeApp() {
+            return true;
+        }
     }
 
     @Override
@@ -69,5 +169,11 @@ public class MainActivity extends Activity {
         } else {
             super.onBackPressed();
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        LocationService.setUpdateCallback(null);
+        super.onDestroy();
     }
 }

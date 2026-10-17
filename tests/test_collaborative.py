@@ -155,4 +155,50 @@ def test_multiple_collaborators_weighted_clustering():
     assert data["accuracy"] == 12.5 # (5 + 20) / 2
 
 
+def test_simulation_restart_isolation_from_previous_terminal():
+    """
+    Valida que ao reiniciar uma simulação no Ponto A (CCHLA) após concluir no Ponto B (CI),
+    os pontos anteriores não distorcem a posição do ônibus por média nem corrompem o sentido.
+    """
+    collaborative_buffer._points.clear()
+
+    # 1. Envia coordenada no Ponto B (Terminal CI - Mangabeira)
+    ponto_ci = {
+        "latitude": -7.1627,
+        "longitude": -34.8182,
+        "accuracy": 8.0,
+        "speed": 0.0,
+        "heading": 0.0
+    }
+    r_ci = client.post("/api/v1/telemetry/collaborative", json=ponto_ci)
+    assert r_ci.status_code == 200
+
+    status_ci = client.get("/api/v1/status").json()
+    assert status_ci["origem"] == "CI"
+    assert status_ci["destino"] == "CCHLA"
+
+    # 2. Usuário reinicia a simulação no Ponto A (Terminal CCHLA - Campus I)
+    ponto_cchla = {
+        "latitude": -7.1397,
+        "longitude": -34.8450,
+        "accuracy": 6.0,
+        "speed": 0.0,
+        "heading": 180.0
+    }
+    r_cchla = client.post("/api/v1/telemetry/collaborative", json=ponto_cchla)
+    assert r_cchla.status_code == 200
+
+    latest_data = client.get("/api/v1/telemetry/collaborative/latest").json()
+    assert latest_data["active"] is True
+    # A latitude consolidada DEVE ser exatamente no CCHLA (-7.1397), e não uma média no meio do caminho (-7.151)
+    assert abs(latest_data["latitude"] - (-7.1397)) < 0.001
+    assert abs(latest_data["longitude"] - (-34.8450)) < 0.001
+
+    status_cchla = client.get("/api/v1/status").json()
+    assert status_cchla["origem"] == "CCHLA"
+    assert status_cchla["destino"] == "CI"
+    assert "CCHLA" in status_cchla["centro_atual"]
+
+
+
 

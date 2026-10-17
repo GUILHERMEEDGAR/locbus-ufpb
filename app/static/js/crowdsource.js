@@ -118,6 +118,30 @@ if (btnStopCollab) {
 
 // 2. Início do Rastreamento do Passageiro
 function startCrowdsourcing() {
+  // Se estiver rodando dentro do App Android Nativo, aciona o Foreground Service de segundo plano
+  if (window.AndroidBridge && typeof window.AndroidBridge.startBackgroundTracking === 'function') {
+    window.AndroidBridge.startBackgroundTracking();
+  }
+
+  // Registra callback para atualizações vindas do serviço nativo em segundo plano
+  window.onNativeLocationUpdate = function(lat, lng, acc, speedKmh, heading, count) {
+    collaborativePointsSent = count;
+    const accRound = Math.round(acc);
+    let accQuality = 'Regular';
+    if (accRound <= 10) accQuality = 'Excelente';
+    else if (accRound <= 25) accQuality = 'Boa';
+
+    if (metricAcc) {
+      metricAcc.textContent = `Acurácia: ±${accRound}m • Ponto #${count} (2º Plano Ativo)`;
+    }
+    if (metricSpeed) {
+      metricSpeed.textContent = `Velocidade: ${Math.round(speedKmh)} km/h`;
+    }
+    if (typeof updateBusMarker === 'function') {
+      updateBusMarker(lat, lng, acc, true);
+    }
+  };
+
   if (!('geolocation' in navigator)) {
     showCollabFeedback('Seu dispositivo ou navegador não suporta geolocalização por GPS.', true);
     return;
@@ -168,6 +192,11 @@ function onGeoSuccess(position) {
   if (metricSpeed) {
     const speedKmh = coords.speed ? Math.round(coords.speed * 3.6) : 0;
     metricSpeed.textContent = `Velocidade: ${speedKmh} km/h`;
+  }
+
+  // Se o rastreamento nativo em segundo plano estiver ativo, o próprio serviço Android já faz o POST
+  if (window.AndroidBridge && typeof window.AndroidBridge.isBackgroundTrackingActive === 'function' && window.AndroidBridge.isBackgroundTrackingActive()) {
+    return;
   }
 
   // Envio imediato no primeiro sinal (lastSendTimestamp === 0) ou se atingiu o throttling (4s)
@@ -269,6 +298,9 @@ function onGeoFinalError(error) {
 
 // 5. Encerramento do Rastreamento
 function stopCrowdsourcing() {
+  if (window.AndroidBridge && typeof window.AndroidBridge.stopBackgroundTracking === 'function') {
+    window.AndroidBridge.stopBackgroundTracking();
+  }
   if (watchId !== null) {
     navigator.geolocation.clearWatch(watchId);
     watchId = null;
@@ -512,6 +544,18 @@ function initSSE() {
       }
     });
 
+    // 8. Listener para Confirmações Colaborativas de Parada em Tempo Real
+    sseSource.addEventListener('stop_report', function(event) {
+      try {
+        const payload = JSON.parse(event.data);
+        if (payload && payload.report) {
+          handleIncomingStopReport(payload.report);
+        }
+      } catch (err) {
+        console.error('Erro ao processar stop_report SSE:', err);
+      }
+    });
+
     sseSource.onerror = function() {
       setSSEBadgeState('reconnecting', 'Reconectando...');
       // Watchdog já garante polling de contingência a cada 3s automaticamente
@@ -521,5 +565,216 @@ function initSSE() {
   }
 }
 
-// Inicializa a comunicação em tempo real assim que a página é carregada
-document.addEventListener('DOMContentLoaded', initSSE);
+// ==========================================================================
+// 9. GERENCIAMENTO DE SELEÇÃO DE PARADA E CONFIRMAÇÃO DE CHEGADA
+// ==========================================================================
+const userStopSelect = document.getElementById('user-stop-select');
+const userStopActionBox = document.getElementById('user-stop-action-box');
+const userStopCard = document.getElementById('user-stop-card');
+const btnAutoDetectStop = document.getElementById('btn-auto-detect-stop');
+const stopStatusBanner = document.getElementById('stop-status-banner');
+const stopStatusText = document.getElementById('stop-status-text');
+const stopStatusIcon = document.getElementById('stop-status-icon');
+const stopFeedbackMsg = document.getElementById('stop-feedback-msg');
+
+const btnReportArrived = document.getElementById('btn-report-arrived');
+const btnReportWaiting = document.getElementById('btn-report-waiting');
+const btnReportDeparted = document.getElementById('btn-report-departed');
+
+function showStopFeedback(text, type = 'success') {
+  if (!stopFeedbackMsg) return;
+  stopFeedbackMsg.textContent = text;
+  stopFeedbackMsg.className = `stop-feedback-msg ${type}`;
+  stopFeedbackMsg.style.display = 'block';
+  setTimeout(() => {
+    if (stopFeedbackMsg) stopFeedbackMsg.style.display = 'none';
+  }, 6000);
+}
+
+function handleIncomingStopReport(report) {
+  if (!report) return;
+
+  // Se o ônibus chegou, aciona o badge animado no mapa
+  if (report.status === 'chegou' && typeof window.markStopArrival === 'function') {
+    window.markStopArrival(report.stop_id);
+  }
+
+  // Se a parada relatada for a mesma que o usuário está olhando, atualiza o banner
+  if (userStopSelect && String(userStopSelect.value) === String(report.stop_id)) {
+    updateStopStatusBanner(report);
+  }
+}
+
+function updateStopStatusBanner(report) {
+  if (!stopStatusText || !stopStatusIcon) return;
+  if (!report) {
+    stopStatusIcon.textContent = '📢';
+    stopStatusText.textContent = 'Sem relatos recentes nesta parada. Seja o primeiro a avisar!';
+    return;
+  }
+
+  if (report.status === 'chegou') {
+    stopStatusIcon.textContent = '🚌';
+    stopStatusText.innerHTML = `<strong>Ônibus no ponto!</strong> Confirmado por passageiro local (${report.human_time}).`;
+  } else if (report.status === 'nao_chegou') {
+    stopStatusIcon.textContent = '⏳';
+    stopStatusText.innerHTML = `<strong>Em espera:</strong> Passageiro aguardando nesta parada (${report.human_time}).`;
+  } else if (report.status === 'partiu') {
+    stopStatusIcon.textContent = '💨';
+    stopStatusText.innerHTML = `<strong>Ônibus partiu:</strong> Partida recente confirmada (${report.human_time}).`;
+  }
+}
+
+function fetchStopReports(stopId) {
+  fetch('/api/v1/stops/reports')
+    .then(r => r.json())
+    .then(data => {
+      const reports = data.reports || {};
+      const stopReport = reports[stopId];
+      updateStopStatusBanner(stopReport);
+    })
+    .catch(err => console.debug('Aviso ao carregar relatos da parada:', err));
+}
+
+function sendStopReport(status) {
+  if (!userStopSelect || !userStopSelect.value) {
+    showStopFeedback('Selecione primeiro a sua parada!', 'info');
+    return;
+  }
+
+  const selectedOpt = userStopSelect.selectedOptions[0];
+  const stopId = parseInt(userStopSelect.value, 10);
+  const stopName = selectedOpt.dataset.name || selectedOpt.textContent;
+  const lat = selectedOpt.dataset.lat ? parseFloat(selectedOpt.dataset.lat) : null;
+  const lon = selectedOpt.dataset.lon ? parseFloat(selectedOpt.dataset.lon) : null;
+
+  const payload = {
+    stop_id: stopId,
+    stop_name: stopName,
+    status: status,
+    latitude: lat,
+    longitude: lon
+  };
+
+  fetch('/api/v1/stops/report', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+    .then(r => r.json())
+    .then(data => {
+      if (status === 'chegou') {
+        showStopFeedback(`🎉 Confirmado! Você avisou que o circular chegou em ${stopName}.`, 'success');
+        if (typeof window.markStopArrival === 'function') {
+          window.markStopArrival(stopId);
+        }
+      } else if (status === 'nao_chegou') {
+        showStopFeedback(`⏳ Registrado! Você está aguardando em ${stopName}.`, 'info');
+      } else if (status === 'partiu') {
+        showStopFeedback(`💨 Registrado! Você avisou que o ônibus partiu de ${stopName}.`, 'info');
+      }
+
+      if (data.summary) {
+        updateStopStatusBanner(data.summary);
+      }
+    })
+    .catch(err => {
+      console.error('Erro ao enviar relato:', err);
+      showStopFeedback('Falha de rede ao registrar relato.', 'info');
+    });
+}
+
+function initUserStopCard() {
+  if (!userStopSelect) return;
+
+  // Mudança de Parada
+  userStopSelect.addEventListener('change', () => {
+    const stopId = userStopSelect.value;
+    if (!stopId) {
+      if (userStopActionBox) userStopActionBox.style.display = 'none';
+      if (userStopCard) userStopCard.classList.remove('has-selected-stop');
+      return;
+    }
+
+    if (userStopActionBox) userStopActionBox.style.display = 'flex';
+    if (userStopCard) userStopCard.classList.add('has-selected-stop');
+
+    // Centraliza no mapa se a função estiver disponível
+    if (typeof window.selectUserStop === 'function') {
+      window.selectUserStop(stopId);
+    }
+
+    fetchStopReports(stopId);
+  });
+
+  // Botões de Confirmação
+  if (btnReportArrived) {
+    btnReportArrived.addEventListener('click', () => sendStopReport('chegou'));
+  }
+  if (btnReportWaiting) {
+    btnReportWaiting.addEventListener('click', () => sendStopReport('nao_chegou'));
+  }
+  if (btnReportDeparted) {
+    btnReportDeparted.addEventListener('click', () => sendStopReport('partiu'));
+  }
+
+  // Detecção Automática da Parada Mais Próxima (GPS)
+  if (btnAutoDetectStop && 'geolocation' in navigator) {
+    btnAutoDetectStop.addEventListener('click', () => {
+      btnAutoDetectStop.disabled = true;
+      btnAutoDetectStop.textContent = 'Buscando GPS...';
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          btnAutoDetectStop.disabled = false;
+          btnAutoDetectStop.textContent = '📍 Perto de mim';
+
+          const userLat = pos.coords.latitude;
+          const userLon = pos.coords.longitude;
+
+          let bestDist = Infinity;
+          let bestOption = null;
+
+          const options = Array.from(userStopSelect.options).filter(o => o.value && o.dataset.lat);
+          options.forEach(opt => {
+            const sLat = parseFloat(opt.dataset.lat);
+            const sLon = parseFloat(opt.dataset.lon);
+            const d = Math.hypot(userLat - sLat, userLon - sLon);
+            if (d < bestDist) {
+              bestDist = d;
+              bestOption = opt;
+            }
+          });
+
+          if (bestOption) {
+            userStopSelect.value = bestOption.value;
+            userStopSelect.dispatchEvent(new Event('change'));
+            showStopFeedback(`📍 Parada mais próxima detectada: ${bestOption.dataset.name}!`, 'success');
+          }
+        },
+        (err) => {
+          btnAutoDetectStop.disabled = false;
+          btnAutoDetectStop.textContent = '📍 Perto de mim';
+          showStopFeedback('Não foi possível obter sinal de GPS para detectar a parada.', 'info');
+        },
+        { enableHighAccuracy: true, timeout: 8000 }
+      );
+    });
+  }
+
+  // Restaura parada salva no localStorage
+  try {
+    const saved = localStorage.getItem('locbus_waiting_stop_id');
+    if (saved && userStopSelect.querySelector(`option[value="${saved}"]`)) {
+      userStopSelect.value = saved;
+      userStopSelect.dispatchEvent(new Event('change'));
+    }
+  } catch (e) {}
+}
+
+// Inicializa a comunicação e os componentes assim que a página é carregada
+document.addEventListener('DOMContentLoaded', () => {
+  initSSE();
+  initUserStopCard();
+});
+

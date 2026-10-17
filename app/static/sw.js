@@ -3,18 +3,19 @@
  * Implementa cache inteligente para funcionamento offline, mapa offline resiliente e navegação instantânea.
  */
 
-const CACHE_NAME = 'locbus-v1.2.0-cache';
+const CACHE_NAME = 'locbus-v1.5.0-cache';
 const TILES_CACHE_NAME = 'locbus-map-tiles';
 
 // Recursos essenciais do App Shell
 const PRECACHE_ASSETS = [
   '/',
   '/manifest.webmanifest',
-  '/static/css/style.css?v=1.2.0',
-  '/static/js/map.js?v=1.2.0',
-  '/static/js/crowdsource.js?v=1.2.0',
-  '/static/js/tabs.js?v=1.2.0',
-  '/static/js/pwa.js?v=1.2.0',
+  '/static/css/style.css?v=1.5.0',
+  '/static/js/route_geometry.js?v=1.5.0',
+  '/static/js/map.js?v=1.5.0',
+  '/static/js/crowdsource.js?v=1.5.0',
+  '/static/js/tabs.js?v=1.5.0',
+  '/static/js/pwa.js?v=1.5.0',
   '/static/icons/icon.svg',
   '/static/icons/icon-192.png',
   '/static/icons/icon-512.png',
@@ -24,24 +25,25 @@ const PRECACHE_ASSETS = [
 
 // 1. Instalação: Pré-carrega o App Shell
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[SW] Pré-carregando App Shell do LocBUS...');
+      console.log('[SW] Pré-carregando App Shell do LocBUS v1.4.3...');
       return cache.addAll(PRECACHE_ASSETS).catch((err) => {
         console.warn('[SW] Aviso no precache inicial:', err);
       });
-    }).then(() => self.skipWaiting())
+    })
   );
 });
 
-// 2. Ativação: Limpa versões antigas de cache e assume o controle de todos os clientes
+// 2. Ativação: Limpa versões antigas de cache e assume o controle imediatamente
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
         keys.map((key) => {
           if (key !== CACHE_NAME && key !== TILES_CACHE_NAME) {
-            console.log('[SW] Removendo cache obsoleto:', key);
+            console.log('[SW] Purgando cache legado obsoleto:', key);
             return caches.delete(key);
           }
         })
@@ -65,9 +67,8 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // C. Map Tiles (CartoDB Basemap): Stale-While-Revalidate
-  // Garante que o mapa viário não fica cinza nos pontos de parada com sinal instável
-  if (url.hostname.includes('cartocdn.com') || url.hostname.includes('tile.openstreetmap.org')) {
+  // C. Map Tiles (Google / CartoDB / OpenStreetMap): Stale-While-Revalidate
+  if (url.hostname.includes('google.com') || url.hostname.includes('cartocdn.com') || url.hostname.includes('tile.openstreetmap.org')) {
     event.respondWith(
       caches.open(TILES_CACHE_NAME).then(async (tileCache) => {
         const cached = await tileCache.match(req);
@@ -84,8 +85,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // D. Endpoints de Dados da API (/api/v1/itinerary, /api/v1/history, /api/v1/status):
-  // Network-First com Fallback para Cache
+  // D. Endpoints de Dados da API: Network-First com Fallback
   if (url.pathname.startsWith('/api/v1/')) {
     event.respondWith(
       fetch(req)
@@ -107,22 +107,38 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // E. App Shell e Arquivos Estáticos: Stale-While-Revalidate
+  // E. Scripts e Estilos Locais (/static/): Network-First para garantir atualizações imediatas no navegador
+  if (url.pathname.startsWith('/static/')) {
+    event.respondWith(
+      fetch(req)
+        .then((networkRes) => {
+          if (networkRes && networkRes.status === 200) {
+            const resClone = networkRes.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(req, resClone));
+          }
+          return networkRes;
+        })
+        .catch(() => caches.match(req))
+    );
+    return;
+  }
+
+  // F. App Shell HTML (Páginas): Network-First para SEMPRE carregar versão atualizada quando conectado
   event.respondWith(
-    caches.match(req).then((cachedResponse) => {
-      const fetchPromise = fetch(req).then((networkRes) => {
+    fetch(req)
+      .then((networkRes) => {
         if (networkRes && networkRes.status === 200) {
           const resClone = networkRes.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(req, resClone));
         }
         return networkRes;
-      }).catch(() => {
+      })
+      .catch(async () => {
+        const cached = await caches.match(req);
+        if (cached) return cached;
         if (req.mode === 'navigate') {
           return caches.match('/');
         }
-      });
-
-      return cachedResponse || fetchPromise;
-    })
+      })
   );
 });

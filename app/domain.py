@@ -34,6 +34,15 @@ class CollaborativeIn(BaseModel):
     client_timestamp: Optional[datetime] = Field(None, description="Horário de captura no celular")
 
 
+class CollaborativeBatchIn(BaseModel):
+    """
+    Lote de telemetria acumulado offline durante períodos sem sinal Wi-Fi eduroam.
+    Permite descarregar múltiplos pontos sequenciais no momento da reconexão.
+    """
+    points: list[CollaborativeIn] = Field(..., min_length=1, max_length=500, description="Lista de pontos capturados offline")
+
+
+
 class CollaborativePoint(BaseModel):
     latitude: float
     longitude: float
@@ -55,3 +64,23 @@ class CollaborativeStatusOut(BaseModel):
     collaborators_count: int = 0
     age_seconds: Optional[int] = None
     human_status: str
+
+
+class StopReportIn(BaseModel):
+    """Payload enviado pelo usuário que está aguardando em uma parada específica."""
+    stop_id: int = Field(..., ge=1, le=30, description="ID sequencial da parada")
+    stop_name: str = Field(..., description="Nome da parada selecionada")
+    status: Literal["chegou", "nao_chegou", "partiu"] = Field(..., description="Estado relatado: chegou, nao_chegou ou partiu")
+    latitude: Optional[float] = Field(None, ge=-90.0, le=90.0)
+    longitude: Optional[float] = Field(None, ge=-180.0, le=180.0)
+
+
+class StopReportOut(BaseModel):
+    stop_id: int
+    stop_name: str
+    status: str
+    timestamp: str
+    age_seconds: int
+    human_time: str
+    total_confirmacoes: int
+

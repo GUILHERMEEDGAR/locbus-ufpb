@@ -13,6 +13,8 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js')
       .then(reg => {
         console.log('[PWA] Service Worker registrado com sucesso no escopo:', reg.scope);
+        // Força verificação imediata de atualizações no servidor
+        reg.update();
       })
       .catch(err => {
         console.warn('[PWA] Falha no registro do Service Worker:', err);
