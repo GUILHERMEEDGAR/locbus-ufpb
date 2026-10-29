@@ -114,7 +114,9 @@ public class MainActivity extends Activity {
                     webView.evaluateJavascript(js, null);
                 }
             });
-              webView.loadUrl(APP_URL);
+        });
+
+        webView.loadUrl(APP_URL);
 
         wifiPollRunnable = new Runnable() {
             @Override

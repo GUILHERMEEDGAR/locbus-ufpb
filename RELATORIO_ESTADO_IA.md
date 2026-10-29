@@ -67,22 +67,23 @@
     - Botão flutuante `🚏 12 Paradas` no mapa (`window.focusCampusArea`) para enquadrar todas as paradas em um clique.
   - **Interface & Itinerário (`app/Templates/index.html` e `app/services.py`):**
     - Seção dedicada na Aba 3 (Itinerário) com lista interativa das 12 paradas e atalhos para focar no mapa.
-### ✅ Compilação e Disponibilização dos APKs Nativos Android v1.6.1 (Passageiro & Ônibus Tracker)
+### ✅ Compilação e Disponibilização dos APKs Nativos Android v1.7.0 (Passageiro & Ônibus Tracker)
 - **Estrutura Multi-Flavor no Gradle (`android/app/build.gradle`):**
   - **Flavor `passenger`:**
     - App Label: "LocBUS"
     - Application ID: `br.edu.ufpb.locbus`
     - URL Padrão: `https://locbus-ufpb.onrender.com`
-    - Binários: `LocBUS-v1.6.1.apk` e `LocBUS.apk` (raiz e `app/static/downloads/`)
+    - Binários: `LocBUS-v1.7.0.apk` e `LocBUS.apk` (raiz e `app/static/downloads/`)
   - **Flavor `tracker` (Celular Fixo no Ônibus):**
     - App Label: "LocBUS Tracker"
     - Application ID: `br.edu.ufpb.locbus.tracker` (permite instalar ambos no mesmo celular sem conflito)
-    - URL Padrão: `https://locbus-ufpb.onrender.com/tracker` (abre direto no cockpit com Store-and-Forward eduroam)
+    - URL Padrão: `https://locbus-ufpb.onrender.com/tracker` (abre direto no cockpit com Store-and-Forward eduroam e Telemetria de Sinal nativa)
     - Modo Kiosk / Display: `FLAG_KEEP_SCREEN_ON` para manter a tela 100% ativa no painel do veículo
     - Foreground Service Autônomo: Disparo imediato do serviço com notificação persistente e `PARTIAL_WAKE_LOCK`
-    - Binários: `LocBUS-Tracker-v1.6.1.apk` e `LocBUS-Tracker.apk` (raiz e `app/static/downloads/`)
-- **Sincronização Gradle:** `versionCode 8`, `versionName "1.6.1"`.
-- **Interface Web:** Cards de download adicionados na Aba 4 de `index.html` e botão dedicado no cockpit de bordo `tracker.html`.
+    - Telemetria de Hardware: Permissão `ACCESS_WIFI_STATE` e método nativo `getWifiTelemetry()`
+    - Binários: `LocBUS-Tracker-v1.7.0.apk` e `LocBUS-Tracker.apk` (raiz e `app/static/downloads/`)
+- **Sincronização Gradle:** `versionCode 9`, `versionName "1.7.0"`.
+- **Interface Web:** Cards de download atualizados na Aba 4 de `index.html` e botão dedicado no cockpit de bordo `tracker.html`.
 
 
 ---
