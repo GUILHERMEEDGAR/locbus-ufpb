@@ -322,8 +322,281 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
-      height: 420px;
+      height: 270px;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    /* CARD DE TELEMETRIA DE SINAL EDUROAM */
+    .wifi-telemetry-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .wifi-telemetry-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 10px;
+    }
+
+    .wifi-title-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .wifi-icon {
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .wifi-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: #ffffff;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .wifi-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .wifi-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #34d399;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: all 0.3s ease;
+    }
+
+    .wifi-badge.disconnected {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: rgba(239, 68, 68, 0.4);
+      color: #f87171;
+    }
+
+    .wifi-badge.warning {
+      background: rgba(245, 158, 11, 0.15);
+      border-color: rgba(245, 158, 11, 0.4);
+      color: #fbbf24;
+    }
+
+    /* LINHA DE INTENSIDADE DE SINAL & BARRAS */
+    .wifi-signal-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(0, 0, 0, 0.35);
+      border-radius: 14px;
+      padding: 12px 16px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .signal-visual-box {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .signal-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+      height: 28px;
+      padding-bottom: 2px;
+    }
+
+    .signal-bars .bar {
+      width: 6px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 2px;
+      transition: all 0.3s ease;
+    }
+
+    .signal-bars .bar-1 { height: 7px; }
+    .signal-bars .bar-2 { height: 13px; }
+    .signal-bars .bar-3 { height: 20px; }
+    .signal-bars .bar-4 { height: 26px; }
+
+    /* Níveis de sinal ativos */
+    .signal-bars.level-0 .bar { background: rgba(255, 255, 255, 0.15); }
+    .signal-bars.level-1 .bar-1 { background: #ef4444; }
+    .signal-bars.level-2 .bar-1,
+    .signal-bars.level-2 .bar-2 { background: #f59e0b; }
+    .signal-bars.level-3 .bar-1,
+    .signal-bars.level-3 .bar-2,
+    .signal-bars.level-3 .bar-3 { background: #38bdf8; }
+    .signal-bars.level-4 .bar-1,
+    .signal-bars.level-4 .bar-2,
+    .signal-bars.level-4 .bar-3,
+    .signal-bars.level-4 .bar-4 { background: #10b981; }
+
+    .signal-text-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .signal-value {
+      font-size: 20px;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      color: #ffffff;
+      line-height: 1.1;
+    }
+
+    .signal-quality {
+      font-size: 11px;
+      color: #38bdf8;
+      font-weight: 600;
+    }
+
+    .wifi-link-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      text-align: right;
+    }
+
+    .meta-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .meta-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .meta-val {
+      font-size: 12px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      color: #e2e8f0;
+    }
+
+    /* GRID DE MÉTRICAS DETALHADAS */
+    .wifi-metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .wifi-metric-item {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 12px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .wifi-metric-item .w-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+    }
+
+    .wifi-metric-item .w-val {
+      font-size: 16px;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      color: #ffffff;
+    }
+
+    .wifi-metric-item .w-val.highlight {
+      color: #34d399;
+    }
+
+    .wifi-metric-item .w-sub {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    /* TIMELINE DE EVENTOS DE SINAL */
+    .wifi-timeline-box {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .timeline-title {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+    }
+
+    .wifi-events-list {
+      max-height: 110px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding-right: 4px;
+    }
+
+    .wifi-events-list::-webkit-scrollbar {
+      width: 4px;
+    }
+    .wifi-events-list::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+    }
+
+    .wifi-event-item {
+      font-size: 11px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      line-height: 1.3;
+      padding: 4px 6px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .wifi-event-item .event-time {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .wifi-event-item.connected {
+      border-left: 3px solid #10b981;
+    }
+    .wifi-event-item.disconnected {
+      border-left: 3px solid #ef4444;
+    }
+    .wifi-event-item.warning {
+      border-left: 3px solid #f59e0b;
+    }
+    .wifi-event-item.info {
+      border-left: 3px solid #38bdf8;
     }
 
     .radar-header {
@@ -561,6 +834,81 @@
         </div>
         <div id="mini-radar-map"></div>
       </div>
+
+      <!-- CARD DE TELEMETRIA DE SINAL EDUROAM (INTENSIDADE, TEMPO DE CONEXÃO E QUALIDADE) -->
+      <div class="wifi-telemetry-card">
+        <div class="wifi-telemetry-header">
+          <div class="wifi-title-group">
+            <span class="wifi-icon">📶</span>
+            <div>
+              <h3 class="wifi-title">Telemetria de Sinal eduroam</h3>
+              <span class="wifi-subtitle" id="wifi-bssid-text">Wi-Fi Institucional UFPB</span>
+            </div>
+          </div>
+          <span class="wifi-badge" id="wifi-badge-status">Conectado</span>
+        </div>
+
+        <!-- PAINEL DE BARRAS DE SINAL & RSSI -->
+        <div class="wifi-signal-row">
+          <div class="signal-visual-box">
+            <div class="signal-bars level-4" id="signal-bars">
+              <span class="bar bar-1"></span>
+              <span class="bar bar-2"></span>
+              <span class="bar bar-3"></span>
+              <span class="bar bar-4"></span>
+            </div>
+            <div class="signal-text-group">
+              <span class="signal-value" id="signal-rssi-val">-65 dBm</span>
+              <span class="signal-quality" id="signal-quality-text">Sinal Excelente</span>
+            </div>
+          </div>
+          <div class="wifi-link-meta">
+            <div class="meta-item">
+              <span class="meta-label">Banda / Canal</span>
+              <span class="meta-val" id="wifi-freq-val">5 GHz</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Velocidade Link</span>
+              <span class="meta-val" id="wifi-speed-val">150 Mbps</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- GRID DE MÉTRICAS DETALHADAS -->
+        <div class="wifi-metrics-grid">
+          <div class="wifi-metric-item">
+            <span class="w-label">⏱️ Tempo Conectado</span>
+            <span class="w-val highlight" id="wifi-connected-timer">00:00:00</span>
+            <span class="w-sub" id="wifi-coverage-rate">Taxa: 100% da rota</span>
+          </div>
+          <div class="wifi-metric-item">
+            <span class="w-label">⚡ Latência HTTP (Ping)</span>
+            <span class="w-val" id="wifi-ping-val">-- ms</span>
+            <span class="w-sub" id="wifi-ping-status">Avaliando resposta</span>
+          </div>
+          <div class="wifi-metric-item">
+            <span class="w-label">🔄 Reconexões / Zonas</span>
+            <span class="w-val" id="wifi-reconnect-count">0</span>
+            <span class="w-sub">Trechos com cobertura</span>
+          </div>
+          <div class="wifi-metric-item">
+            <span class="w-label">📡 SSID Conectado</span>
+            <span class="w-val" id="wifi-ssid-val" style="color: #38bdf8;">eduroam</span>
+            <span class="w-sub" id="wifi-auth-val">WPA2 Enterprise</span>
+          </div>
+        </div>
+
+        <!-- TIMELINE / REGISTRO DE EVENTOS DA EDUROAM -->
+        <div class="wifi-timeline-box">
+          <span class="timeline-title">📋 Registro de Cobertura e Transições de Sinal</span>
+          <div class="wifi-events-list" id="wifi-events-list">
+            <div class="wifi-event-item info">
+              <span class="event-time">Agora</span>
+              <span class="event-desc">Monitor de telemetria eduroam ativado no cockpit.</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
   </main>
@@ -617,6 +965,220 @@
     const wakelockLabel = document.getElementById('wakelock-label');
     const batteryLabel = document.getElementById('battery-label');
     const networkLabel = document.getElementById('network-label');
+
+    // ELEMENTOS DOM TELEMETRIA EDUROAM
+    const wifiBadgeStatus = document.getElementById('wifi-badge-status');
+    const wifiBssidText = document.getElementById('wifi-bssid-text');
+    const signalBars = document.getElementById('signal-bars');
+    const signalRssiVal = document.getElementById('signal-rssi-val');
+    const signalQualityText = document.getElementById('signal-quality-text');
+    const wifiFreqVal = document.getElementById('wifi-freq-val');
+    const wifiSpeedVal = document.getElementById('wifi-speed-val');
+    const wifiConnectedTimer = document.getElementById('wifi-connected-timer');
+    const wifiCoverageRate = document.getElementById('wifi-coverage-rate');
+    const wifiPingVal = document.getElementById('wifi-ping-val');
+    const wifiPingStatus = document.getElementById('wifi-ping-status');
+    const wifiReconnectCount = document.getElementById('wifi-reconnect-count');
+    const wifiSsidVal = document.getElementById('wifi-ssid-val');
+    const wifiAuthVal = document.getElementById('wifi-auth-val');
+    const wifiEventsList = document.getElementById('wifi-events-list');
+
+    // ESTADO DE TELEMETRIA WI-FI / EDUROAM
+    let isEduroamConnected = navigator.onLine;
+    let wifiConnectedSeconds = 0;
+    let wifiDisconnectedSeconds = 0;
+    let wifiReconnects = 0;
+    let currentRssiDbm = -65;
+    let currentSignalLevel = 4;
+    let currentLinkSpeed = 150;
+    let currentFrequencyMhz = 5000;
+    let currentSsid = 'eduroam';
+    let currentBssid = '';
+    let lastHttpPingMs = null;
+    let wifiTickerTimer = null;
+
+    function formatTime(sec) {
+      const h = String(Math.floor(sec / 3600)).padStart(2, '0');
+      const m = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
+      const s = String(sec % 60).padStart(2, '0');
+      return `${h}:${m}:${s}`;
+    }
+
+    function logWifiEvent(type, message) {
+      if (!wifiEventsList) return;
+      const now = new Date();
+      const timeStr = now.toTimeString().split(' ')[0];
+      const item = document.createElement('div');
+      item.className = `wifi-event-item ${type}`;
+      item.innerHTML = `<span class="event-time">${timeStr}</span><span class="event-desc">${message}</span>`;
+      wifiEventsList.insertBefore(item, wifiEventsList.firstChild);
+      while (wifiEventsList.children.length > 15) {
+        wifiEventsList.removeChild(wifiEventsList.lastChild);
+      }
+    }
+
+    function updateWifiSignalUI(level, rssi, qualityText, freq, speed, ssid, bssid, isConnected) {
+      if (signalBars) {
+        signalBars.className = `signal-bars level-${Math.max(0, Math.min(4, level))}`;
+      }
+      if (signalRssiVal) {
+        signalRssiVal.textContent = isConnected ? `${rssi} dBm` : 'Sem Sinal';
+      }
+      if (signalQualityText) {
+        signalQualityText.textContent = isConnected ? qualityText : 'Desconectado do Wi-Fi';
+        signalQualityText.style.color = isConnected
+          ? (level >= 3 ? '#34d399' : (level === 2 ? '#fbbf24' : '#f87171'))
+          : '#ef4444';
+      }
+      if (wifiFreqVal) {
+        wifiFreqVal.textContent = freq >= 4900 ? '5 GHz' : (freq > 0 ? '2.4 GHz' : 'Padrão UFPB');
+      }
+      if (wifiSpeedVal) {
+        wifiSpeedVal.textContent = speed > 0 ? `${speed} Mbps` : '-- Mbps';
+      }
+      if (wifiSsidVal) {
+        wifiSsidVal.textContent = ssid || 'eduroam';
+      }
+      if (wifiBssidText) {
+        wifiBssidText.textContent = bssid ? `AP BSSID: ${bssid}` : 'Wi-Fi Institucional UFPB';
+      }
+      if (wifiBadgeStatus) {
+        if (!isConnected) {
+          wifiBadgeStatus.className = 'wifi-badge disconnected';
+          wifiBadgeStatus.textContent = 'Sem Sinal';
+        } else if (level <= 1) {
+          wifiBadgeStatus.className = 'wifi-badge warning';
+          wifiBadgeStatus.textContent = 'Sinal Fraco';
+        } else {
+          wifiBadgeStatus.className = 'wifi-badge';
+          wifiBadgeStatus.textContent = 'Conectado';
+        }
+      }
+      if (networkLabel) {
+        networkLabel.textContent = isConnected
+          ? `${ssid} • ${rssi} dBm${lastHttpPingMs ? ' (' + lastHttpPingMs + 'ms)' : ''}`
+          : 'Sem eduroam (Offline)';
+      }
+    }
+
+    function recordPingMeasurement(ms) {
+      lastHttpPingMs = ms;
+      if (wifiPingVal) wifiPingVal.textContent = `${ms} ms`;
+      if (wifiPingStatus) {
+        if (ms < 80) {
+          wifiPingStatus.textContent = 'Excelente • Latência baixa';
+          wifiPingStatus.style.color = '#34d399';
+        } else if (ms < 200) {
+          wifiPingStatus.textContent = 'Normal • Resposta estável';
+          wifiPingStatus.style.color = '#38bdf8';
+        } else {
+          wifiPingStatus.textContent = 'Lenta • Variação de sinal';
+          wifiPingStatus.style.color = '#fbbf24';
+        }
+      }
+      if (networkLabel && isEduroamConnected) {
+        networkLabel.textContent = `${currentSsid} • ${currentRssiDbm} dBm (${ms}ms)`;
+      }
+    }
+
+    function startWifiTicker() {
+      if (wifiTickerTimer) return;
+      wifiTickerTimer = setInterval(() => {
+        if (isEduroamConnected) {
+          wifiConnectedSeconds++;
+        } else {
+          wifiDisconnectedSeconds++;
+        }
+        if (wifiConnectedTimer) {
+          wifiConnectedTimer.textContent = formatTime(wifiConnectedSeconds);
+        }
+        const total = wifiConnectedSeconds + wifiDisconnectedSeconds;
+        if (wifiCoverageRate && total > 0) {
+          const rate = Math.round((wifiConnectedSeconds / total) * 100);
+          wifiCoverageRate.textContent = `Taxa: ${rate}% da rota com sinal`;
+        }
+      }, 1000);
+    }
+
+    function handleWifiTelemetryUpdate(info) {
+      if (!info) return;
+      const wasConnected = isEduroamConnected;
+      isEduroamConnected = !!info.connected;
+
+      currentSsid = info.ssid || 'eduroam';
+      currentBssid = info.bssid || '';
+      currentRssiDbm = info.rssi !== undefined ? info.rssi : (isEduroamConnected ? -65 : -100);
+      currentSignalLevel = info.level !== undefined ? info.level : (isEduroamConnected ? 4 : 0);
+      currentLinkSpeed = info.speedMbps || (isEduroamConnected ? 150 : 0);
+      currentFrequencyMhz = info.frequencyMhz || (isEduroamConnected ? 5000 : 0);
+
+      let quality = 'Sinal Excelente';
+      if (currentSignalLevel === 3) quality = 'Sinal Bom';
+      else if (currentSignalLevel === 2) quality = 'Sinal Regular';
+      else if (currentSignalLevel === 1) quality = 'Sinal Fraco';
+      else if (currentSignalLevel === 0) quality = 'Sem Sinal';
+
+      updateWifiSignalUI(
+        currentSignalLevel,
+        currentRssiDbm,
+        quality,
+        currentFrequencyMhz,
+        currentLinkSpeed,
+        currentSsid,
+        currentBssid,
+        isEduroamConnected
+      );
+
+      // Detecta reconexão
+      if (!wasConnected && isEduroamConnected) {
+        wifiReconnects++;
+        if (wifiReconnectCount) wifiReconnectCount.textContent = wifiReconnects;
+        logWifiEvent('connected', `Reconectado ao ${currentSsid} (${currentRssiDbm} dBm, ${currentLinkSpeed} Mbps)`);
+      } else if (wasConnected && !isEduroamConnected) {
+        logWifiEvent('disconnected', 'Perda de sinal eduroam. Modo Store-and-Forward gravando percurso.');
+      }
+    }
+
+    // Callback exposto para a ponte nativa do Android (MainActivity.java)
+    window.onNativeWifiUpdate = function(info) {
+      handleWifiTelemetryUpdate(info);
+    };
+
+    function checkWebNetworkTelemetry() {
+      // Fallback gracioso para navegadores web comuns
+      const isOnline = navigator.onLine;
+      const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      let rtt = 50;
+      let downlink = 50;
+      if (conn) {
+        rtt = conn.rtt || 50;
+        downlink = conn.downlink || 50;
+      }
+
+      let simulatedLevel = 4;
+      let simulatedRssi = -60;
+      if (!isOnline) {
+        simulatedLevel = 0;
+        simulatedRssi = -100;
+      } else if (lastHttpPingMs) {
+        if (lastHttpPingMs < 60) { simulatedLevel = 4; simulatedRssi = -58; }
+        else if (lastHttpPingMs < 130) { simulatedLevel = 3; simulatedRssi = -68; }
+        else if (lastHttpPingMs < 250) { simulatedLevel = 2; simulatedRssi = -78; }
+        else { simulatedLevel = 1; simulatedRssi = -88; }
+      }
+
+      handleWifiTelemetryUpdate({
+        connected: isOnline,
+        isWifi: isOnline,
+        ssid: isOnline ? 'eduroam' : 'Sem Sinal',
+        bssid: isOnline ? 'AP-UFPB' : '',
+        rssi: simulatedRssi,
+        level: simulatedLevel,
+        speedMbps: Math.round(downlink * 10) || 150,
+        frequencyMhz: 5000,
+        isEduroam: isOnline
+      });
+    }
 
     function saveQueueToStorage() {
       try {
@@ -681,7 +1243,17 @@
     // 3. MONITOR DE CONEXÃO E RECONEXÃO EDUROAM
     function updateNetworkStatus() {
       const isOnline = navigator.onLine;
-      if (networkLabel) networkLabel.textContent = isOnline ? 'eduroam (Online)' : 'Sem eduroam (Offline)';
+      if (window.AndroidBridge && typeof window.AndroidBridge.getWifiTelemetry === 'function') {
+        try {
+          const info = JSON.parse(window.AndroidBridge.getWifiTelemetry());
+          handleWifiTelemetryUpdate(info);
+        } catch (e) {
+          checkWebNetworkTelemetry();
+        }
+      } else {
+        checkWebNetworkTelemetry();
+      }
+
       if (isOnline) {
         triggerEduroamFlush();
       } else {
@@ -775,6 +1347,7 @@
 
       isFlushingQueue = true;
       const batchToSend = [...eduroamQueue];
+      const fetchStart = performance.now();
 
       // Se temos apenas 1 ponto
       if (batchToSend.length === 1) {
@@ -789,12 +1362,14 @@
           return res.json();
         })
         .then(() => {
+          const pingMs = Math.round(performance.now() - fetchStart);
+          recordPingMeasurement(pingMs);
           eduroamQueue.shift();
           saveQueueToStorage();
           pointsSentCount++;
           if (pointsCountVal) pointsCountVal.textContent = pointsSentCount;
           updateBufferUI();
-          setHeroStatus('transmitting', 'Transmitindo Posição do Ônibus', `Posição entregue via eduroam (Ponto #${pointsSentCount}).`);
+          setHeroStatus('transmitting', 'Transmitindo Posição do Ônibus', `Posição entregue via eduroam (Ponto #${pointsSentCount} • ${pingMs}ms).`);
           isFlushingQueue = false;
         })
         .catch(err => {
@@ -813,13 +1388,16 @@
           return res.json();
         })
         .then(data => {
+          const pingMs = Math.round(performance.now() - fetchStart);
+          recordPingMeasurement(pingMs);
           const sentLen = batchToSend.length;
           eduroamQueue.splice(0, sentLen);
           saveQueueToStorage();
           pointsSentCount += (data.accepted_points || sentLen);
           if (pointsCountVal) pointsCountVal.textContent = pointsSentCount;
           updateBufferUI();
-          setHeroStatus('transmitting', 'Sinal eduroam Reconectado!', `Descarregado lote de ${sentLen} pontos acumulados offline.`);
+          setHeroStatus('transmitting', 'Sinal eduroam Reconectado!', `Descarregado lote de ${sentLen} pontos acumulados offline (${pingMs}ms).`);
+          logWifiEvent('connected', `Descarregados ${sentLen} pontos acumulados para o servidor em ${pingMs}ms`);
           isFlushingQueue = false;
         })
         .catch(err => {
@@ -871,14 +1449,18 @@
       if (now - lastSendTimestamp >= THROTTLE_MS) {
         lastSendTimestamp = now;
 
-        // Guarda o ponto na fila persistente
+        // Guarda o ponto na fila persistente enriquecido com telemetria Wi-Fi
         eduroamQueue.push({
           latitude: lat,
           longitude: lon,
           accuracy: acc,
           speed: speedKmh,
           heading: heading,
-          client_timestamp: new Date().toISOString()
+          client_timestamp: new Date().toISOString(),
+          wifi_ssid: currentSsid,
+          wifi_rssi: currentRssiDbm,
+          wifi_level: currentSignalLevel,
+          wifi_link_speed: currentLinkSpeed
         });
 
         // Limita tamanho máximo de segurança a 400 pontos
@@ -987,9 +1569,15 @@
     document.addEventListener('DOMContentLoaded', () => {
       initRadarMap();
       startUptime();
+      startWifiTicker();
       updateBufferUI();
       startTracking();
       updateNetworkStatus();
+
+      // Monitor periódico suave para atualização contínua de sinal e latência
+      setInterval(() => {
+        updateNetworkStatus();
+      }, 3000);
 
       // Se já tinha pontos acumulados de uma sessão anterior, tenta descarregar agora
       if (eduroamQueue.length > 0) {

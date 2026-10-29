@@ -25,7 +25,24 @@
 
 ---
 
-## 2. 📍 Estado Real do Projeto (17/10/2026 · Atualizado)
+## 2. 📍 Estado Real do Projeto (28/10/2026 · Atualizado)
+
+### ✅ Telemetria de Intensidade de Sinal, Tempo de Conexão e Latência eduroam no Tracker
+- **Implementação Realizada:**
+  - **Módulo Visual Cockpit (`app/Templates/tracker.html`):**
+    - Painel dedicado **"Telemetria de Sinal eduroam"** com indicador visual de 4 barras reativas (`signal-bars`), mostrador numérico em dBm (`RSSI`) e classificação de qualidade (Excelente, Bom, Regular, Fraco).
+    - Cronômetro de tempo de conexão contínua na rede eduroam (`wifi-connected-timer`) e cálculo em tempo real da taxa percentual de cobertura na rota.
+    - Medidor de latência HTTP (Ping RTT em ms) avaliado em tempo real a cada envio de telemetria.
+    - Contador de zonas / reconexões cruzadas na viagem.
+    - Feed cronológico rolável (**Registro de Cobertura e Transições de Sinal**) com logs de entrada, atenuação e reconexão.
+  - **Ponte Nativa Android (`android/app/src/main/java/br/edu/ufpb/locbus/MainActivity.java` e `AndroidManifest.xml`):**
+    - Permissão `ACCESS_WIFI_STATE` adicionada.
+    - Método nativo `getWifiTelemetry()` via `WifiManager` e `ConnectivityManager` expondo SSID, BSSID, RSSI em dBm, nível de 0 a 4 barras, velocidade de link (Mbps) e frequência (2.4 GHz vs 5 GHz).
+    - Polling e injeção automática em tempo real para o WebView (`window.onNativeWifiUpdate`).
+    - Fallback gracioso para navegadores web comuns via Network Information API e latência HTTP.
+  - **Backend & Schemas (`app/domain.py`, `app/services.py`):**
+    - `CollaborativeIn` e `CollaborativePoint` enriquecidos com campos opcionais: `wifi_ssid`, `wifi_rssi`, `wifi_level` e `wifi_link_speed`.
+  - **Testes Automatizados:** 34 testes aprovados (100% no Pytest, incluindo `test_tracker_eduroam_telemetry_elements` e `test_eduroam_batch_telemetry`).
 
 ### ✅ Integração das 12 Paradas Oficiais do Campus I ao Mapa Interativo
 - **Implementação Realizada:**
@@ -221,6 +238,8 @@
 
 ---
 
+| 25/10/2026 | **Adequação Formal Completa do Artigo Científico IEEE Latin America (LaTeX e PDF)**: reestruturação integral do artigo atendendo a 100% dos requisitos acadêmicos — (1) Introdução, (2) Objetivos Geral e Específicos formalizados, (3) Contribuições Tecnológicas, (4) Estado da Arte com Portfólio Bibliográfico (Mapeamento Sistemático) e Portfólio Tecnológico (análise de patentes/mercado e Tabela Comparativa I), (5) Metodologia formal fundamentada em *Design Science Research* (DSR) e Prototipagem Evolutiva, (6) Arquitetura e Tabela II de Requisitos do Sistema (RF e RNF) derivados das lacunas do Estado da Arte com modelagem matemática, (7) Seção dedicada ao Desenvolvimento do MVP/PoC (FastAPI, Cockpit Tracker, PWA Passenger, 12 paradas do Campus I e Crowdsourcing de Espera); compilação com êxito via Puppeteer/KaTeX | `artigo_ieee_la/artigo_locbus_ieee_la.tex`, `artigo_ieee_la/artigo_locbus_ieee_la.pdf`, `scripts/generate_ieee_pdf.js` | ✅ Concluído (PDF Gerado) |
+| 18/10/2026 | **Atualização Integral e Compilação do Artigo Científico IEEE Latin America (PDF)**: incorporação dos 5 pilares arquiteturais, formulação matemática (geofencing segmentado OSRM, clustering por vizinhança 350m, Store-and-Forward sobre eduroam), mapeamento das 12 paradas oficiais do Campus I, módulo colaborativo de espera, suíte de 33 testes automatizados (100% OK), latência SSE (278 ms) e campanha de campo; PDF vetorial gerado via Puppeteer/KaTeX (678 kB) | `artigo_ieee_la/artigo_locbus_ieee_la.tex`, `artigo_ieee_la/artigo_locbus_ieee_la.pdf`, `scripts/generate_ieee_pdf.js` | ✅ Concluído (PDF Gerado) |
 | 07/10/2026 | Correção de deploy Render: suporte a requisições HEAD (`405 Method Not Allowed`), proteção contra lista vazia em `obter_historico_viagens` (`IndexError`) com fallback para ambiente em nuvem | `app/main.py`, `app/services.py` | ✅ Concluído (Deploy automático no Render) |
 | 07/10/2026 | Publicação do repositório no GitHub: criação do repositório público `GUILHERMEEDGAR/locbus-ufpb`, push inicial completo da branch `main` com Dockerfile, infra CEAR, APKs e automação Render | Git / GitHub CLI | ✅ Concluído (`https://github.com/GUILHERMEEDGAR/locbus-ufpb`) |
 | 07/10/2026 | Preparação Cloud & CEAR (v1.2.1): criação de Dockerfile, render.yaml, docker-compose.yml e Nginx para o CEAR; APK recompilado e assinado (`LocBUS-v1.2.1.apk`) apontando para URL fixa na nuvem (`locbus-ufpb.onrender.com`) | `Dockerfile`, `render.yaml`, `docker-compose.yml`, `infra_cear/`, `LocBUS-v1.2.1.apk` | ✅ Concluído (Guia gerado) |

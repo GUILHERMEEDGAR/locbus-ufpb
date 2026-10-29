@@ -153,7 +153,11 @@ class CollaborativeBuffer:
             speed=data.speed,
             heading=data.heading,
             received_at=now,
-            is_valid=True
+            is_valid=True,
+            wifi_ssid=data.wifi_ssid,
+            wifi_rssi=data.wifi_rssi,
+            wifi_level=data.wifi_level,
+            wifi_link_speed=data.wifi_link_speed
         )
         self._points.append(point)
         self._clean_expired(now)

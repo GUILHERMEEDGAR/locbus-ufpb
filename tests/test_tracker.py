@@ -48,7 +48,11 @@ def test_eduroam_batch_telemetry():
                 "accuracy": 8.0,
                 "speed": 25.0,
                 "heading": 120.0,
-                "client_timestamp": "2026-10-17T16:00:00Z"
+                "client_timestamp": "2026-10-17T16:00:00Z",
+                "wifi_ssid": "eduroam",
+                "wifi_rssi": -65,
+                "wifi_level": 4,
+                "wifi_link_speed": 150
             },
             {
                 "latitude": -7.1425,
@@ -56,7 +60,11 @@ def test_eduroam_batch_telemetry():
                 "accuracy": 7.5,
                 "speed": 30.0,
                 "heading": 135.0,
-                "client_timestamp": "2026-10-17T16:00:04Z"
+                "client_timestamp": "2026-10-17T16:00:04Z",
+                "wifi_ssid": "eduroam",
+                "wifi_rssi": -72,
+                "wifi_level": 3,
+                "wifi_link_speed": 108
             },
             {
                 "latitude": -7.1448,
@@ -64,7 +72,11 @@ def test_eduroam_batch_telemetry():
                 "accuracy": 9.0,
                 "speed": 28.0,
                 "heading": 140.0,
-                "client_timestamp": "2026-10-17T16:00:08Z"
+                "client_timestamp": "2026-10-17T16:00:08Z",
+                "wifi_ssid": "eduroam",
+                "wifi_rssi": -85,
+                "wifi_level": 1,
+                "wifi_link_speed": 54
             }
         ]
     }
@@ -75,4 +87,18 @@ def test_eduroam_batch_telemetry():
     assert data["total_points"] == 3
     assert data["accepted_points"] >= 1
     assert "Buffer Eduroam" in data["message"]
+
+
+def test_tracker_eduroam_telemetry_elements():
+    """Garante que os mostradores de telemetria de sinal e tempo de conexão eduroam estão presentes no template."""
+    response = client.get("/tracker")
+    assert response.status_code == 200
+    assert "Telemetria de Sinal eduroam" in response.text
+    assert "signal-bars" in response.text
+    assert "signal-rssi-val" in response.text
+    assert "wifi-connected-timer" in response.text
+    assert "wifi-ping-val" in response.text
+    assert "wifi-events-list" in response.text
+    assert "Registro de Cobertura e Transições de Sinal" in response.text
+
 

@@ -32,6 +32,10 @@ class CollaborativeIn(BaseModel):
     speed: Optional[float] = Field(None, ge=0.0, le=150.0, description="Velocidade em km/h")
     heading: Optional[float] = Field(None, ge=0.0, le=360.0, description="Rumo em graus")
     client_timestamp: Optional[datetime] = Field(None, description="Horário de captura no celular")
+    wifi_ssid: Optional[str] = Field(None, description="SSID da rede Wi-Fi conectada (ex: eduroam)")
+    wifi_rssi: Optional[int] = Field(None, description="Intensidade do sinal Wi-Fi em dBm")
+    wifi_level: Optional[int] = Field(None, ge=0, le=4, description="Nível de sinal de 0 a 4 barras")
+    wifi_link_speed: Optional[int] = Field(None, description="Velocidade de enlace em Mbps")
 
 
 class CollaborativeBatchIn(BaseModel):
@@ -51,6 +55,10 @@ class CollaborativePoint(BaseModel):
     heading: Optional[float] = None
     received_at: datetime
     is_valid: bool = True
+    wifi_ssid: Optional[str] = None
+    wifi_rssi: Optional[int] = None
+    wifi_level: Optional[int] = None
+    wifi_link_speed: Optional[int] = None
 
 
 class CollaborativeStatusOut(BaseModel):

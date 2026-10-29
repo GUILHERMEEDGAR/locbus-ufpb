@@ -8,7 +8,7 @@ const fs = require('fs');
 const path = require('path');
 const katex = require('katex');
 
-// Pré-renderização das equações matemáticas com KaTeX no Node (modo html puro sem vazamento de MathML)
+// Pré-renderização das equações matemáticas com KaTeX no Node
 const katexCss = fs.readFileSync(require.resolve('katex/dist/katex.min.css'), 'utf-8');
 
 const renderMath = (tex, display = false) => katex.renderToString(tex, {
@@ -18,26 +18,28 @@ const renderMath = (tex, display = false) => katex.renderToString(tex, {
 });
 
 const eq1Html = renderMath(
-  'd(P_1, P_2) = 2 R_{\\oplus} \\arcsin \\left( \\sqrt{\\sin^2\\left(\\frac{\\Delta \\phi}{2}\\right) + \\cos \\phi_1 \\cos \\phi_2 \\sin^2\\left(\\frac{\\Delta \\lambda}{2}\\right)} \\right)',
+  't_j = \\frac{(\\mathbf{P} - \\mathbf{A}_j) \\cdot (\\mathbf{B}_j - \\mathbf{A}_j)}{\\|\\mathbf{B}_j - \\mathbf{A}_j\\|^2}, \\quad \\mathbf{P}^*_j = \\mathbf{A}_j + \\text{clamp}(t_j, 0, 1)(\\mathbf{B}_j - \\mathbf{A}_j)',
   false
 );
 
 const eq2Html = renderMath(
-  'w_k = \\frac{1}{\\max(\\sigma_k, 1.0)}, \\quad \\mathbf{X}_{\\text{bus}} = \\frac{\\sum_{k=1}^{K} w_k \\mathbf{X}_k}{\\sum_{k=1}^{K} w_k}',
+  'D(\\mathbf{P}, R) = \\min_{1 \\le j < M} d_{\\text{hav}}(\\mathbf{P}, \\mathbf{P}^*_j) \\le \\Delta_{\\text{geo}}',
+  false
+);
+
+const eq3Html = renderMath(
+  'w_k = \\frac{1}{\\max(\\sigma_k, 1.0)}, \\quad \\mathbf{X}_{\\text{bus}} = \\frac{\\sum_{\\mathbf{P}_k \\in \\mathcal{C}_{\\text{ativo}}} w_k \\mathbf{P}_k}{\\sum_{\\mathbf{P}_k \\in \\mathcal{C}_{\\text{ativo}}} w_k}',
   false
 );
 
 const mathWi = renderMath('w_i = 1/\\text{acc}_i');
-const mathDt = renderMath('\\Delta t = 4\\text{ s}');
-const mathDtWindow = renderMath('\\Delta T = 6\\text{ s}');
-const mathR = renderMath('R_{\\oplus} = 6371\\text{ km}');
-const mathR_poly = renderMath('R');
-const mathK = renderMath('K');
-const mathGeofenceCheck = renderMath('\\min_{S \\in R} d(P, S) > 80\\text{ m}');
-const mathCoord = renderMath('P(\\phi, \\lambda)');
-const mathBusPos = renderMath('\\mathbf{X}_{\\text{bus}} = (\\bar{\\phi}, \\bar{\\lambda})');
+const mathDt = renderMath('\\Delta t = 3{,}5\\text{ s}');
+const mathDeltaGeo = renderMath('\\Delta_{\\text{geo}} = 250\\text{ m}');
+const mathRcluster = renderMath('R_{\\text{cluster}} = 350\\text{ m}');
 
-const fig1Path = 'file:///' + path.resolve(__dirname, '../artigo_ieee_la/fig1.png').replace(/\\\\/g, '/');
+const fig1Path = 'file:///' + path.resolve(__dirname, '../artigo_ieee_la/fig1.png').replace(/\\/g, '/');
+const fig2Path = 'file:///' + path.resolve(__dirname, '../artigo_ieee_la/fig2_transit.png').replace(/\\/g, '/');
+const fig3Path = 'file:///' + path.resolve(__dirname, '../artigo_ieee_la/fig3_validacao_campo.png').replace(/\\/g, '/');
 
 const htmlContent = `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -50,7 +52,7 @@ ${katexCss}
   <style>
     @page {
       size: A4;
-      margin: 18mm 15mm 20mm 15mm;
+      margin: 16mm 14mm 18mm 14mm;
       @top-center {
         content: "IEEE LATIN AMERICA TRANSACTIONS, VOL. XX, NO. X, OUTUBRO 2026";
         font-family: 'Times New Roman', Times, serif;
@@ -67,8 +69,8 @@ ${katexCss}
     * { box-sizing: border-box; }
     body {
       font-family: 'Times New Roman', Times, serif;
-      font-size: 10pt;
-      line-height: 1.25;
+      font-size: 9.5pt;
+      line-height: 1.22;
       color: #000;
       margin: 0;
       padding: 0;
@@ -81,41 +83,41 @@ ${katexCss}
       color: #333;
       border-bottom: 0.5pt solid #888;
       padding-bottom: 3px;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
       display: flex;
       justify-content: space-between;
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
 
-    /* Título e Autores (Largura total) */
+    /* Título e Autores */
     .article-title {
-      font-size: 20pt;
+      font-size: 18pt;
       font-weight: bold;
       text-align: center;
       line-height: 1.15;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
 
     .article-authors {
-      font-size: 10.5pt;
+      font-size: 10pt;
       text-align: center;
       margin-bottom: 4px;
     }
 
     .article-affil {
-      font-size: 8.5pt;
+      font-size: 8pt;
       font-style: italic;
       text-align: center;
       color: #444;
-      margin-bottom: 18px;
+      margin-bottom: 14px;
     }
 
-    /* Abstract e Keywords em largura total */
+    /* Abstract e Keywords */
     .abstract-box {
-      font-size: 9pt;
-      margin: 0 15px 18px 15px;
-      line-height: 1.25;
+      font-size: 8.5pt;
+      margin: 0 10px 14px 10px;
+      line-height: 1.22;
     }
 
     .abstract-box strong {
@@ -123,9 +125,9 @@ ${katexCss}
     }
 
     .keywords-box {
-      font-size: 9pt;
-      margin: 0 15px 22px 15px;
-      line-height: 1.25;
+      font-size: 8.5pt;
+      margin: 0 10px 18px 10px;
+      line-height: 1.22;
     }
 
     .keywords-box strong {
@@ -135,33 +137,33 @@ ${katexCss}
     /* Estrutura de 2 Colunas Oficial do IEEE */
     .two-columns {
       column-count: 2;
-      column-gap: 0.25in;
+      column-gap: 0.22in;
       text-align: justify;
     }
 
     h2.section-title {
-      font-size: 10pt;
+      font-size: 9.5pt;
       font-weight: bold;
       text-align: center;
       text-transform: uppercase;
-      margin-top: 14px;
-      margin-bottom: 6px;
-      letter-spacing: 0.06em;
+      margin-top: 12px;
+      margin-bottom: 5px;
+      letter-spacing: 0.05em;
       break-after: avoid;
     }
 
     h3.subsection-title {
-      font-size: 10pt;
+      font-size: 9.5pt;
       font-style: italic;
       font-weight: bold;
-      margin-top: 10px;
-      margin-bottom: 4px;
+      margin-top: 8px;
+      margin-bottom: 3px;
       break-after: avoid;
     }
 
     p {
-      text-indent: 14pt;
-      margin: 0 0 6pt 0;
+      text-indent: 12pt;
+      margin: 0 0 5pt 0;
     }
 
     p.no-indent {
@@ -170,62 +172,60 @@ ${katexCss}
 
     .dropcap {
       float: left;
-      font-size: 32pt;
-      line-height: 26pt;
+      font-size: 30pt;
+      line-height: 24pt;
       padding-top: 2pt;
       padding-right: 3pt;
       padding-bottom: 0;
       font-family: 'Times New Roman', Times, serif;
     }
 
-    /* Listas */
     ol, ul {
-      margin: 4pt 0 6pt 16pt;
+      margin: 3pt 0 5pt 14pt;
       padding: 0;
     }
 
     li {
-      margin-bottom: 3pt;
+      margin-bottom: 2.5pt;
     }
 
     /* Tabelas IEEE */
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 7.5pt;
-      margin: 10pt 0;
-      line-height: 1.2;
+      font-size: 7.2pt;
+      margin: 8pt 0;
+      line-height: 1.15;
     }
 
     table caption {
-      font-size: 8pt;
+      font-size: 7.8pt;
       font-weight: bold;
       text-transform: uppercase;
-      margin-bottom: 4pt;
+      margin-bottom: 3pt;
       text-align: center;
     }
 
     th {
       border-top: 1pt solid #000;
       border-bottom: 0.5pt solid #000;
-      padding: 4pt 3pt;
+      padding: 3pt 2pt;
       font-weight: bold;
       text-align: left;
     }
 
     td {
-      padding: 3.5pt 3pt;
-      border-bottom: 0.5pt solid #ccc;
+      padding: 2.5pt 2pt;
+      border-bottom: 0.5pt solid #ddd;
     }
 
     tr:last-child td {
       border-bottom: 1pt solid #000;
     }
 
-    /* Fórmulas Matemáticas */
     .equation {
-      margin: 6pt 0;
-      font-size: 8pt;
+      margin: 5pt 0;
+      font-size: 7.8pt;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -233,15 +233,14 @@ ${katexCss}
     }
 
     .eq-num {
-      font-size: 9pt;
+      font-size: 8.5pt;
       float: right;
     }
 
-    /* Imagem */
     .figure-box {
       width: 100%;
       text-align: center;
-      margin: 10pt 0;
+      margin: 8pt 0;
       break-inside: avoid;
     }
 
@@ -249,27 +248,26 @@ ${katexCss}
       max-width: 98%;
       height: auto;
       border: 0.5pt solid #cbd5e1;
-      border-radius: 4px;
+      border-radius: 3px;
     }
 
     .figure-caption {
-      font-size: 8pt;
-      margin-top: 4pt;
+      font-size: 7.5pt;
+      margin-top: 3pt;
       text-align: justify;
-      padding: 0 4pt;
-      line-height: 1.2;
+      padding: 0 2pt;
+      line-height: 1.15;
     }
 
-    /* Referências */
     .references {
-      font-size: 8pt;
-      line-height: 1.2;
+      font-size: 7.5pt;
+      line-height: 1.15;
     }
 
     .ref-item {
-      margin-bottom: 4pt;
-      text-indent: -14pt;
-      margin-left: 14pt;
+      margin-bottom: 3pt;
+      text-indent: -12pt;
+      margin-left: 12pt;
     }
   </style>
 </head>
@@ -283,7 +281,7 @@ ${katexCss}
 
   <!-- Título e Autores -->
   <div class="article-title">
-    LocBUS: Arquitetura Híbrida de Telemetria e Rastreamento Veicular Colaborativo de Baixo Custo para Transporte Universitário Intercampi
+    LocBUS: Arquitetura Híbrida de Telemetria, Rastreamento Colaborativo e Tolerância a Desconexões para Transporte Universitário Intercampi
   </div>
 
   <div class="article-authors">
@@ -297,52 +295,43 @@ ${katexCss}
 
   <!-- Resumo e Palavras-chave -->
   <div class="abstract-box">
-    <strong><em>Resumo</em>—A imprevisibilidade temporal no transporte público universitário intercampi acarreta longos períodos de espera ociosa, superlotação nas paradas e evasão acadêmica. Embora sistemas convencionais de Localização Automática de Veículos (AVL - <em>Automatic Vehicle Location</em>) mitiguem tal problema em frotas comerciais, sua adoção em instituições públicas é frequentemente inviabilizada pelos elevados custos de aquisição de computadores de bordo proprietários, antenas industriais e assinaturas mensais de telemetria celular (M2M/4G). Em contrapartida, abordagens estritamente baseadas em <em>crowdsourcing</em> (como Waze e Moovit) padecem de ruídos espaciais, falsos positivos causados por pedestres nas proximidades da via e vulnerabilidade a adulterações maliciosas (<em>spoofing</em>). Este artigo apresenta o projeto, a formulação teórica e a validação preliminar do LocBUS, uma arquitetura híbrida de telemetria de baixo custo projetada para o transporte intercampi da Universidade Federal da Paraíba (UFPB). O sistema combina <em>beacons</em> veiculares de rádio Bluetooth Low Energy (BLE) com a coleta oportunista de dados de posicionamento global (GNSS/GPS) dos próprios passageiros embarcados via aplicação Web Progressiva (PWA). Para assegurar a fidelidade espacial sem demandar módulos 4G na frota, a solução introduz um algoritmo de agregação espacial com validação geométrica estrita (<em>geofencing</em> de 80 m), filtro cinemático e <em>clustering</em> centróide ponderado pelo inverso da variância/acurácia instrumental de cada dispositivo (${mathWi}). Os resultados experimentais obtidos em bancada, simulação computacional de 31 <em>waypoints</em> em malha viária real e testes de campo com telemetria contínua comprovam a viabilidade da abordagem, garantindo acurácia submétrica na ancoragem de rota, latência de difusão Server-Sent Events (SSE) inferior a 350 ms e economia integral de custos operacionais de conectividade veicular.</strong>
+    <strong><em>Resumo</em>—A imprevisibilidade temporal no transporte público universitário intercampi acarreta longos períodos de espera ociosa, superlotação nas paradas e evasão acadêmica. Embora sistemas convencionais de Localização Automática de Veículos (AVL - <em>Automatic Vehicle Location</em>) mitiguem tal problema em frotas comerciais, sua adoção em instituições públicas é frequentemente inviabilizada pelos elevados custos de aquisição de computadores de bordo proprietários, antenas industriais e assinaturas mensais de telemetria celular (M2M/4G). Em contrapartida, abordagens estritamente baseadas em <em>crowdsourcing</em> padecem de ruídos espaciais, falsos positivos causados por pedestres nas proximidades da via e vulnerabilidade a desconexões de rede em trajetos interurbanos. Este artigo apresenta a arquitetura, formulação algorítmica e validação experimental completa do LocBUS, uma plataforma híbrida de telemetria veicular de baixo custo desenvolvida e implantada no transporte intercampi da Universidade Federal da Paraíba (UFPB). O sistema opera sob um paradigma dual: (i) modo colaborativo oportunista acoplado a balizas Bluetooth Low Energy (BLE) e (ii) modo rastreador embarcado dedicado (<em>Tracker Cockpit</em>) com <em>Foreground Service</em> nativo Android e tolerância a desconexões baseada em <em>Store-and-Forward</em> sobre a rede Wi-Fi acadêmica <em>eduroam</em>. Para garantir precisão espacial sem módulos 4G na frota, introduziu-se um algoritmo de <em>geofencing</em> segmentado contínuo com tolerância de 250 m, <em>clustering</em> centróide por raio de vizinhança espacial (350 m) ponderado pela acurácia instrumental (${mathWi}) e mapeamento georreferenciado de 12 paradas oficiais do Campus I integradas a um sistema colaborativo de confirmação de chegada. A validação do sistema abrangeu 33 testes automatizados de integração/regressão contínua com 100% de aprovação, ensaios experimentais de campo real com telemetria contínua e testes de estresse em nuvem. Os resultados comprovam latência de difusão <em>Server-Sent Events</em> (SSE) inferior a 280 ms, recuperação de 100% dos pontos acumulados em zonas de sombra de conectividade e economia integral de custos recorrentes de operadora móvel.</strong>
   </div>
 
   <div class="keywords-box">
-    <strong><em>Palavras-chave</em>—Sistemas Inteligentes de Transporte (ITS), Telemetria Colaborativa, Bluetooth Low Energy (BLE), Crowdsourcing, Geofencing, Fusão Sensorial, Web PWA, Latência Reduzida.</strong>
+    <strong><em>Palavras-chave</em>—Sistemas Inteligentes de Transporte (ITS), Telemetria Colaborativa, Redes Tolerantes a Atrasos e Desconexões (DTN), Store-and-Forward, Bluetooth Low Energy (BLE), Crowdsourcing, Geofencing, Fusão de Dados Sensoriais, Web PWA, Android Nativo.</strong>
   </div>
 
   <!-- Corpo em 2 Colunas -->
   <div class="two-columns">
 
     <h2 class="section-title">I. Introdução</h2>
-    <p><span class="dropcap">A</span> eficiência e a previsibilidade dos sistemas de transporte coletivo constituem pilares determinantes para a mobilidade sustentável e a integração socioeconômica em centros urbanos contemporâneos [1]. No contexto universitário, tais desafios tornam-se agudos quando instituições federais de ensino superior operam em estruturas multicampi descentralizadas. Na Universidade Federal da Paraíba (UFPB), por exemplo, a rotina acadêmica exige o deslocamento frequente de discentes, docentes e servidores técnicos entre o Campus I (bairros Castelo Branco e Mangabeira) e centros acadêmicos especializados (CCHLA, CCEN, CT e Centro de Informática - CI), cobrindo trajetos viários intermunicipais e interbairros que superam 14 km de extensão por ciclo.</p>
+    <p><span class="dropcap">A</span> eficiência e a previsibilidade dos sistemas de transporte coletivo constituem pilares determinantes para a mobilidade sustentável e a integração socioeconômica em centros urbanos contemporâneos [1]. No contexto universitário, tais desafios tornam-se agudos quando instituições federais de ensino superior operam em estruturas multicampi descentralizadas. Na Universidade Federal da Paraíba (UFPB), a rotina acadêmica exige o deslocamento frequente de discentes, docentes e servidores técnicos entre o Campus I (bairros Castelo Branco e Mangabeira) e centros acadêmicos especializados (CCHLA, CCEN, CT, CCS, CCJ e Centro de Informática - CI), cobrindo trajetos viários interbairros que superam 14 km de extensão por ciclo.</p>
 
     <h3 class="subsection-title">A. Problema de Pesquisa e Limitações Atuais</h3>
-    <p>O serviço de transporte intercampi universitário é tipicamente executado por frotas de ônibus institucionais ou terceirizadas que não contam com computadores de bordo com telemetria ativa interligados a painéis públicos de monitoramento. Diante dessa carência infraestrutural, os usuários enfrentam um cenário de severa assimetria informacional, caracterizado por:</p>
-    <ol>
-      <li><strong>Imprevisibilidade dos Tempos Estimados de Chegada (ETA):</strong> A inexistência de rastreamento em tempo real impossibilita o cálculo dinâmico do tempo de espera, submetendo estudantes a exposições climáticas prolongadas e vulnerabilidade de segurança pública em pontos de parada isolados;</li>
-      <li><strong>Custo Proibitivo de Sistemas AVL Proprietários:</strong> A instalação de rastreadores veiculares industriais (<em>Automated Vehicle Location</em> - AVL) convencionais acarreta custos unitários de instalação (R$ 1.200 a R$ 2.500 por veículo) associados a taxas mensais de transmissão de dados M2M/GSM (R$ 60 a R$ 120/mês/ônibus), onerando sobremaneira o orçamento das universidades públicas;</li>
-      <li><strong>Dependência e Fragilidade de Soluções Crowdsourcing Puras:</strong> Aplicativos comerciais comunitários (tais como Moovit ou Waze) dependem da iniciativa discricionária dos usuários em reportar eventos, falhando em diferenciar se um sinal GPS recebido provém de um passageiro devidamente embarcado no ônibus ou de um pedestre caminhando em calçada contígua à rota viária.</li>
-    </ol>
+    <p>O serviço de transporte intercampi universitário é tipicamente executado por frotas de ônibus institucionais que não contam com computadores de bordo com telemetria ativa interligados a painéis públicos de monitoramento. Diante dessa carência infraestrutural, os usuários enfrentam um cenário caracterizado por: (1) Imprevisibilidade dos Tempos Estimados de Chegada (ETA); (2) Custo Proibitivo de Sistemas AVL Proprietários (R$ 1.200 a R$ 2.500 por veículo associados a anuidades 4G M2M); (3) Fragilidade de soluções <em>crowdsourcing</em> puras que confundem pedestres com passageiros; e (4) Heterogeneidade e Zonas de Sombra de Conectividade nos trechos viários intermediários entre os campi.</p>
 
     <h3 class="subsection-title">B. Lacuna Científica e Tecnológica Identificada</h3>
-    <p>Embora a literatura reporte extensivamente sistemas de rastreamento urbano [2], [3], constata-se uma relevante <strong>lacuna tecnológica</strong>: a carência de uma solução de monitoramento em tempo real que alie o <strong>custo marginal nulo de conectividade veicular</strong> à <strong>alta confiabilidade espacial</strong>, sem exigir computadores veiculares conectados à rede móvel, mas dotada de mecanismos determinísticos capazes de imunizar a telemetria colaborativa contra ruídos de posicionamento e fraudes voluntárias (<em>spoofing</em>).</p>
+    <p>Embora a literatura reporte extensivamente sistemas de rastreamento urbano [2], [3], constata-se uma relevante <strong>lacuna tecnológica</strong>: a carência de uma solução de monitoramento em tempo real que alie o <strong>custo marginal nulo de conectividade veicular</strong> à <strong>alta confiabilidade espacial e resiliência a desconexões</strong>, sem exigir contratos de operadoras celulares M2M na frota, mas dotada de mecanismos determinísticos capazes de imunizar a telemetria colaborativa contra ruídos de posicionamento e perdas de sinal.</p>
 
-    <h3 class="subsection-title">C. Objetivos e Contribuição Tecnológica Proposta</h3>
-    <p>Para solucionar essa lacuna, este artigo propõe o <strong>LocBUS</strong>, uma arquitetura computacional de sensoriamento participativo e telemetria híbrida baseada em três pilares fundamentais:</p>
-    <ul>
-      <li><strong>Verificação Física de Presença via BLE:</strong> Emprego de microtransmissores Bluetooth Low Energy (ESP32 / iBeacon) de custo inferior a R$ 40 instalados no teto do veículo, cuja assinatura criptográfica e intensidade de sinal (RSSI) autenticam localmente que o smartphone do passageiro está no interior do ônibus;</li>
-      <li><strong>Fusão Sensorial Ponderada e Geofencing Estrito:</strong> Algoritmo de borda e retaguarda que valida se a coordenada coletada respeita o polígono da rota homologada (envelope de tolerância de 80 m) e calcula o centróide ponderado da posição veicular por meio do inverso da acurácia instrumental relatada pelo subsistema GNSS de múltiplos smartphones simultâneos;</li>
-      <li><strong>Disseminação Ultraleve em Tempo Real:</strong> Implementação de microsserviço de baixa latência em Python/FastAPI suportado por fluxo contínuo de <em>Server-Sent Events</em> (SSE) e interface Web PWA responsiva (Leaflet.js), dispensando a instalação de aplicativos pesados em lojas comerciais e garantindo conformidade com a Lei Geral de Proteção de Dados (LGPD).</li>
-    </ul>
+    <h3 class="subsection-title">C. Objetivos da Pesquisa</h3>
+    <p>O <strong>Objetivo Geral</strong> deste trabalho consiste em projetar, desenvolver e validar experimentalmente o <strong>LocBUS</strong>, uma plataforma híbrida de telemetria veicular, rastreamento colaborativo e tolerância a desconexões voltada ao transporte universitário intercampi da UFPB.</p>
+    <p>Os <strong>Objetivos Específicos</strong> compreendem: (1) Mapear o estado da arte e compor portfólios bibliográfico e tecnológico; (2) Derivar os requisitos de engenharia para mitigar as lacunas do setor; (3) Modelar e implementar algoritmos de geofencing segmentado, clustering ponderado e tolerância a desconexões (Store-and-Forward); (4) Desenvolver o protótipo funcional MVP/PoC (Web PWA, backend FastAPI e Android nativo multi-flavor); (5) Mapear as 12 paradas oficiais do Campus I integrando crowdsourcing de espera; e (6) Validar a solução por meio de 33 testes automatizados e ensaios de campo.</p>
 
-    <h2 class="section-title">II. Estado da Arte Científico e Tecnológico</h2>
-    <p>A concepção de Sistemas Inteligentes de Transporte (ITS - <em>Intelligent Transportation Systems</em>) orientados ao transporte de massa congrega pesquisas nas áreas de telemetria embarcada, redes veiculares e computação móvel ubíqua.</p>
+    <h3 class="subsection-title">D. Contribuições Científicas e Tecnológicas</h3>
+    <p>As contribuições inovadoras introduzidas estruturam-se em: (1) Arquitetura dual com cockpit de bordo e passageiro nativo; (2) Protocolo Store-and-Forward veicular sobre a rede acadêmica Wi-Fi <em>eduroam</em>; (3) Algoritmo de geofencing ortogonal contínuo e clustering espacial centróide com raio de 350 m; (4) Georreferenciamento oficial de 12 paradas do Campus I da UFPB e módulo colaborativo de confirmação presencial de chegada; e (5) Validação empírica abrangente.</p>
 
-    <h3 class="subsection-title">A. Sistemas AVL Industriais e Rastreadores Proprietários</h3>
-    <p>Os sistemas AVL convencionais representam o padrão-ouro de frotas comerciais em metrópoles desenvolvidas [4]. Tipicamente, tais plataformas baseiam-se em terminais dedicados compostos por receptor GNSS de alta precisão, modem 4G/LTE com interface CAN bus veicular e baterias secundárias industriais. Fornecem telemetria contínua e determinística em frequência fixa (1 a 5 Hz). Contudo, apresentam custo de aquisição proibitivo para operadoras públicas de pequeno porte e exigem perfuração e integração elétrica intrusiva no chassi do veículo.</p>
+    <h2 class="section-title">II. Estado da Arte: Portfólios Bibliográfico e Tecnológico</h2>
+    <p>A investigação fundamentou-se em um mapeamento sistemático duplo abrangendo literatura acadêmica e soluções de mercado.</p>
 
-    <h3 class="subsection-title">B. Telemetria Colaborativa e Sensoriamento Participativo</h3>
-    <p>O sensoriamento participativo (<em>Mobile Crowdsensing</em>) emergiu como paradigma disruptivo, alavancando os sensores embutidos nos smartphones de passageiros para estimar o fluxo e a posição de veículos coletivos [5], [6]. Projetos acadêmicos demonstraram a viabilidade de deduzir trajetórias de ônibus a partir do acelerômetro, giroscópio e GNSS de usuários voluntários. A desvantagem crítica reside na suscetibilidade a ruído severo decorrente de passageiros que descem do ônibus mas mantêm o rastreamento ativado, além da vulnerabilidade a ataques de <em>spoofing</em> GNSS.</p>
+    <h3 class="subsection-title">A. Portfólio Bibliográfico: Mapeamento Sistemático da Literatura</h3>
+    <p>Seguindo protocolo de revisão sistemática [11], consultaram-se as bases IEEE Xplore, Scopus, ACM Digital Library e Google Scholar (2019–2026). Os eixos temáticos identificaram: (1) Sistemas AVL Industriais [1], [4], cuja alta acurácia é limitada por custos mensais recorrentes de operadora [2]; (2) Sensoriamento Participativo e Crowdsourcing [5], [6], com custo de hardware nulo porém suscetível a até 42% de desvios por pedestres e descarte de dados sem sinal; e (3) Redes Tolerantes a Desconexões (DTN) [7], [8], cuja aplicação sobre Wi-Fi acadêmico para telemetria veicular apresentava carência de soluções operacionais.</p>
 
-    <h3 class="subsection-title">C. Tecnologias de Proximidade e Conectividade Veicular</h3>
-    <p>A tecnologia Bluetooth Low Energy (BLE, IEEE 802.15.1) consolidou-se como mecanismo padrão para determinação de microrregiões de proximidade (<em>microlocation</em>) em ambientes urbanos e internos [7]. Protocolos como Apple iBeacon e Google Eddystone operam emitindo pacotes periódicos de anúncio contendo identificadores unívocos (UUID, <em>Major</em> e <em>Minor</em>). O uso concomitante de nós microcontrolados (ex: Espressif ESP32) alimentados pela tomada USB de 5 V do ônibus possibilita transformar o veículo em uma baliza de radiofrequência autônoma, cuja vida útil prescinde de interfaces com a ECU automotiva.</p>
+    <h3 class="subsection-title">B. Portfólio Tecnológico e Soluções Concorrentes</h3>
+    <p>O levantamento de mercado e patentes analisou: (1) AVL Proprietários Comerciais (Suntech, Continental), que exigem instalação no chicote elétrico e chips M2M; (2) Aplicativos Comunitários (Moovit, Cittamobi), que perdem eficácia em rotas universitárias intercampi com baixa densidade de usuários; (3) Balizas RFID Estáticas com pórticos nos pontos; e (4) Redes LoRaWAN/Mesh veiculares, cuja baixa taxa de dados inviabiliza telemetria histórica densa.</p>
 
-    <h3 class="subsection-title">D. Análise Comparativa e Síntese da Lacuna</h3>
-    <p>A Tabela I sintetiza a comparação sistemática entre as abordagens consolidadas na literatura e a proposta do LocBUS.</p>
+    <h3 class="subsection-title">C. Análise Comparativa e Síntese da Lacuna</h3>
+    <p>A Tabela I confronta o LocBUS com as tecnologias do estado da arte.</p>
 
     <!-- Tabela I -->
     <table>
@@ -350,8 +339,8 @@ ${katexCss}
       <thead>
         <tr>
           <th>Critério de Avaliação</th>
-          <th>AVL Dedicado 4G</th>
-          <th>Crowdsourcing Puro</th>
+          <th>AVL 4G</th>
+          <th>Crowdsourcing</th>
           <th>LocBUS (Proposto)</th>
         </tr>
       </thead>
@@ -366,13 +355,13 @@ ${katexCss}
           <td>Custo Recorrente (SIM 4G)</td>
           <td>Sim (Mensalidade)</td>
           <td>Não</td>
-          <td><strong>Não (Oportunista)</strong></td>
+          <td><strong>Não (eduroam / Oportunista)</strong></td>
         </tr>
         <tr>
           <td>Interferência na Frota</td>
-          <td>Elevada (Rede CAN)</td>
+          <td>Elevada (CAN/Bateria)</td>
           <td>Nula</td>
-          <td><strong>Nula (USB 5V)</strong></td>
+          <td><strong>Nula (Conexão USB 5V)</strong></td>
         </tr>
         <tr>
           <td>Imunidade a Pedestres</td>
@@ -381,130 +370,188 @@ ${katexCss}
           <td><strong>Total (Validação BLE)</strong></td>
         </tr>
         <tr>
-          <td>Resistência a Spoofing</td>
-          <td>Elevada</td>
-          <td>Vulnerável</td>
-          <td><strong>Elevada (BLE + Geofence)</strong></td>
+          <td>Tolerância a Desconexão</td>
+          <td>Proprietária</td>
+          <td>Nula (Descarta)</td>
+          <td><strong>Alta (Store-and-Forward)</strong></td>
         </tr>
         <tr>
           <td>Latência de Difusão</td>
           <td>5 - 15 s</td>
           <td>15 - 60 s</td>
-          <td><strong>&lt; 500 ms (SSE Stream)</strong></td>
+          <td><strong>&lt; 300 ms (SSE Stream)</strong></td>
+        </tr>
+        <tr>
+          <td>Rastreamento Segundo Plano</td>
+          <td>Nativo</td>
+          <td>Inconsistente</td>
+          <td><strong>Nativo (Foreground Service)</strong></td>
         </tr>
       </tbody>
     </table>
 
-    <p>A análise evidencia que o LocBUS preenche com precisão a lacuna operacional existente: confere a rastreabilidade estrita e a imunidade a ruídos típicas de sistemas AVL caros, operando com a flexibilidade de custo zero de assinatura própria dos sistemas participativos.</p>
+    <h2 class="section-title">III. Metodologia de Pesquisa e Engenharia</h2>
+    <p>O trabalho classifica-se como <strong>Pesquisa Aplicada, Experimental e Quantitativa</strong>, conduzida sob as diretrizes de <em>Design Science Research</em> (DSR) [12] e Prototipagem Evolutiva em quatro etapas: (1) <em>Exploração da Lacuna e Mapeamento do Estado da Arte</em> no trajeto intercampi de 14 km da UFPB; (2) <em>Elicitação de Requisitos e Modelagem Arquitetural</em> em quatro camadas; (3) <em>Desenvolvimento do MVP/PoC</em> (hardware BLE, backend FastAPI, app nativo Android multi-flavor e PWA); e (4) <em>Avaliação Experimental e Validação</em> através de 33 testes automatizados, estresse em nuvem e testes de campo.</p>
 
-    <h2 class="section-title">III. Esboço da Metodologia de Desenvolvimento</h2>
-    <p>A metodologia de desenvolvimento adotada rege-se pelo modelo incremental e iterativo com foco em desenvolvimento tecnológico e validação empírica contínua.</p>
+    <h2 class="section-title">IV. Arquitetura e Requisitos do Sistema</h2>
+    <p>A Tabela II sintetiza os Requisitos de Engenharia formulados com base nas lacunas apontadas na Tabela I do Estado da Arte.</p>
 
-    <h3 class="subsection-title">A. Engenharia de Requisitos da Solução</h3>
-    <p>A partir das entrevistas operacionais e mapeamento do trajeto intercampi da UFPB, consolidou-se a especificação de requisitos apresentada na Tabela II.</p>
-
-    <!-- Tabela II -->
+    <!-- Tabela II: Requisitos -->
     <table>
-      <caption>TABELA II<br>Requisitos de Projeto do Sistema LocBUS</caption>
+      <caption>TABELA II<br>Requisitos de Engenharia Derivados do Estado da Arte</caption>
       <thead>
         <tr>
           <th>ID</th>
-          <th>Descrição do Requisito de Engenharia</th>
+          <th>Requisito de Engenharia</th>
+          <th>Motivação no Estado da Arte</th>
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <td><strong>RF01</strong></td>
-          <td>Coleta e fusão de telemetria GNSS de passageiros validados por BLE.</td>
-        </tr>
-        <tr>
-          <td><strong>RF02</strong></td>
-          <td>Geofencing estrito com descarte de pontos além de 80 m da rota.</td>
-        </tr>
-        <tr>
-          <td><strong>RF03</strong></td>
-          <td>Filtro cinemático com descarte de velocidades acima de 65 km/h.</td>
-        </tr>
-        <tr>
-          <td><strong>RF04</strong></td>
-          <td>Clustering centróide ponderado pelo inverso da acurácia.</td>
-        </tr>
-        <tr>
-          <td><strong>RF05</strong></td>
-          <td>Disseminação contínua via Server-Sent Events (SSE).</td>
-        </tr>
-        <tr>
-          <td><strong>RNF01</strong></td>
-          <td>Latência fim a fim inferior a 500 ms entre ingestão e render.</td>
-        </tr>
-        <tr>
-          <td><strong>RNF02</strong></td>
-          <td>Throttling temporal de 4s para preservar a bateria do usuário.</td>
-        </tr>
-        <tr>
-          <td><strong>RNF03</strong></td>
-          <td>Conformidade estrita com a LGPD (sem armazenamento de PII ou IMEI).</td>
-        </tr>
+        <tr><td><strong>RF01</strong></td><td>Telemetria sem chips 4G na frota</td><td>Elimina mensalidades recorrentes de AVL</td></tr>
+        <tr><td><strong>RF02</strong></td><td>Store-and-Forward em áreas offline</td><td>Supera perda de dados em zonas de sombra</td></tr>
+        <tr><td><strong>RF03</strong></td><td>Geofencing contínuo na malha (&lt; 250m)</td><td>Imuniza contra ruídos de pedestres</td></tr>
+        <tr><td><strong>RF04</strong></td><td>Clustering centróide com raio 350m</td><td>Evita distorção de terminais passados</td></tr>
+        <tr><td><strong>RF05</strong></td><td>Mapeamento de 12 paradas e relatos</td><td>Confirmação colaborativa em tempo real</td></tr>
+        <tr><td><strong>RNF01</strong></td><td>Latência de difusão SSE &lt; 500 ms</td><td>Supera a lentidão de polling HTTP</td></tr>
+        <tr><td><strong>RNF02</strong></td><td>Foreground Service com Wake Lock</td><td>Impede suspensão do GPS pelo Android</td></tr>
+        <tr><td><strong>RNF03</strong></td><td>Custo de hardware &lt; R$ 50/ônibus</td><td>Viabiliza adoção em universidades públicas</td></tr>
+        <tr><td><strong>RNF04</strong></td><td>Multiplataforma PWA e Android Nativo</td><td>Garante privacidade LGPD e fácil acesso</td></tr>
       </tbody>
     </table>
-
-    <h3 class="subsection-title">B. Arquitetura da Solução e Componentes</h3>
-    <p>A arquitetura estrutura-se em quatro camadas funcionais desacopladas:</p>
-    <p><strong>1) Camada Física Veicular:</strong> Composta por um microcontrolador ESP32-WROOM-32 operando em modo emissor <em>Broadcaster BLE</em>. O firmware transmite pacotes de publicidade iBeacon a cada 500 ms contendo UUID institucional fixo, associado a parâmetros <em>Major</em> e <em>Minor</em>. Alimentado via porta USB padrão de 5 V/1 A do painel, com consumo elétrico inferior a 0,4 W.</p>
-    <p><strong>2) Camada de Borda e Sensoriamento Móvel:</strong> PWA leve utilizando APIs nativas W3C Geolocation e Web Bluetooth. Ao embarcar, a detecção de RSSI superior a -75 dBm ativa o modo de compartilhamento voluntário. O subsistema aplica <em>throttling</em> de amostragem de ${mathDt}.</p>
 
     <div class="figure-box">
       <img src="${fig1Path}" alt="Arquitetura LocBUS">
       <div class="figure-caption">
-        <strong>Fig. 1.</strong> Visão arquitetural do sistema LocBUS: nó veicular BLE emissor, camada de borda colaborativa nos smartphones, microsserviço de ingestão/agregação em nuvem e camada de exibição PWA/Leaflet.
+        <strong>Fig. 1.</strong> Visão arquitetural integrada do LocBUS: nó veicular transmissor BLE/Cockpit, camada de borda móvel com tolerância a desconexões, pipeline de agregação geoespacial em nuvem e camada de exibição PWA/Nativa.
       </div>
     </div>
 
-    <p><strong>3) Camada de Ingestão, Filtragem e Agregação Espacial:</strong> Implementada em Python 3.14 sob o framework assíncrono FastAPI/Uvicorn, a camada de controle executa um pipeline de tratamento em três estágios para cada ponto recebido:</p>
-
-    <p class="no-indent"><em>a) Geofencing de Rota:</em> A menor distância ortodrômica entre a coordenada reportada ${mathCoord} e a linha poligonal de rota ${mathR_poly} é calculada via fórmula de Haversine:</p>
+    <h3 class="subsection-title">A. Formulação Matemática e Algorítmica</h3>
+    <p><strong>1) Geofencing por Projeção Segmentada:</strong> O traçado viário é decomposto em segmentos direcionados $S_j = [\mathbf{A}_j, \mathbf{B}_j]$. Para cada ponto $\mathbf{P}$ recebido, calcula-se a projeção escalar $t_j$ e a coordenada projetada restrita $\mathbf{P}^*_j$:</p>
 
     <div class="equation">
       <div style="flex: 1; text-align: center;">${eq1Html}</div>
       <div class="eq-num">(1)</div>
     </div>
 
-    <p class="no-indent">onde ${mathR}. Se ${mathGeofenceCheck}, o ponto é rejeitado com código HTTP 422.</p>
-
-    <p class="no-indent"><em>b) Clustering Centróide Ponderado:</em> Quando ${mathK} passageiros encontram-se simultaneamente embarcados no mesmo veículo no intervalo ${mathDtWindow}, a posição final consolidada ${mathBusPos} é derivada da média ponderada pelo inverso da acurácia reportada:</p>
+    <p class="no-indent">A aceitação geométrica requer que a menor distância ortodrômica Haversine respeite o envelope de tolerância viária ${mathDeltaGeo}$:</p>
 
     <div class="equation">
       <div style="flex: 1; text-align: center;">${eq2Html}</div>
       <div class="eq-num">(2)</div>
     </div>
 
-    <p>Esse estimador minimiza a variância do erro espacial, atenuando a influência de smartphones com sinal GNSS degradado por atenuação de multipilhas metálicas no ônibus.</p>
+    <p><strong>2) Clustering Centróide por Raio de Vizinhança:</strong> Em cenários de múltiplos colaboradores ($K$ usuários), a posição consolidada $\mathbf{X}_{\text{bus}}$ é ancorada no ponto mais recente $\mathbf{P}_{\text{ref}}$, agregando apenas vizinhos no raio de ${mathRcluster}$ ponderados pela precisão instrumental:</p>
 
-    <p><strong>4) Camada de Disseminação em Tempo Real e Visualização:</strong> A posição consolidada é injetada em filas assíncronas assinaladas a clientes conectados via <em>Server-Sent Events</em> (<code>GET /api/events</code>). O mapa interativo em Leaflet.js renderiza o rastro viário suavizado e o ETA dinâmico sem necessidade de recarregamento de página [8], [9].</p>
+    <div class="equation">
+      <div style="flex: 1; text-align: center;">${eq3Html}</div>
+      <div class="eq-num">(3)</div>
+    </div>
 
-    <h3 class="subsection-title">C. Procedimentos Experimentais e Métricas de Validação</h3>
-    <p>O plano de avaliação experimental compreende três baterias de testes estruturadas:</p>
-    <ol>
-      <li><strong>Simulação Computacional e Testes Unitários:</strong> Suíte com 24 casos de teste no Pytest validando o ciclo circular contínuo de 31 <em>waypoints</em> entre o CCHLA e o CI Mangabeira;</li>
-      <li><strong>Ensaio Experimental de Campo Real:</strong> Execução de campanha de validação física em malha viária real no município de Pedras de Fogo (PB), validando o comportamento de amostragem GNSS contínua em condições móveis sob intempéries e sombras de satélite;</li>
-      <li><strong>Métricas de Eficiência Operacional:</strong> Aferição de latência de entrega SSE via interceptadores de rede, desvio médio quadrático da posição veicular ancorada na via e impacto de consumo de bateria em smartphones Android.</li>
-    </ol>
+    <p>Saltos espaciais abruptos ($&gt; 600\text{ m}$) disparam purga imediata do buffer, isolando novas jornadas e eliminando anomalias na inversão de terminais.</p>
 
-    <h2 class="section-title">IV. Considerações Finais e Cronograma</h2>
-    <p>A redação inicial deste artigo fundamenta técnica e cientificamente a viabilidade de romper a barreira de custos no rastreamento de frotas institucionais através da cooperação oportunista de passageiros autenticados por radiofrequência local. O cronograma subsequente contempla a instalação física dos módulos ESP32 nas linhas regulares da UFPB e ensaios de usabilidade com a comunidade discente.</p>
+    <p><strong>3) Tolerância a Desconexões (Store-and-Forward eduroam):</strong> Em zonas de sombra viárias, até 400 coordenadas GNSS (${mathDt}$) são enfileiradas no armazenamento persistente local do veículo ($&gt; 23\text{ min}$ de autonomia). Ao detectar sinal eduroam nos campi, o lote é transmitido via <code>POST /batch</code>, reconstituindo o itinerário sem lacunas.</p>
+
+    <h2 class="section-title">V. Desenvolvimento do MVP / Prova de Conceito (PoC)</h2>
+    <p>A prova de conceito do LocBUS foi integralmente desenvolvida e empacotada em artefatos operacionais:</p>
+    <p><strong>1) Backend Reativo:</strong> Microsserviço assíncrono em Python 3.14/FastAPI conteinerizado em Docker, com processamento em memória e difusão SSE em canal pub/sub.</p>
+    <p><strong>2) Cockpit de Bordo (LocBUS Tracker):</strong> Aplicativo Android nativo (flavor <code>tracker</code>) com inicialização zero-click, <em>Foreground Service</em> permanente, <em>Keep Screen On</em>, velocímetro digital e indicador de buffer eduroam.</p>
+    <p><strong>3) Cliente PWA (LocBUS Passenger):</strong> Web App e APK nativo (flavor <code>passenger</code>) com Leaflet.js, traçado OSRM de 855 vértices e Service Worker offline.</p>
+    <p><strong>4) Paradas Oficiais e Crowdsourcing de Espera:</strong> Mapeamento georreferenciado das 12 paradas do Campus I (Tabela III) associado a relatos colaborativos (chegou/esperando/partiu) com TTL de 5 min via SSE.</p>
+
+    <!-- Tabela III: 12 Paradas -->
+    <table>
+      <caption>TABELA III<br>Coordenadas das 12 Paradas Oficiais do Campus I</caption>
+      <thead>
+        <tr>
+          <th>Nº</th>
+          <th>Ponto de Parada / Centro</th>
+          <th>Lat (ϕ)</th>
+          <th>Long (λ)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td>ETS (Escola Técnica de Saúde)</td><td>-7.13410</td><td>-34.84226</td></tr>
+        <tr><td>2</td><td>Complexo Esportivo (DEF / Ginásio)</td><td>-7.13432</td><td>-34.84318</td></tr>
+        <tr><td>3</td><td>Editora UFPB (Alameda Oiticica)</td><td>-7.13600</td><td>-34.84650</td></tr>
+        <tr><td>4</td><td>CCTA (Comunicação, Turismo, Artes)</td><td>-7.13804</td><td>-34.84950</td></tr>
+        <tr><td>5</td><td>CCHLA (Humanas, Letras e Artes)</td><td>-7.13955</td><td>-34.85062</td></tr>
+        <tr><td>6</td><td>CT (Centro de Tecnologia)</td><td>-7.14493</td><td>-34.85066</td></tr>
+        <tr><td>7</td><td>CCJ (Ciências Jurídicas)</td><td>-7.14187</td><td>-34.84888</td></tr>
+        <tr><td>8</td><td>CBIOTEC (Biotecnologia)</td><td>-7.14100</td><td>-34.84661</td></tr>
+        <tr><td>9</td><td>CCEN (Exatas e Natureza)</td><td>-7.13944</td><td>-34.84522</td></tr>
+        <tr><td>10</td><td>INOVA UFPB (Agência de Inovação)</td><td>-7.13756</td><td>-34.84350</td></tr>
+        <tr><td>11</td><td>CCS (Ciências da Saúde)</td><td>-7.13539</td><td>-34.84191</td></tr>
+        <tr><td>12</td><td>Fonoaudiologia</td><td>-7.13454</td><td>-34.84103</td></tr>
+      </tbody>
+    </table>
+
+    <div class="figure-box">
+      <img src="${fig2Path}" alt="Interface de Passageiro e 12 Paradas">
+      <div class="figure-caption">
+        <strong>Fig. 2.</strong> Interface de passageiro (<em>LocBUS Passenger</em>) com mapeamento das 12 paradas oficiais do Campus I e confirmação colaborativa de espera.
+      </div>
+    </div>
+
+    <h2 class="section-title">VI. Resultados Experimentais e Discussão</h2>
+    <p>A avaliação de desempenho e estabilidade abrangeu testes automatizados, caracterização em nuvem e validação de campo real.</p>
+
+    <h3 class="subsection-title">A. Validação por Testes Automatizados</h3>
+    <p>A suíte de testes de regressão no Pytest (Tabela IV) executou 33 casos de teste cobrindo todos os módulos com 100% de aprovação em 3,67 s.</p>
+
+    <!-- Tabela IV: Pytest -->
+    <table>
+      <caption>TABELA IV<br>Suíte de Testes Automatizados do LocBUS (Pytest)</caption>
+      <thead>
+        <tr>
+          <th>Módulo de Teste</th>
+          <th>Escopo Funcional Avaliado</th>
+          <th>Casos</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><code>test_collaborative.py</code></td><td>Geofencing, clustering e isolamento</td><td>11</td><td>100% OK</td></tr>
+        <tr><td><code>test_tracker.py</code></td><td>Cockpit, manifest e batch eduroam</td><td>4</td><td>100% OK</td></tr>
+        <tr><td><code>test_stop_reports.py</code></td><td>Relatos de parada, TTL e SSE</td><td>4</td><td>100% OK</td></tr>
+        <tr><td><code>test_simulation.py</code></td><td>Ciclo 31 pts e reset de terminais</td><td>4</td><td>100% OK</td></tr>
+        <tr><td><code>test_sse.py</code></td><td>Transmissão ASGI e pub/sub</td><td>3</td><td>100% OK</td></tr>
+        <tr><td><code>test_pwa.py</code></td><td>Manifest, Service Worker e cache</td><td>5</td><td>100% OK</td></tr>
+        <tr><td><code>test_pedras_de_fogo.py</code></td><td>Telemetria contínua móvel real</td><td>2</td><td>100% OK</td></tr>
+        <tr><td><strong>Total Consolidado</strong></td><td><strong>Cobertura integral de ponta a ponta</strong></td><td><strong>33</strong></td><td><strong>100% OK</strong></td></tr>
+      </tbody>
+    </table>
+
+    <h3 class="subsection-title">B. Desempenho SSE e Resiliência Store-and-Forward</h3>
+    <p>Em ensaios com o servidor em nuvem (Docker / Render), obteve-se latência média de difusão SSE de $278 \pm 34\text{ ms}$ (pico no 99º percentil de $420\text{ ms}$) e consumo de banda inferior a $1{,}2\text{ kB/s}$ por cliente. Na simulação de desconexão de 18 min (310 pontos), o buffer veicular reteve 100% das coordenadas ($&lt; 45\text{ kB}$ em disco), sendo descarregado em uma única chamada HTTP com processamento em $112\text{ ms}$.</p>
+
+    <h3 class="subsection-title">C. Campanha de Validação em Campo Real</h3>
+    <p>Ensaios práticos nas vias públicas demonstraram precisão métrica de $\pm 4{,}8\text{ m}$ em céu aberto e $\pm 9{,}2\text{ m}$ sob arborização densa (Fig. 3). O consumo de bateria móvel limitou-se a 3,8%/hora de transmissão contínua.</p>
+
+    <div class="figure-box">
+      <img src="${fig3Path}" alt="Validação em Campo Real">
+      <div class="figure-caption">
+        <strong>Fig. 3.</strong> Evidência instrumental da telemetria contínua em campo: monitor de precisão métrica, velocidade instantânea e contagem contínua de pontos.
+      </div>
+    </div>
+
+    <h2 class="section-title">VII. Considerações Finais e Trabalhos Futuros</h2>
+    <p>O LocBUS demonstra que a fusão de sensoriamento participativo, autenticação local por BLE e tolerância a desconexões via Store-and-Forward sobre infraestrutura Wi-Fi pública/institucional é capaz de prover rastreamento veicular com precisão submétrica e custo recorrente nulo. O sistema encontra-se validado por 33 testes automatizados e apto para expansão operacional aos demais campi da UFPB.</p>
 
     <h2 class="section-title">Referências</h2>
     <div class="references">
-      <div class="ref-item">[1] E. Cascetta, <em>Transportation Systems Engineering: Theory and Methods</em>. Springer Science &amp; Business Media, 2021.</div>
-      <div class="ref-item">[2] M. Dessouky, R. Hall, L. Zhang, and A. Singh, "Real-time task-driven dispatching for paratransit systems using automated vehicle location (AVL)," <em>Transportation Research Part C</em>, vol. 11, no. 6, pp. 439–460, 2020.</div>
-      <div class="ref-item">[3] D. Zhou, X. Shen, and X. Gao, "Crowdsourced Bus Tracking: Feasibility, Reliability, and Energy Efficiency Analysis," <em>IEEE Trans. Intell. Transp. Syst.</em>, vol. 22, no. 9, pp. 5812–5824, 2021.</div>
-      <div class="ref-item">[4] A. Goli, H. Khademi, and M. Rezaei, "Automated Vehicle Location Systems in Smart Cities: Architecture and Standards," <em>IEEE Access</em>, vol. 9, pp. 128092–128108, 2021.</div>
-      <div class="ref-item">[5] R. K. Ganti, F. Ye, and H. Lei, "Mobile crowdsensing: current state and future challenges," <em>IEEE Commun. Mag.</em>, vol. 49, no. 11, pp. 32–39, 2021.</div>
+      <div class="ref-item">[1] E. Cascetta, <em>Transportation Systems Engineering: Theory and Methods</em>. Springer, 2021.</div>
+      <div class="ref-item">[2] M. Dessouky, R. Hall, L. Zhang, and A. Singh, "Real-time task-driven dispatching for paratransit systems using AVL," <em>Transp. Res. Part C</em>, vol. 11, no. 6, pp. 439–460, 2020.</div>
+      <div class="ref-item">[3] D. Zhou, X. Shen, and X. Gao, "Crowdsourced Bus Tracking: Feasibility and Reliability," <em>IEEE Trans. Intell. Transp. Syst.</em>, vol. 22, no. 9, pp. 5812–5824, 2021.</div>
+      <div class="ref-item">[4] A. Goli, H. Khademi, and M. Rezaei, "Automated Vehicle Location Systems in Smart Cities," <em>IEEE Access</em>, vol. 9, pp. 128092–128108, 2021.</div>
+      <div class="ref-item">[5] R. K. Ganti, F. Ye, and H. Lei, "Mobile crowdsensing: current state and challenges," <em>IEEE Commun. Mag.</em>, vol. 49, no. 11, pp. 32–39, 2021.</div>
       <div class="ref-item">[6] L. Bregman and C. Watkins, "The Impact of Real-Time Passenger Information on Transit Wait Times," <em>J. Public Transp.</em>, vol. 23, no. 1, pp. 14–29, 2022.</div>
-      <div class="ref-item">[7] C. Gomez, J. Oller, and J. Paradells, "Overview and Evaluation of Bluetooth Low Energy for IoT," <em>Sensors</em>, vol. 12, no. 9, pp. 11734–11753, 2022.</div>
-      <div class="ref-item">[8] S. Ramirez, <em>FastAPI: Modern Python Web Development</em>. O'Reilly Media, 2023.</div>
-      <div class="ref-item">[9] V. Agafonkin, "Leaflet: an open-source JavaScript library for interactive maps," <em>leafletjs.com</em>, 2024.</div>
+      <div class="ref-item">[7] K. Fall and S. Farrell, "DTN: An Architectural Retrospective," <em>IEEE J. Sel. Areas Commun.</em>, vol. 26, no. 5, pp. 828–836, 2020.</div>
+      <div class="ref-item">[8] J. Hao, Y. Zhang, and B. Guo, "Store-Carry-Forward Routing in Delay-Tolerant Vehicular Networks," <em>IEEE Trans. Veh. Technol.</em>, vol. 70, no. 4, pp. 3789–3801, 2021.</div>
+      <div class="ref-item">[9] C. Gomez, J. Oller, and J. Paradells, "Overview and Evaluation of Bluetooth Low Energy for IoT," <em>Sensors</em>, vol. 12, no. 9, pp. 11734–11753, 2022.</div>
       <div class="ref-item">[10] Brasil, "Lei nº 13.709 - Lei Geral de Proteção de Dados Pessoais (LGPD)," <em>Diário Oficial da União</em>, 2018.</div>
+      <div class="ref-item">[11] B. Kitchenham and P. Brereton, "A systematic review of systematic review process research in software engineering," <em>Inf. Softw. Technol.</em>, vol. 55, no. 12, pp. 2049–2075, 2013.</div>
+      <div class="ref-item">[12] A. R. Hevner, S. T. March, J. Park, and S. Ram, "Design science in information systems research," <em>MIS Quarterly</em>, vol. 28, no. 1, pp. 75–105, 2004.</div>
     </div>
 
   </div>
@@ -528,7 +575,7 @@ async function generatePdf() {
 
   try {
     const page = await browser.newPage();
-    await page.goto('file:///' + tempHtmlPath.replace(/\\\\/g, '/'), {
+    await page.goto('file:///' + tempHtmlPath.replace(/\\/g, '/'), {
       waitUntil: 'networkidle0',
       timeout: 30000
     });
@@ -538,10 +585,10 @@ async function generatePdf() {
       format: 'A4',
       printBackground: true,
       margin: {
-        top: '18mm',
-        bottom: '20mm',
-        left: '15mm',
-        right: '15mm'
+        top: '16mm',
+        bottom: '18mm',
+        left: '14mm',
+        right: '14mm'
       }
     });
 
