@@ -102,3 +102,35 @@ def test_tracker_eduroam_telemetry_elements():
     assert "Registro de Cobertura e Transições de Sinal" in response.text
 
 
+def test_eduroam_batch_chronological_sorting():
+    """Garante que o lote offline ordena os pontos cronologicamente pelo client_timestamp."""
+    from app.services import collaborative_buffer
+    collaborative_buffer._points.clear()
+
+    batch_payload = {
+        "points": [
+            {
+                "latitude": -7.1448,
+                "longitude": -34.8404,
+                "accuracy": 8.0,
+                "speed": 30.0,
+                "client_timestamp": "2026-10-17T16:02:00Z",
+                "wifi_ssid": "eduroam",
+            },
+            {
+                "latitude": -7.13955,
+                "longitude": -34.85062,
+                "accuracy": 8.0,
+                "speed": 10.0,
+                "client_timestamp": "2026-10-17T16:00:00Z",
+                "wifi_ssid": "eduroam",
+            },
+        ]
+    }
+    response = client.post("/api/v1/telemetry/collaborative/batch", json=batch_payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["accepted_points"] == 2
+    assert collaborative_buffer._points[-1].latitude == -7.1448
+
+

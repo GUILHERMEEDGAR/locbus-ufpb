@@ -36,7 +36,7 @@ CORREDOR_ROTA_WAYPOINTS = [
     {"lat": -7.13600, "lon": -34.84650},  # 3. Editora UFPB
     {"lat": -7.13804, "lon": -34.84950},  # 4. CCTA
     {"lat": -7.13955, "lon": -34.85062},  # 5. CCHLA
-    {"lat": -7.14493, "lon": -34.85066},  # 6. CT
+    {"lat": -7.14194, "lon": -34.85038},  # 6. CT
     {"lat": -7.14187, "lon": -34.84888},  # 7. CCJ
     {"lat": -7.14100, "lon": -34.84661},  # 8. CBIOTEC
     {"lat": -7.13944, "lon": -34.84522},  # 9. CCEN
@@ -153,6 +153,7 @@ class CollaborativeBuffer:
             speed=data.speed,
             heading=data.heading,
             received_at=now,
+            client_timestamp=data.client_timestamp,
             is_valid=True,
             wifi_ssid=data.wifi_ssid,
             wifi_rssi=data.wifi_rssi,
@@ -166,10 +167,20 @@ class CollaborativeBuffer:
     def add_batch(self, points: List[CollaborativeIn]) -> tuple[int, int, str]:
         """
         Processa um lote de pontos acumulados offline (Store-and-Forward da eduroam).
-        Retorna (total, aceitos, mensagem descritiva).
+        Ordena cronologicamente por client_timestamp quando disponível e retorna (total, aceitos, mensagem).
         """
+        def _sort_key(item: tuple[int, CollaborativeIn]):
+            idx, pt = item
+            if pt.client_timestamp is None:
+                return (1, datetime.max.replace(tzinfo=timezone.utc), idx)
+            ts = pt.client_timestamp
+            if ts.tzinfo is None:
+                ts = ts.replace(tzinfo=timezone.utc)
+            return (0, ts, idx)
+
+        ordered_points = [pt for _, pt in sorted(enumerate(points), key=_sort_key)]
         accepted = 0
-        for pt in points:
+        for pt in ordered_points:
             ok, _ = self.add_point(pt)
             if ok:
                 accepted += 1
@@ -353,7 +364,7 @@ stop_reports_manager = StopReportsManager()
 
 
 PARADAS_OFICIAIS = [
-    {"nome": "Terminal CCHLA (Campus I)", "lat": -7.1397, "lon": -34.8450, "ordem": 1},
+    {"nome": "Terminal CCHLA (Campus I)", "lat": -7.13955, "lon": -34.85062, "ordem": 1},
     {"nome": "Reitoria / Praça da Alegria", "lat": -7.1425, "lon": -34.8420, "ordem": 2},
     {"nome": "CCS / HU Lauro Wanderley", "lat": -7.1438, "lon": -34.8410, "ordem": 3},
     {"nome": "Via Expressa Padre Zé", "lat": -7.1455, "lon": -34.8398, "ordem": 4},
@@ -412,8 +423,8 @@ def calcular_status_geral() -> StatusLocBUS:
             destino = "CCHLA"
             centro_atual = "Terminal CI (Mangabeira) - Ponto Final / Embarque Retorno"
             eta = "Aguardando partida"
-            modo_rastreamento = "BLE_FIXO"
-            confiabilidade = "Presença Física Confirmada no Terminal (BLE)"
+            modo_rastreamento = "TRACKER_EMBARCADO"
+            confiabilidade = "Presença Confirmada no Terminal (Tracker / eduroam)"
             dist_restante = 0.0
         # Se estiver muito próximo ao CCHLA (< 350m), chegou ao CCHLA e o próximo sentido é ida (CI)
         elif dist_cchla < 0.35:
@@ -423,8 +434,8 @@ def calcular_status_geral() -> StatusLocBUS:
             destino = "CI"
             centro_atual = "Terminal CCHLA (Campus I) - Ponto de Partida / Embarque"
             eta = "Aguardando partida"
-            modo_rastreamento = "BLE_FIXO"
-            confiabilidade = "Presença Física Confirmada no Terminal (BLE)"
+            modo_rastreamento = "TRACKER_EMBARCADO"
+            confiabilidade = "Presença Confirmada no Terminal (Tracker / eduroam)"
             dist_restante = 0.0
         else:
             # Em trânsito entre pontos
@@ -544,7 +555,7 @@ def obter_historico_viagens() -> dict:
                         "chegada": h_chegada,
                         "duracao_min": duracao,
                         "status": "Concluída",
-                        "fonte": "Telemetria BLE/Checkpoint"
+                        "fonte": "Telemetria Embarcada / Checkpoint"
                     })
                     contagem_por_dia[day_str] = contagem_por_dia.get(day_str, 0) + 1
                     i += 2
@@ -575,7 +586,7 @@ def obter_historico_viagens() -> dict:
                 "chegada": cheg,
                 "duracao_min": dur,
                 "status": "Concluída",
-                "fonte": "Telemetria BLE/Checkpoint"
+                "fonte": "Telemetria Embarcada / Checkpoint"
             })
             contagem_por_dia[d] = contagem_por_dia.get(d, 0) + 1
             duracoes.append(dur)
@@ -638,7 +649,7 @@ def obter_itinerario_oficial() -> dict:
             {"ordem": 3, "nome": "Editora UFPB", "sigla": "EDITORA", "detalhe": "Alameda da Oiticica / Gráfica e Editora Universitária", "coords": [-7.13600, -34.84650]},
             {"ordem": 4, "nome": "CCTA (Centro de Comunicação, Turismo e Artes)", "sigla": "CCTA", "detalhe": "Parada CCTA / Rádio e TV Universitária", "coords": [-7.13804, -34.84950]},
             {"ordem": 5, "nome": "CCHLA (Centro de Ciências Humanas, Letras e Artes)", "sigla": "CCHLA", "detalhe": "Terminal e Girador do CCHLA / Praça da Alegria", "coords": [-7.13955, -34.85062]},
-            {"ordem": 6, "nome": "CT (Centro de Tecnologia)", "sigla": "CT", "detalhe": "Girador e Blocos do Centro de Tecnologia", "coords": [-7.14493, -34.85066]},
+            {"ordem": 6, "nome": "CT (Centro de Tecnologia)", "sigla": "CT", "detalhe": "Blocos e Parada do Centro de Tecnologia (CT)", "coords": [-7.14194, -34.85038]},
             {"ordem": 7, "nome": "CCJ (Centro de Ciências Jurídicas)", "sigla": "CCJ", "detalhe": "Faculdade de Direito / Praça do CCJ", "coords": [-7.14187, -34.84888]},
             {"ordem": 8, "nome": "Centro de Biotecnologia", "sigla": "CBIOTEC", "detalhe": "CBIOTEC / Prédio de Pesquisa e Pós-Graduação", "coords": [-7.14100, -34.84661]},
             {"ordem": 9, "nome": "CCEN (Centro de Ciências Exatas e da Natureza)", "sigla": "CCEN", "detalhe": "Parada CCEN / Química, Física e Matemática", "coords": [-7.13944, -34.84522]},

@@ -13,4 +13,4 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "LocBUS"
-include ':app'
+include ':app', ':mockgps'

@@ -22,7 +22,7 @@ const CAMPUS_BUS_STOPS = [
   { id: 3, name: "Editora UFPB", sigla: "EDITORA", desc: "Alameda da Oiticica / Gráfica e Editora Universitária", coords: [-7.13600, -34.84650] },
   { id: 4, name: "CCTA (Centro de Comunicação, Turismo e Artes)", sigla: "CCTA", desc: "Parada CCTA / Rádio e TV Universitária", coords: [-7.13804, -34.84950] },
   { id: 5, name: "CCHLA (Centro de Ciências Humanas, Letras e Artes)", sigla: "CCHLA", desc: "Terminal e Girador do CCHLA", coords: [-7.13955, -34.85062] },
-  { id: 6, name: "CT (Centro de Tecnologia)", sigla: "CT", desc: "Girador e Blocos de Engenharia / Tecnologia", coords: [-7.14493, -34.85066] },
+  { id: 6, name: "CT (Centro de Tecnologia)", sigla: "CT", desc: "Blocos e Parada do Centro de Tecnologia (CT)", coords: [-7.14194, -34.85038] },
   { id: 7, name: "CCJ (Centro de Ciências Jurídicas)", sigla: "CCJ", desc: "Faculdade de Direito / Praça do CCJ", coords: [-7.14187, -34.84888] },
   { id: 8, name: "Centro de Biotecnologia", sigla: "CBIOTEC", desc: "CBIOTEC / Prédio de Pesquisa e Pós-Graduação", coords: [-7.14100, -34.84661] },
   { id: 9, name: "CCEN (Centro de Ciências Exatas e da Natureza)", sigla: "CCEN", desc: "Parada CCEN / Química, Física e Matemática", coords: [-7.13944, -34.84522] },
@@ -74,7 +74,15 @@ function initMap() {
     attribution: '&copy; OpenStreetMap'
   });
 
-  // Define Google Maps Ruas como camada ativa padrão
+  // Define Google Maps Ruas como camada ativa padrão, com fallback automático para OSM
+  let googleTileFallbackTriggered = false;
+  googleRoadLayer.on('tileerror', () => {
+    if (!googleTileFallbackTriggered && map && !map.hasLayer(osmLayer)) {
+      googleTileFallbackTriggered = true;
+      map.removeLayer(googleRoadLayer);
+      osmLayer.addTo(map);
+    }
+  });
   googleRoadLayer.addTo(map);
 
   // Traçado viário realista: usa a geometria exata calculada via OSRM (curvas reais do asfalto)

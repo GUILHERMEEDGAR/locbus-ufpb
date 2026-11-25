@@ -3,19 +3,21 @@
  * Implementa cache inteligente para funcionamento offline, mapa offline resiliente e navegação instantânea.
  */
 
-const CACHE_NAME = 'locbus-v1.5.0-cache';
+const CACHE_NAME = 'locbus-v2.3.0-cache';
 const TILES_CACHE_NAME = 'locbus-map-tiles';
 
 // Recursos essenciais do App Shell
 const PRECACHE_ASSETS = [
   '/',
+  '/tracker',
   '/manifest.webmanifest',
-  '/static/css/style.css?v=1.5.0',
-  '/static/js/route_geometry.js?v=1.5.0',
-  '/static/js/map.js?v=1.5.0',
-  '/static/js/crowdsource.js?v=1.5.0',
-  '/static/js/tabs.js?v=1.5.0',
-  '/static/js/pwa.js?v=1.5.0',
+  '/manifest-tracker.webmanifest',
+  '/static/css/style.css?v=2.3.0',
+  '/static/js/route_geometry.js?v=2.3.0',
+  '/static/js/map.js?v=2.3.0',
+  '/static/js/crowdsource.js?v=2.3.0',
+  '/static/js/tabs.js?v=2.3.0',
+  '/static/js/pwa.js?v=2.3.0',
   '/static/icons/icon.svg',
   '/static/icons/icon-192.png',
   '/static/icons/icon-512.png',
@@ -28,7 +30,7 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[SW] Pré-carregando App Shell do LocBUS v1.4.3...');
+      console.log('[SW] Pré-carregando App Shell do LocBUS v2.3.0...');
       return cache.addAll(PRECACHE_ASSETS).catch((err) => {
         console.warn('[SW] Aviso no precache inicial:', err);
       });

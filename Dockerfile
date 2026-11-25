@@ -24,5 +24,5 @@ COPY . .
 # Expõe a porta padrão
 EXPOSE 8000
 
-# Inicializa o servidor FastAPI com suporte dinâmico à variável $PORT (Render / Nuvem / CEAR)
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Inicializa o servidor FastAPI com suporte dinâmico à variável $PORT (1 worker devido ao estado em memória)
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1"]

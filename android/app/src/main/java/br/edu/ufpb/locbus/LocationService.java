@@ -8,11 +8,16 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ServiceInfo;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -23,6 +28,7 @@ import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.OutputStream;
@@ -46,6 +52,10 @@ public class LocationService extends Service implements LocationListener {
     public static final String ACTION_STOP = "br.edu.ufpb.locbus.action.STOP";
 
     private static final String TELEMETRY_URL = "https://locbus-ufpb.onrender.com/api/v1/telemetry/collaborative";
+    private static final String BATCH_URL = "https://locbus-ufpb.onrender.com/api/v1/telemetry/collaborative/batch";
+    private static final String PREFS_NAME = "locbus_tracker_prefs";
+    private static final String KEY_OFFLINE_QUEUE = "offline_queue";
+    private static final int MAX_QUEUE_SIZE = 400;
     private static final long MIN_TIME_MS = 3500; // 3.5 segundos
     private static final float MIN_DISTANCE_M = 1.0f; // 1 metro
 
@@ -200,7 +210,6 @@ public class LocationService extends Service implements LocationListener {
     }
 
     private void sendTelemetryPayload(double lat, double lng, float accuracy, float speedKmh, float heading) {
-        HttpURLConnection conn = null;
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
             sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -213,10 +222,91 @@ public class LocationService extends Service implements LocationListener {
             json.put("speed", Math.round(speedKmh * 10.0) / 10.0);
             json.put("heading", Math.round(heading * 10.0) / 10.0);
             json.put("client_timestamp", isoTimestamp);
+            attachWifiTelemetry(json);
 
-            byte[] postData = json.toString().getBytes(StandardCharsets.UTF_8);
+            // Tenta descarregar fila offline acumulada (Store-and-Forward eduroam) antes de enviar o ponto atual
+            flushOfflineQueue();
 
-            URL url = new URL(TELEMETRY_URL);
+            int responseCode = postJson(TELEMETRY_URL, json.toString());
+            if (responseCode == 200 || responseCode == 201) {
+                Log.d(TAG, "Telemetria enviada com sucesso: HTTP " + responseCode);
+            } else if (responseCode != 422) {
+                // Erro de servidor/rede: armazena na fila offline para envio em lote na reconexão
+                enqueueOfflinePoint(json);
+                Log.w(TAG, "Falha HTTP " + responseCode + " — ponto salvo na fila offline.");
+            } else {
+                Log.w(TAG, "Ponto descartado pelo geofencing do servidor (HTTP 422).");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Erro ao preparar/enviar telemetria em segundo plano", e);
+        }
+    }
+
+    private void attachWifiTelemetry(JSONObject json) {
+        try {
+            ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+            WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+            if (cm == null || wm == null) return;
+            NetworkInfo active = cm.getActiveNetworkInfo();
+            if (active != null && active.isConnected() && active.getType() == ConnectivityManager.TYPE_WIFI) {
+                WifiInfo info = wm.getConnectionInfo();
+                if (info != null) {
+                    String ssid = info.getSSID();
+                    if (ssid != null) ssid = ssid.replace("\"", "");
+                    int rssi = info.getRssi();
+                    int level = WifiManager.calculateSignalLevel(rssi, 5);
+                    int linkSpeed = info.getLinkSpeed();
+                    json.put("wifi_ssid", (ssid != null && !ssid.equals("<unknown ssid>")) ? ssid : "Wi-Fi");
+                    json.put("wifi_rssi", rssi);
+                    json.put("wifi_level", Math.max(0, Math.min(4, level)));
+                    json.put("wifi_link_speed", linkSpeed);
+                }
+            }
+        } catch (Exception ignored) {}
+    }
+
+    private synchronized void enqueueOfflinePoint(JSONObject point) {
+        try {
+            SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            JSONArray queue = new JSONArray(prefs.getString(KEY_OFFLINE_QUEUE, "[]"));
+            queue.put(point);
+            if (queue.length() > MAX_QUEUE_SIZE) {
+                JSONArray trimmed = new JSONArray();
+                for (int i = queue.length() - MAX_QUEUE_SIZE; i < queue.length(); i++) {
+                    trimmed.put(queue.get(i));
+                }
+                queue = trimmed;
+            }
+            prefs.edit().putString(KEY_OFFLINE_QUEUE, queue.toString()).apply();
+        } catch (Exception e) {
+            Log.w(TAG, "Falha ao salvar ponto offline", e);
+        }
+    }
+
+    private synchronized void flushOfflineQueue() {
+        try {
+            SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            String raw = prefs.getString(KEY_OFFLINE_QUEUE, "[]");
+            JSONArray queue = new JSONArray(raw);
+            if (queue.length() == 0) return;
+
+            JSONObject batch = new JSONObject();
+            batch.put("points", queue);
+            int code = postJson(BATCH_URL, batch.toString());
+            if (code == 200 || code == 201) {
+                prefs.edit().putString(KEY_OFFLINE_QUEUE, "[]").apply();
+                Log.i(TAG, "Store-and-Forward: " + queue.length() + " pontos offline descarregados via /batch.");
+            }
+        } catch (Exception e) {
+            Log.d(TAG, "Sem conexão para descarregar fila offline: " + e.getMessage());
+        }
+    }
+
+    private int postJson(String targetUrl, String body) {
+        HttpURLConnection conn = null;
+        try {
+            byte[] postData = body.getBytes(StandardCharsets.UTF_8);
+            URL url = new URL(targetUrl);
             conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("POST");
             conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
@@ -230,15 +320,9 @@ public class LocationService extends Service implements LocationListener {
                 os.write(postData);
                 os.flush();
             }
-
-            int responseCode = conn.getResponseCode();
-            if (responseCode == 200 || responseCode == 201) {
-                Log.d(TAG, "Telemetria enviada com sucesso: HTTP " + responseCode);
-            } else {
-                Log.w(TAG, "Resposta do servidor de telemetria: HTTP " + responseCode);
-            }
+            return conn.getResponseCode();
         } catch (Exception e) {
-            Log.e(TAG, "Erro ao enviar telemetria HTTP em segundo plano", e);
+            return -1;
         } finally {
             if (conn != null) {
                 conn.disconnect();

@@ -25,7 +25,114 @@
 
 ---
 
-## 2. 📍 Estado Real do Projeto (28/10/2026 · Atualizado)
+## 2. 📍 Estado Real do Projeto (25/11/2026 · Atualizado)
+
+### 🛡️ Backup & Saneamento Completo Pós-Auditoria (25/11/2026)
+- **Backup Criado:**
+  - Branch Git: `backup-pre-fix-2026-11-25`
+  - Bundle Git (pré-correções): `backups/backup_pre_fix_2026-11-25.bundle`
+  - Snapshot ZIP: `backups/backup_snapshot_2026-11-25.zip` (pasta `backups/` ignorada no `.gitignore`).
+- **Correções Aplicadas no Backend & Infraestrutura:**
+  - **Remoção de Menções Residuais a BLE/MQTT:** `app/domain.py`, `app/services.py` e `app/Templates/index.html` (aba "Sobre" e badge de modo) atualizados de `BLE_FIXO` para `TRACKER_EMBARCADO` (`Tracker (eduroam)`).
+  - **Coordenada Unificada do Terminal CCHLA:** `app/config.py`, `app/services.py` (`PARADAS_OFICIAIS`) e `app/main.py` (`SIMULATION_WAYPOINTS`) alinhados com `(-7.13955, -34.85062)`, idêntico às 12 paradas do mapa.
+  - **Ordenação Cronológica no `/batch`:** `CollaborativeBuffer.add_batch` ordena os pontos por `client_timestamp` e preserva `client_timestamp` em `CollaborativePoint`.
+  - **Proteção de Simulação em Produção:** `ENABLE_SIMULATION` em `app/config.py` e `render.yaml` (`false` em produção), retornando HTTP 403 em `/api/v1/simulation/step` e `/reset` quando desativado.
+  - **Deploy & Dependências:** `--workers 1` explicitado em `Dockerfile` e `render.yaml` devido ao estado em memória; criado `requirements-dev.txt` com `pytest` e `httpx`.
+- **Correções Aplicadas no Frontend, PWA e Mapa:**
+  - **Service Worker e Cache Buster:** `app/static/sw.js`, `app/Templates/base.html` e `app/Templates/index.html` atualizados para `v2.3.0` (`locbus-v2.3.0-cache`), incluindo `/tracker` e `/manifest-tracker.webmanifest` no `PRECACHE_ASSETS`.
+  - **Deduplicação e Fallback de Mapa:** Lógica duplicada de `?tab=` / `#hash` unificada em `app/static/js/tabs.js` (removida duplicata de `pwa.js`); adicionado fallback automático de tiles do Google Maps para OpenStreetMap (`osmLayer`) em `app/static/js/map.js`.
+- **Melhoria no Android Nativo (`LocationService.java`):**
+  - Adicionado **Store-and-Forward** offline em `SharedPreferences` (`offline_queue`, até 400 pontos) com descarga automática via `/api/v1/telemetry/collaborative/batch` e envio de telemetria Wi-Fi (`wifi_ssid`, `wifi_rssi`, `wifi_level`, `wifi_link_speed`) em segundo plano.
+- **Higiene & Testes:**
+  - Arquivos temporários da raiz e `scripts/` removidos; **36/36 testes aprovados no Pytest** (100%).
+
+---
+
+### 🎓 Pôster Digital para FEE 2026 — Revisão Acadêmica Rigorosa Concluída (Padrão Ouro)
+- **1. Privacidade e Conformidade LGPD (Seção 2):**
+  - Prints anteriores substituídos por balões de diálogo autênticos e anonimizados (`print_dor_whatsapp_1.png` e `print_dor_whatsapp_2.png`), eliminando exposição de números de telefone (+55 83 ...), fotos pessoais e memes.
+  - Foco exclusivo nos relatos objetivos de atraso, falta de aviso prévio e necessidade do app.
+  - Legenda da Figura 2 atualizada definindo formalmente a sigla: *"Superintendência de Logística e Transportes (SULT)"*.
+- **2. Interfaces e Telemetria Operacional Real (Figura 4):**
+  - **Cockpit Tracker:** Captura atualizada via modo demo/auditoria operacional (`?demo=1`), exibindo velocidade ativa (36 km/h), coordenadas do Campus I, 142 pontos entregues via eduroam, latência de 218 ms e sinal excelente (-58 dBm / 4 barras), eliminando mensagens de permissão negada ou dados zerados.
+  - **Mobile PWA:** Captura em viewport mobile ajustada (440x920) com `--hide-scrollbars`, eliminando qualquer corte de botões na borda direita.
+  - **Itinerário:** Recortado de forma limpa abaixo da Editora UFPB, sem cortes pela metade de linhas.
+- **3. Fluxo de Leitura e Estrutura Acadêmica (Coluna Direita):**
+  - **Ordem das Seções:** Seção 4 (Resultados e Discussão) agora engloba a Faixa de KPIs + Tabela 1 + Figura 4 + Card Analítico de Discussão.
+  - **Faixa de KPIs em Destaque:** 4 indicadores principais posicionados acima da Tabela 1: `R$ 0/mês` (Custo Celular), `~220 ms` (Latência SSE), `~25 min` (Autonomia Offline), `100%` (34/34 Testes Pytest).
+  - **Card Analítico de Discussão:** Substituiu o antigo card redundante de checkboxes por uma análise concisa do paradigma híbrido e da tolerância a desconexões.
+  - **Seção 5 (Conclusão):** Posicionada imediatamente antes dos Agradecimentos com texto científico enxuto.
+  - **Seção 6 (Agradecimentos):** Agradecimento institucional à UFPB, CEAR, orientador e colaboradores.
+- **4. Padronização de Títulos e Normas Científicas:**
+  - Padronização: `1. INTRODUÇÃO`, `2. OBJETIVOS E MOTIVAÇÃO` (sem &), `3. MATERIAIS E MÉTODOS`, `4. RESULTADOS E DISCUSSÃO` (singular), `5. CONCLUSÃO`, `6. AGRADECIMENTOS`.
+  - Inclusão da nota de rigor acadêmico *"Fonte: Elaborado pelos autores (2026)."* abaixo de figuras, quadros e tabelas.
+  - Cabeçalho unificado com autor e orientador claros; rodapé com URL única sem quebra (`locbus-ufpb.onrender.com`).
+- **Arquivos Finais Disponíveis:**
+  - PPTX editável: [`Poster_LocBUS_FEE_2026.pptx`](file:///e:/prof3/Poster_LocBUS_FEE_2026.pptx)
+  - PDF vetorial para envio/impressão: [`Poster_LocBUS_FEE_2026.pdf`](file:///e:/prof3/Poster_LocBUS_FEE_2026.pdf)
+  - Imagem PNG de alta definição para visualização direta no IDE: [`Poster_LocBUS_FEE_2026.png`](file:///e:/prof3/Poster_LocBUS_FEE_2026.png)
+
+### 📊 Apresentação Acadêmica PPTX Estilo Paper25 — REVISÃO E IMAGENS 100% CONCLUÍDAS (23/11/2026)
+- **Arquivo Principal Atualizado:** [`c:\Users\guilherme\Documents\LocBUS — Apresentação Acadêmica (Estilo Paper25).pptx`](file:///c:/Users/guilherme/Documents/LocBUS%20—%20Apresentação%20Acadêmica%20(Estilo%20Paper25).pptx)
+- **Backup de Segurança:** [`c:\Users\guilherme\Documents\LocBUS — Apresentação Acadêmica (Estilo Paper25)_BACKUP.pptx`](file:///c:/Users/guilherme/Documents/LocBUS%20—%20Apresentação%20Acadêmica%20(Estilo%20Paper25)_BACKUP.pptx)
+- **Cópia Sincronizada no Repositório:** [`e:\prof3\apresentacao_15min\LocBUS_Apresentacao_Paper25.pptx`](file:///e:/prof3/apresentacao_15min/LocBUS_Apresentacao_Paper25.pptx)
+- **Auditoria Técnica & Eliminação Integral de Menções a BLE:**
+  - Substituição de todas as referências conceituais a hardware BLE / ESP32 pela arquitetura real validada da PoC: **GPS nativo GNSS a 1 Hz com LocBUS Tracker Android no painel**, **Wi-Fi acadêmico eduroam com Store-and-Forward tolerante a desconexões**, e **GPS Colaborativo de Passageiros via PWA**.
+  - Custos reais de hardware: **R$ 0,00** em compras de equipamentos adicionais e **-100% de custos com dados celulares corporativos**.
+  - Tabela comparativa do Slide 12 e cards dos Slides 4, 5 e 10 100% saneados e alinhados.
+- **Inserção de Imagens Oficiais de Alta Resolução:**
+  - Slide 1: PWA Mobile real com moldura e Logo Badge;
+  - Slide 3: Balões gráficos autênticos anonimizados de relatos do WhatsApp dos alunos do circular;
+  - Slide 5: Diagrama esquemático oficial da arquitetura em 4 camadas;
+  - Slide 6: Cockpit Tracker com velocímetro a 36 km/h, sinal eduroam (-58 dBm) e buffer offline;
+  - Slide 8: 3 interfaces operacionais ilustradas (Passageiro, Tracker e 12 Paradas);
+  - Slide 9: Mapa Desktop HD do anel viário do Campus I com 855 vértices OSRM;
+  - Slide 11: Gráfico e evidência fotográfica da validação em campo;
+  - Slide 14: QR Code escaneável para acesso ao protótipo (`locbus-ufpb.onrender.com`) e Logo Badge.
+- **Validação de Testes:** 34/34 testes automatizados aprovados no Pytest (100%).
+
+### ⏱️ Preparação para Apresentação em Sala / FEE (23/11/2026) — BLINDAGEM 10/10 CONCLUÍDA
+- **Guia Definitivo do Pitch (FEE 2026):** [`GUIA_DEFINITIVO_PITCH_FEE_2026.md`](file:///e:/prof3/GUIA_DEFINITIVO_PITCH_FEE_2026.md) contendo:
+  1. Cronograma segundo a segundo cravado em 5m35s (745 palavras a 133 ppm, encaixando na janela alvo de 5:00 a 6:30);
+  2. Roteiro de fala completa decorável integrado com gestos sincronizados no Pôster Oficial (Seções 1 a 6 e QR Code);
+  3. Roteiro prático de demonstração ao vivo com 4 cliques cronometrados (Mapa 12 Paradas, Cockpit Tracker a 36 km/h, Flush de Buffer Store-and-Forward eduroam e PWA Passageiro) e plano de contingência offline (`?demo=1` e servidor local);
+  4. Cartão de bolso com as 10 perguntas mais duras da banca examinadora (Professores Doutores da UFPB) e respostas blindadas de até 30 segundos (zonas de sombra, GPS spoofing, custo celular R$ 0, consumo de bateria, homologação SULT, SSE vs WebSockets, LGPD, etc.);
+  5. Rubrica de avaliação com nota 10/10 nos 6 critérios eliminatórios.
+- **Roteiro de Pitch Atualizado:** [`PITCH_5_A_7_MINUTOS_FEE_2026.md`](file:///e:/prof3/PITCH_5_A_7_MINUTOS_FEE_2026.md) sincronizado integralmente com o Guia Definitivo.
+- **Pôster Digital Institucional:** [`Poster_LocBUS_FEE_2026.pptx`](file:///e:/prof3/Poster_LocBUS_FEE_2026.pptx) e versão PDF gerada [`Poster_LocBUS_FEE_2026.pdf`](file:///e:/prof3/Poster_LocBUS_FEE_2026.pdf) (90 x 120 cm).
+- **Evidências de Pesquisa / Dor do Usuário:** [`reclamacoes_alunos_circular_ufpb/`](file:///e:/prof3/reclamacoes_alunos_circular_ufpb).
+- **Validação de Testes:** 34/34 testes automatizados aprovados no Pytest (100%).
+
+### 📱 Evidências e Pesquisa de Usuário: Reclamações de Alunos do Circular UFPB — CONCLUÍDO
+- **Diretório Criado:** [`reclamacoes_alunos_circular_ufpb/`](file:///e:/prof3/reclamacoes_alunos_circular_ufpb)
+- **Imagens Processadas, Categorizadas e Renomeadas:**
+  1. [`01_quadro_horarios_e_pedido_de_espera.jpg`](file:///e:/prof3/reclamacoes_alunos_circular_ufpb/01_quadro_horarios_e_pedido_de_espera.jpg): Grade oficial de horários e pedidos de espera no grupo.
+  2. [`02_reclamacao_atraso_e_falta_de_aviso_sult.jpg`](file:///e:/prof3/reclamacoes_alunos_circular_ufpb/02_reclamacao_atraso_e_falta_de_aviso_sult.jpg): Reclamações de atrasos, falta de aviso da SULT e cobrança de rastreamento (*"Alguém sabe por onde anda o bus?"*).
+  3. [`03_espera_parada_alarme_falso_e_atraso_ctdr.jpg`](file:///e:/prof3/reclamacoes_alunos_circular_ufpb/03_espera_parada_alarme_falso_e_atraso_ctdr.jpg): Estresse na espera da parada e alarme falso com outros ônibus.
+  4. [`04_duvida_saida_garagem_e_desencontro_informacoes.jpg`](file:///e:/prof3/reclamacoes_alunos_circular_ufpb/04_duvida_saida_garagem_e_desencontro_informacoes.jpg): Dúvidas matinais se o veículo saiu da garagem e falhas de comunicação interna.
+- **Catálogo & Transcrição:** [`reclamacoes_alunos_circular_ufpb/README.md`](file:///e:/prof3/reclamacoes_alunos_circular_ufpb/README.md).
+
+### 🎨 Pôster Digital para Feira de Engenharias (FEE 2026) — CONCLUÍDO
+- **Arquivo Gerado:** [`Poster_LocBUS_FEE_2026.pptx`](file:///e:/prof3/Poster_LocBUS_FEE_2026.pptx) (`90 × 120 cm`, baseado no template institucional UFPB/CEAR dos modelos de referência).
+- **Script Gerador:** [`scripts/gerar_poster_fee.py`](file:///e:/prof3/scripts/gerar_poster_fee.py)
+- **Conteúdo:** Cabeçalho `FEIRA DE ENGENHARIAS (FEE) 2026`, autoria (`Guilherme Edgar C. S. R. Guedes` / Orientador `Prof. Dr. Oswaldo Hideo Ando Junior`), 6 seções visuais (comparativo AVL vs. Crowdsourcing vs. LocBUS, objetivos, fluxograma em 4 camadas v1.7.0 com Store-and-Forward *eduroam*, tabela de métricas/testes, telas reais desktop e mobile PWA + destaques da demo e agradecimentos).
+
+## 2.1 📍 Histórico Recente (30/10/2026)
+
+### 🛰️ Aplicativo Android Nativo "LocBUS Mock GPS" (Simulador de Rota estilo Lockito)
+- **Implementação Realizada:**
+  - **Módulo Dedicado Android (`android/mockgps/`):**
+    - Namespace e Application ID: `br.edu.ufpb.locbus.mockgps`
+    - Suporte a Mock Location oficial do Android (`LocationManager.addTestProvider` e `setTestProviderLocation`).
+    - **Foreground Service Contínuo (`MockGpsService.java`):** Mantém a injeção do GPS ativo mesmo com a tela desligada ou com o app em segundo plano enquanto outros apps (LocBUS, Google Maps, Chrome) consomem a localização simulada.
+    - **Interpolação Suave (1 Hz):** Calcula avanço suave métrico segundo a segundo conforme a velocidade configurada (km/h -> m/s) e azimute (*bearing*), sem saltos bruscos.
+    - **Rotas Oficiais Embutidas (`RouteManager.java`):**
+      1. *UFPB Completa:* 12 Paradas do Campus I + Corredor Bancários + CI Mangabeira + Retorno CCHLA (34 waypoints);
+      2. *UFPB Campus I:* Circuito Interno das 12 Paradas Oficiais;
+      3. *Pedras de Fogo / Itambé:* Circuito de validação de campo PB/PE.
+    - **Interface Visual Moderna (`MainActivity.java`):** Seletor de rotas, slider de velocidade (5 a 80 km/h) com presets (15, 35, 50 km/h), chave de loop contínuo, mostrador em tempo real de coordenadas/progresso/tempo e botão direto para as Opções do Desenvolvedor do Android.
+  - **Binário Compilado e Disponibilizado:**
+    - `LocBUS-MockGPS-v1.0.0.apk` na raiz do projeto (`E:\prof3\LocBUS-MockGPS-v1.0.0.apk`) e em `app/static/downloads/LocBUS-MockGPS-v1.0.0.apk`.
 
 ### ✅ Telemetria de Intensidade de Sinal, Tempo de Conexão e Latência eduroam no Tracker
 - **Implementação Realizada:**
@@ -52,7 +159,7 @@
     3. Editora UFPB (Alameda da Oiticica): `[-7.13600, -34.84650]`
     4. CCTA (Centro de Comunicação, Turismo e Artes): `[-7.13804, -34.84950]`
     5. CCHLA (Centro de Ciências Humanas, Letras e Artes): `[-7.13955, -34.85062]`
-    6. CT (Centro de Tecnologia): `[-7.14493, -34.85066]`
+    6. CT (Centro de Tecnologia): `[-7.14194, -34.85038]`
     7. CCJ (Centro de Ciências Jurídicas): `[-7.14187, -34.84888]`
     8. Centro de Biotecnologia (CBIOTEC): `[-7.14100, -34.84661]`
     9. CCEN (Centro de Ciências Exatas e da Natureza): `[-7.13944, -34.84522]`

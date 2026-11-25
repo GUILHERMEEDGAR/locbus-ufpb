@@ -179,8 +179,8 @@ def test_simulation_restart_isolation_from_previous_terminal():
 
     # 2. Usuário reinicia a simulação no Ponto A (Terminal CCHLA - Campus I)
     ponto_cchla = {
-        "latitude": -7.1397,
-        "longitude": -34.8450,
+        "latitude": -7.13955,
+        "longitude": -34.85062,
         "accuracy": 6.0,
         "speed": 0.0,
         "heading": 180.0
@@ -190,14 +190,27 @@ def test_simulation_restart_isolation_from_previous_terminal():
 
     latest_data = client.get("/api/v1/telemetry/collaborative/latest").json()
     assert latest_data["active"] is True
-    # A latitude consolidada DEVE ser exatamente no CCHLA (-7.1397), e não uma média no meio do caminho (-7.151)
-    assert abs(latest_data["latitude"] - (-7.1397)) < 0.001
-    assert abs(latest_data["longitude"] - (-34.8450)) < 0.001
+    # A latitude consolidada DEVE ser exatamente no CCHLA (-7.13955), e não uma média no meio do caminho (-7.151)
+    assert abs(latest_data["latitude"] - (-7.13955)) < 0.001
+    assert abs(latest_data["longitude"] - (-34.85062)) < 0.001
 
     status_cchla = client.get("/api/v1/status").json()
     assert status_cchla["origem"] == "CCHLA"
     assert status_cchla["destino"] == "CI"
+    assert status_cchla["modo_rastreamento"] == "TRACKER_EMBARCADO"
     assert "CCHLA" in status_cchla["centro_atual"]
+
+
+def test_simulation_disabled_in_production(monkeypatch):
+    """Garante que os endpoints de simulação retornam 403 quando ENABLE_SIMULATION=False."""
+    from app.config import settings
+    monkeypatch.setattr(settings, "ENABLE_SIMULATION", False)
+
+    res_step = client.post("/api/v1/simulation/step")
+    assert res_step.status_code == 403
+
+    res_reset = client.post("/api/v1/simulation/reset")
+    assert res_reset.status_code == 403
 
 
 

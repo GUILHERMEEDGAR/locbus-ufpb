@@ -13,7 +13,7 @@ class StatusLocBUS(BaseModel):
     centro_atual: str
     eta_minutos: str
     confiabilidade: str
-    modo_rastreamento: Literal["BLE_FIXO", "COLABORATIVO_PASSAGEIRO", "ESTIMADO"]
+    modo_rastreamento: Literal["TRACKER_EMBARCADO", "COLABORATIVO_PASSAGEIRO", "ESTIMADO"]
     ultima_atualizacao: str
     detalhes_colaboracao: Optional[dict] = None
     proxima_parada: Optional[str] = "Reitoria / Praça da Alegria"
@@ -54,6 +54,7 @@ class CollaborativePoint(BaseModel):
     speed: Optional[float] = None
     heading: Optional[float] = None
     received_at: datetime
+    client_timestamp: Optional[datetime] = None
     is_valid: bool = True
     wifi_ssid: Optional[str] = None
     wifi_rssi: Optional[int] = None

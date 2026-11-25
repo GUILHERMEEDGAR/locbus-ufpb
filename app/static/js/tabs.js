@@ -43,6 +43,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btn) btn.click();
   };
 
+  // Suporte a deep-linking via ?tab= ou #hash na URL (ex: /?tab=itinerario ou #historico)
+  const urlParams = new URLSearchParams(window.location.search);
+  const requestedTab = urlParams.get('tab') || window.location.hash.replace('#', '');
+  if (requestedTab) {
+    window.switchTab(requestedTab);
+  }
+
   // 2. Alternância de Turnos no Itinerário (Manhã, Tarde, Noite)
   const shiftButtons = document.querySelectorAll('.shift-btn');
   const shiftPanels = document.querySelectorAll('.shift-panel');

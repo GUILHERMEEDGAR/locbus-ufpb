@@ -75,8 +75,7 @@ public class MainActivity extends Activity {
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
                 // Injeta garantia de acoplamento da ponte nativa diretamente no DOM
-                String injectHook =
-                        "(function() {" +
+                String injectHook = "(function() {" +
                         "  if (window.__locbusBridgeAttached) return;" +
                         "  window.__locbusBridgeAttached = true;" +
                         "  console.log('[LocBUS] Conectando ponte nativa de segundo plano...');" +
@@ -124,9 +123,11 @@ public class MainActivity extends Activity {
                 if (webView != null) {
                     try {
                         String telemetryJson = new WebAppInterface().getWifiTelemetry();
-                        String js = "if (window.onNativeWifiUpdate) { window.onNativeWifiUpdate(" + telemetryJson + "); }";
+                        String js = "if (window.onNativeWifiUpdate) { window.onNativeWifiUpdate(" + telemetryJson
+                                + "); }";
                         webView.evaluateJavascript(js, null);
-                    } catch (Exception ignored) {}
+                    } catch (Exception ignored) {
+                    }
                 }
                 wifiPollHandler.postDelayed(this, 2500);
             }
@@ -208,16 +209,19 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void startBackgroundTracking() {
             runOnUiThread(() -> {
-                if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                if (checkSelfPermission(
+                        Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                     checkAndRequestPermissions();
-                    Toast.makeText(MainActivity.this, "Permissão de localização necessária para segundo plano.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(MainActivity.this, "Permissão de localização necessária para segundo plano.",
+                            Toast.LENGTH_LONG).show();
                     return;
                 }
 
                 Intent intent = new Intent(MainActivity.this, LocationService.class);
                 intent.setAction(LocationService.ACTION_START);
                 ContextCompat.startForegroundService(MainActivity.this, intent);
-                Toast.makeText(MainActivity.this, "Transmissão em 2º plano ATIVADA! (Tela pode ser bloqueada)", Toast.LENGTH_LONG).show();
+                Toast.makeText(MainActivity.this, "Transmissão em 2º plano ATIVADA! (Tela pode ser bloqueada)",
+                        Toast.LENGTH_LONG).show();
             });
         }
 
@@ -251,7 +255,8 @@ public class MainActivity extends Activity {
             try {
                 Context ctx = getApplicationContext();
                 WifiManager wifiManager = (WifiManager) ctx.getSystemService(Context.WIFI_SERVICE);
-                ConnectivityManager connManager = (ConnectivityManager) ctx.getSystemService(Context.CONNECTIVITY_SERVICE);
+                ConnectivityManager connManager = (ConnectivityManager) ctx
+                        .getSystemService(Context.CONNECTIVITY_SERVICE);
 
                 boolean isConnected = false;
                 boolean isWifi = false;

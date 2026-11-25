@@ -50,8 +50,8 @@
         </span>
         <span class="vehicle-id-badge">Ônibus #01</span>
         <span class="tracking-mode-badge" id="tracking-mode-badge">
-          {% if status.modo_rastreamento == 'BLE_FIXO' %}
-            BLE Fixo
+          {% if status.modo_rastreamento == 'TRACKER_EMBARCADO' %}
+            Tracker (eduroam)
           {% elif status.modo_rastreamento == 'COLABORATIVO_PASSAGEIRO' %}
             Colaborativo (GPS)
           {% else %}
@@ -110,7 +110,7 @@
             <option value="3" data-name="Editora UFPB" data-lat="-7.13600" data-lon="-34.84650">3. Editora UFPB (Alameda Oiticica)</option>
             <option value="4" data-name="CCTA (Comunicação e Artes)" data-lat="-7.13804" data-lon="-34.84950">4. CCTA (Comunicação e Artes)</option>
             <option value="5" data-name="CCHLA (Terminal Campus I)" data-lat="-7.13955" data-lon="-34.85062">5. CCHLA (Terminal Campus I)</option>
-            <option value="6" data-name="CT (Centro de Tecnologia)" data-lat="-7.14493" data-lon="-34.85066">6. CT (Centro de Tecnologia)</option>
+            <option value="6" data-name="CT (Centro de Tecnologia)" data-lat="-7.14194" data-lon="-34.85038">6. CT (Centro de Tecnologia)</option>
             <option value="7" data-name="CCJ (Direito)" data-lat="-7.14187" data-lon="-34.84888">7. CCJ (Direito / Ciências Jurídicas)</option>
             <option value="8" data-name="Centro de Biotecnologia" data-lat="-7.14100" data-lon="-34.84661">8. Centro de Biotecnologia (CBIOTEC)</option>
             <option value="9" data-name="CCEN (Exatas e Natureza)" data-lat="-7.13944" data-lon="-34.84522">9. CCEN (Ciências Exatas e Natureza)</option>
@@ -554,7 +554,7 @@
       <div class="sobre-badge">Arquitetura Integrada • UFPB</div>
       <h2 style="font-size: 22px; font-weight: 800; margin: 8px 0 6px 0;">LocBUS: Sistema Híbrido de Rastreamento Circular</h2>
       <p style="color: var(--text-muted); font-size: 13.5px; line-height: 1.5;">
-        O LocBUS é uma solução tecnológica desenvolvida para eliminar a imprevisibilidade do transporte universitário intercampi, unindo microcontroladores de baixo custo nos terminais com colaboração ativa dos passageiros em trânsito.
+        O LocBUS é uma solução tecnológica de custo zero em hardware desenvolvida para eliminar a imprevisibilidade do transporte universitário intercampi, unindo rastreamento embarcado via Wi-Fi acadêmico (eduroam) com colaboração ativa dos passageiros em trânsito.
       </p>
     </div>
 
@@ -564,32 +564,32 @@
       <div class="pipeline-diagram">
         <div class="pipe-step">
           <div class="pipe-icon">🚌</div>
-          <strong>ESP32 no Ônibus</strong>
-          <span>Beacon BLE transmissor</span>
+          <strong>LocBUS Tracker</strong>
+          <span>GNSS 1 Hz embarcado</span>
         </div>
         <div class="pipe-arrow">&rarr;</div>
         <div class="pipe-step">
-          <div class="pipe-icon">🚏</div>
-          <strong>ESP32 no Ponto</strong>
-          <span>Recepção BLE + Wi-Fi</span>
-        </div>
-        <div class="pipe-arrow">&rarr;</div>
-        <div class="pipe-step">
-          <div class="pipe-icon">☁️</div>
-          <strong>EMQX Broker</strong>
-          <span>MQTT sobre TLS</span>
+          <div class="pipe-icon">📶</div>
+          <strong>Rede eduroam</strong>
+          <span>Store-and-Forward offline</span>
         </div>
         <div class="pipe-arrow">&rarr;</div>
         <div class="pipe-step">
           <div class="pipe-icon">⚙️</div>
           <strong>Backend FastAPI</strong>
-          <span>Regras e Crowdsourcing</span>
+          <span>Geofencing &amp; Clustering</span>
+        </div>
+        <div class="pipe-arrow">&rarr;</div>
+        <div class="pipe-step">
+          <div class="pipe-icon">⚡</div>
+          <strong>Streaming SSE</strong>
+          <span>Broadcast em tempo real</span>
         </div>
         <div class="pipe-arrow">&rarr;</div>
         <div class="pipe-step pipe-highlight">
           <div class="pipe-icon">📱</div>
-          <strong>Frontend Web (UX)</strong>
-          <span>Mapa ao vivo &amp; PWA</span>
+          <strong>PWA Passageiro</strong>
+          <span>Mapa OSRM &amp; Crowdsourcing</span>
         </div>
       </div>
     </div>
@@ -600,23 +600,23 @@
       <div class="groups-grid">
         <div class="group-box">
           <strong>1. Backend &amp; Streaming SSE</strong>
-          <p>Servidor FastAPI assíncrono, canal pub/sub Server-Sent Events, reconstrução de histórico e APIs RESTful.</p>
+          <p>Servidor FastAPI assíncrono, canal pub/sub Server-Sent Events, ingestão em lote (/batch) e reconstrução de histórico.</p>
         </div>
         <div class="group-box">
-          <strong>2. Telemetria &amp; Mensageria IoT</strong>
-          <p>Coletor contínuo, broker MQTT com TLS, detecção de beacons BLE e armazenamento persistente de logs.</p>
+          <strong>2. Store-and-Forward (eduroam)</strong>
+          <p>Fila persistente no veículo durante zonas sem Wi-Fi, com descarregamento automático ao reconectar nos campi da UFPB.</p>
         </div>
         <div class="group-box">
-          <strong>3. Firmware &amp; Gateways</strong>
-          <p>Microcontroladores ESP32 nos pontos terminais (CCHLA e CI), filtragem de sinal RSSI e antenas omnidirecionais.</p>
+          <strong>3. App Tracker Embarcado</strong>
+          <p>Aplicativo Android nativo com Foreground Service, Wake Lock e telemetria de sinal Wi-Fi (RSSI, velocidade de enlace e RTT).</p>
         </div>
         <div class="group-box group-box-active">
           <strong>4. Frontend &amp; Crowdsourcing</strong>
-          <p>Design System responsivo em tempo real, renderização geoespacial com Leaflet e telemetria colaborativa espontânea.</p>
+          <p>Design System responsivo, mapa Leaflet com traçado OSRM das 12 paradas do Campus I e confirmação colaborativa de espera.</p>
         </div>
         <div class="group-box">
           <strong>5. Inteligência Geoespacial</strong>
-          <p>Algoritmos de Haversine, geofencing de segurança, detecção de tráfego e estimador dinâmico de tempo estimado (ETA).</p>
+          <p>Geofencing contínuo por segmentos viários (250 m), clustering por vizinhança (350 m) e estimativa dinâmica de ETA.</p>
         </div>
       </div>
     </div>
@@ -704,9 +704,9 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="/static/js/route_geometry.js?v=1.5.0"></script>
-<script src="/static/js/map.js?v=1.5.0"></script>
-<script src="/static/js/crowdsource.js?v=1.5.0"></script>
-<script src="/static/js/tabs.js?v=1.5.0"></script>
-<script src="/static/js/pwa.js?v=1.5.0"></script>
+<script src="/static/js/route_geometry.js?v=2.3.0"></script>
+<script src="/static/js/map.js?v=2.3.0"></script>
+<script src="/static/js/crowdsource.js?v=2.3.0"></script>
+<script src="/static/js/tabs.js?v=2.3.0"></script>
+<script src="/static/js/pwa.js?v=2.3.0"></script>
 {% endblock %}

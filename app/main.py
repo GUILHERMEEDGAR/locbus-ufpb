@@ -78,7 +78,7 @@ templates = Jinja2Templates(directory=str(settings.TEMPLATES_DIR))
 # Waypoints de simulação da rota circular completa (CCHLA <-> CI: Ida e Volta)
 SIMULATION_WAYPOINTS = [
     # --- ETAPA 1: SENTIDO IDA (CCHLA -> CI) ---
-    {"lat": -7.1397, "lon": -34.8450, "speed": 0.0, "origem": "CCHLA", "destino": "CI", "desc": "Parado no Terminal CCHLA (Campus I) - Embarque"},
+    {"lat": -7.13955, "lon": -34.85062, "speed": 0.0, "origem": "CCHLA", "destino": "CI", "desc": "Parado no Terminal CCHLA (Campus I) - Embarque"},
     {"lat": -7.1404, "lon": -34.8442, "speed": 18.0, "origem": "CCHLA", "destino": "CI", "desc": "Saindo do estacionamento do CCHLA"},
     {"lat": -7.1415, "lon": -34.8430, "speed": 25.0, "origem": "CCHLA", "destino": "CI", "desc": "Via interna do Campus I"},
     {"lat": -7.1425, "lon": -34.8420, "speed": 22.0, "origem": "CCHLA", "destino": "CI", "desc": "Parada Reitoria / Praça da Alegria"},
@@ -110,7 +110,7 @@ SIMULATION_WAYPOINTS = [
     {"lat": -7.1438, "lon": -34.8410, "speed": 24.0, "origem": "CI", "destino": "CCHLA", "desc": "Passando pelo CCS"},
     {"lat": -7.1425, "lon": -34.8420, "speed": 20.0, "origem": "CI", "destino": "CCHLA", "desc": "Rotatória da Reitoria / Praça da Alegria"},
     {"lat": -7.1408, "lon": -34.8436, "speed": 18.0, "origem": "CI", "destino": "CCHLA", "desc": "Acesso final ao CCHLA"},
-    {"lat": -7.1397, "lon": -34.8450, "speed": 0.0, "origem": "CI", "destino": "CCHLA", "desc": "Terminal CCHLA (Campus I) - Ciclo Completo Concluído!"},
+    {"lat": -7.13955, "lon": -34.85062, "speed": 0.0, "origem": "CI", "destino": "CCHLA", "desc": "Terminal CCHLA (Campus I) - Ciclo Completo Concluído!"},
 ]
 sim_state = {"index": 0}
 
@@ -382,6 +382,8 @@ async def simulation_step():
     Avança um passo na simulação de rota.
     Notifica instantaneamente todos os clientes conectados via SSE.
     """
+    if not settings.ENABLE_SIMULATION:
+        raise HTTPException(status_code=403, detail="Simulação desativada neste ambiente.")
     idx = sim_state["index"]
     wp = SIMULATION_WAYPOINTS[idx]
 
@@ -414,6 +416,8 @@ async def simulation_step():
 @app.post("/api/v1/simulation/reset")
 async def simulation_reset():
     """Reinicia a simulação para o CCHLA e transmite atualização imediata."""
+    if not settings.ENABLE_SIMULATION:
+        raise HTTPException(status_code=403, detail="Simulação desativada neste ambiente.")
     sim_state["index"] = 0
     reset_direcao_circular("CI")
     collaborative_buffer._points.clear()

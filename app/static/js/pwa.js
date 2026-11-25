@@ -76,16 +76,3 @@ function updateOnlineStatus() {
 window.addEventListener('online', updateOnlineStatus);
 window.addEventListener('offline', updateOnlineStatus);
 document.addEventListener('DOMContentLoaded', updateOnlineStatus);
-
-// 5. Suporte a Atalhos de Abas via URL (ex: /?tab=itinerario)
-document.addEventListener('DOMContentLoaded', () => {
-  const urlParams = new URLSearchParams(window.location.search);
-  const requestedTab = urlParams.get('tab') || window.location.hash.replace('#', '');
-
-  if (requestedTab) {
-    const targetBtn = document.querySelector(`.tab-btn[data-tab="tab-view-${requestedTab}"]`);
-    if (targetBtn) {
-      targetBtn.click();
-    }
-  }
-});

@@ -1,6 +1,7 @@
 """
 Configurações do LocBUS e do Módulo Colaborativo de Telemetria (Crowdsourcing).
 """
+import os
 from pathlib import Path
 from pydantic import BaseModel
 
@@ -10,6 +11,7 @@ PROJECT_ROOT = BASE_DIR.parent
 class Settings(BaseModel):
     APP_NAME: str = "LocBUS - Mobilidade Circular Universitária"
     APP_VERSION: str = "2.3.0-pwa-realtime"
+    ENABLE_SIMULATION: bool = os.getenv("ENABLE_SIMULATION", "true").lower() in ("1", "true", "yes")
     
     # Diretórios
     TEMPLATES_DIR: Path = BASE_DIR / "Templates"
@@ -26,7 +28,7 @@ class Settings(BaseModel):
     COLLABORATIVE_SAMPLING_INTERVAL_SEC: int = 10  # Intervalo recomendado de envio pelo frontend
     
     # Coordenadas de Referência (UFPB Campus I e Mangabeira)
-    PONTO_CCHLA: tuple[float, float] = (-7.1397, -34.8450)
+    PONTO_CCHLA: tuple[float, float] = (-7.13955, -34.85062)
     PONTO_CI: tuple[float, float] = (-7.1627, -34.8182)
     
     # Bounding Box Oficial do Corredor (AUD_13)

@@ -426,8 +426,8 @@ function applyStatusToUI(status) {
   // Atualiza Badge do Modo de Rastreamento (estilo Transit)
   if (trackingModeBadge && status.modo_rastreamento) {
     trackingModeBadge.className = 'tracking-mode-badge';
-    if (status.modo_rastreamento === 'BLE_FIXO') {
-      trackingModeBadge.textContent = 'BLE Fixo';
+    if (status.modo_rastreamento === 'TRACKER_EMBARCADO') {
+      trackingModeBadge.textContent = 'Tracker (eduroam)';
       trackingModeBadge.classList.add('mode-ble');
     } else if (status.modo_rastreamento === 'COLABORATIVO_PASSAGEIRO') {
       trackingModeBadge.textContent = 'Colaborativo (GPS)';
